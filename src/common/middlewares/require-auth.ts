@@ -8,6 +8,7 @@ export const requireAuth = (...allowedRoles: Role[]): RequestHandler => {
   return (req, _res, next) => {
     const authorization = req.headers.authorization;
     if (!authorization?.startsWith("Bearer ")) {
+      console.log("Missing or invalid authorization header", authorization);
       next(new AppError("Missing or invalid authorization header", StatusCodes.UNAUTHORIZED));
       return;
     }

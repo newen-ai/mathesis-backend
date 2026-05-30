@@ -12,13 +12,13 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   logger.error("request_failed", {
     statusCode,
     message: err.message,
-    stack: env.NODE_ENV === "production" ? undefined : err.stack
+    stack: env.NODE_ENV === "prod" ? undefined : err.stack
   });
 
   res.status(statusCode).json({
     success: false,
     message,
     details: isAppError ? err.details : undefined,
-    stack: env.NODE_ENV === "production" ? undefined : err.stack
+    stack: env.NODE_ENV === "prod" ? undefined : err.stack
   });
 };
