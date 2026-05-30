@@ -13,7 +13,7 @@ export const validateRequest = (schema: z.ZodTypeAny): RequestHandler => {
 
     if (!parsed.success) {
       next(
-        new AppError("Validation failed", StatusCodes.BAD_REQUEST, true, parsed.error.flatten())
+        new AppError("Validation failed", StatusCodes.BAD_REQUEST, true, parsed.error.issues)
       );
       return;
     }
