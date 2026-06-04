@@ -3,17 +3,36 @@ import { StatusCodes } from "http-status-codes";
 import { AppError } from "../errors/app-error";
 import { authService } from "../../modules/auth/auth.service";
 import type { Role } from "../../modules/auth/auth.types";
+import { env } from "../../config/env";
+
+function getTokenFromCookieHeader(cookieHeader: string | undefined, cookieName: string): string | undefined {
+  if (!cookieHeader) {
+    return undefined;
+  }
+
+  const cookies = cookieHeader.split(";");
+  for (const cookie of cookies) {
+    const trimmedCookie = cookie.trim();
+    if (trimmedCookie.startsWith(`${cookieName}=`)) {
+      return decodeURIComponent(trimmedCookie.slice(cookieName.length + 1));
+    }
+  }
+
+  return undefined;
+}
 
 export const requireAuth = (...allowedRoles: Role[]): RequestHandler => {
   return (req, _res, next) => {
+    const tokenFromCookie = getTokenFromCookieHeader(req.headers.cookie, env.AUTH_COOKIE_NAME);
     const authorization = req.headers.authorization;
-    if (!authorization?.startsWith("Bearer ")) {
-      console.log("Missing or invalid authorization header", authorization);
-      next(new AppError("Missing or invalid authorization header", StatusCodes.UNAUTHORIZED));
+    const tokenFromBearer = authorization?.startsWith("Bearer ") ? authorization.slice(7) : undefined;
+    const token = tokenFromCookie ?? tokenFromBearer;
+
+    if (!token) {
+      next(new AppError("Missing authentication token", StatusCodes.UNAUTHORIZED));
       return;
     }
 
-    const token = authorization.slice(7);
     const payload = authService.verifyToken(token);
 
     if (allowedRoles.length && !allowedRoles.includes(payload.role)) {

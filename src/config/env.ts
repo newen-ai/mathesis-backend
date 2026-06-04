@@ -32,7 +32,13 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["local", "dev", "test", "prod"]).default("dev"),
   PORT: z.coerce.number().int().positive().default(4000),
   JWT_ACCESS_SECRET: z.string().min(10, "JWT_ACCESS_SECRET must be at least 10 chars"),
-  JWT_ACCESS_TTL: z.string().default("15m")
+  JWT_ACCESS_TTL: z.string().default("15m"),
+  JWT_ISSUER: z.string().min(1).default("mensa-linkedin-backend"),
+  JWT_AUDIENCE: z.string().min(1).default("mensa-linkedin-web"),
+  FRONTEND_ORIGIN: z.string().url().default("http://localhost:3000"),
+  AUTH_COOKIE_NAME: z.string().min(1).default("ml_access_token"),
+  AUTH_COOKIE_SAME_SITE: z.enum(["lax", "strict", "none"]).default("lax"),
+  AUTH_COOKIE_SECURE: z.coerce.boolean().default(false)
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -42,6 +48,10 @@ if (!parsedEnv.success) {
     .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
     .join("; ");
   throw new Error(`Invalid environment configuration: ${issues}`);
+}
+
+if (parsedEnv.data.AUTH_COOKIE_SAME_SITE === "none" && !parsedEnv.data.AUTH_COOKIE_SECURE) {
+  throw new Error("Invalid environment configuration: AUTH_COOKIE_SECURE must be true when AUTH_COOKIE_SAME_SITE is none");
 }
 
 export const env = parsedEnv.data;

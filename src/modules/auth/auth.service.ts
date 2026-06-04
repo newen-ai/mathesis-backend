@@ -11,7 +11,12 @@ const prisma = new PrismaClient();
 
 function buildAccessToken(payload: AuthPayload): string {
   const expiresIn = env.JWT_ACCESS_TTL as jwt.SignOptions["expiresIn"];
-  return jwt.sign(payload, env.JWT_ACCESS_SECRET, { expiresIn });
+  return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
+    expiresIn,
+    algorithm: "HS256",
+    issuer: env.JWT_ISSUER,
+    audience: env.JWT_AUDIENCE
+  });
 }
 
 function sanitizeUser(user: User) {
@@ -212,7 +217,11 @@ export const authService = {
 
   verifyToken(token: string): AuthPayload {
     try {
-      return jwt.verify(token, env.JWT_ACCESS_SECRET) as AuthPayload;
+      return jwt.verify(token, env.JWT_ACCESS_SECRET, {
+        algorithms: ["HS256"],
+        issuer: env.JWT_ISSUER,
+        audience: env.JWT_AUDIENCE
+      }) as AuthPayload;
     } catch {
       throw new AppError("Invalid or expired token", StatusCodes.UNAUTHORIZED);
     }
