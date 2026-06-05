@@ -2,7 +2,7 @@ import type { CookieOptions, RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
 import { env } from "../../config/env";
 import { authService } from "./auth.service";
-import type { LoginBody, RegisterBody, UpdateMyProfileBody } from "./auth.schemas";
+import type { LoginBody, RegisterBody } from "./auth.schemas";
 
 function buildAuthCookieOptions(): CookieOptions {
   return {
@@ -21,7 +21,7 @@ export const register: RequestHandler = async (req, res) => {
 
   res.status(StatusCodes.CREATED).json({
     success: true,
-    message: "User registered",
+    message: "USER_REGISTERED",
     data: {
       user: result.user
     }
@@ -36,7 +36,7 @@ export const login: RequestHandler = async (req, res) => {
 
   res.status(StatusCodes.OK).json({
     success: true,
-    message: "Login successful",
+    message: "LOGIN_SUCCESSFUL",
     data: {
       user: result.user
     }
@@ -53,36 +53,6 @@ export const logout: RequestHandler = async (_req, res) => {
 
   res.status(StatusCodes.OK).json({
     success: true,
-    message: "Logout successful"
-  });
-};
-
-export const me: RequestHandler = async (req, res) => {
-  res.status(StatusCodes.OK).json({
-    success: true,
-    message: "Authenticated user",
-    data: req.user
-  });
-};
-
-export const myProfile: RequestHandler = async (req, res) => {
-  const userId = req.user?.sub;
-  const result = await authService.getMyProfile(userId as string);
-
-  res.status(StatusCodes.OK).json({
-    success: true,
-    message: "My profile",
-    data: result
-  });
-};
-
-export const upsertMyProfile: RequestHandler = async (req, res) => {
-  const userId = req.user?.sub;
-  const result = await authService.upsertMyProfile(userId as string, req.body as UpdateMyProfileBody);
-
-  res.status(StatusCodes.OK).json({
-    success: true,
-    message: "Profile saved",
-    data: result
+    message: "LOGOUT_SUCCESSFUL"
   });
 };

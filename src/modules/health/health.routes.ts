@@ -6,7 +6,7 @@ const healthRouter = Router();
 healthRouter.get("/", (_req, res) => {
   res.status(StatusCodes.OK).json({
     success: true,
-    message: "API is healthy",
+    message: "API_IS_HEALTHY",
     timestamp: new Date().toISOString()
   });
 });

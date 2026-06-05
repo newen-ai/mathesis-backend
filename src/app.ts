@@ -25,7 +25,7 @@ app.use(morgan("dev"));
 app.get("/", (_req, res) => {
   res.json({
     success: true,
-    message: "Backend server is running"
+    message: "BACKEND_SERVER_IS_RUNNING"
   });
 });
 
