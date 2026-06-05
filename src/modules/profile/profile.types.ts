@@ -17,7 +17,7 @@ export type EmploymentHistoryOutput = {
 export type ProfileOutput = {
   firstName: string;
   lastName: string;
-  dateOfBirth: Date | null;
+  dateOfBirth: string | null;
   nationality: string | null;
   currentJobTitle: string | null;
   currentCompany: string | null;

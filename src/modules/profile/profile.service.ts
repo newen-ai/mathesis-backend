@@ -25,7 +25,7 @@ function mapProfile(profile: ProfileWithWorkExperiences | null): ProfileOutput |
   return {
     firstName: profile.firstName,
     lastName: profile.lastName,
-    dateOfBirth: profile.dateOfBirth,
+    dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.toISOString() : null,
     nationality: profile.nationality,
     currentJobTitle: profile.currentJobTitle,
     currentCompany: profile.currentCompany,

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const yearMonthRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
+const iso8601DateRegex = /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2}))?$/;
 
 const employmentHistoryItemSchema = z
   .object({
@@ -22,7 +23,11 @@ export const updateMyProfileSchema = z.object({
     .object({
       firstName: z.string().min(1).max(80),
       lastName: z.string().min(1).max(80),
-      dateOfBirth: z.coerce.date().optional(),
+      dateOfBirth: z
+        .string()
+        .regex(iso8601DateRegex, "Use ISO-8601 format")
+        .transform((value) => new Date(value))
+        .optional(),
       nationality: z.string().min(2).max(80).optional(),
       currentJobTitle: z.string().min(1).max(120).optional(),
       currentCompany: z.string().min(1).max(120).optional(),
