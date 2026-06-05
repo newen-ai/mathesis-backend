@@ -4,15 +4,43 @@ export type ProfileWithWorkExperiences = Pick<
   Profile,
   "firstName" | "lastName" | "dateOfBirth" | "nationality" | "currentJobTitle" | "currentCompany"
 > & {
-  workExperiences: Array<Pick<WorkExperience, "company" | "jobTitle" | "startDate" | "endDate">>;
+  workExperiences: Array<Pick<WorkExperience, "id" | "company" | "jobTitle" | "startDate" | "endDate">>;
 };
 
 export type EmploymentHistoryOutput = {
+  id: string;
   company: string;
   jobTitle: string;
   startYearMonth: string;
   endYearMonth: string | null;
 };
+
+export type AddWorkExperienceOperationInput = {
+  action: "ADD";
+  company: string;
+  jobTitle: string;
+  startYearMonth: string;
+  endYearMonth?: string;
+};
+
+export type EditWorkExperienceOperationInput = {
+  action: "EDIT";
+  id: string;
+  company?: string;
+  jobTitle?: string;
+  startYearMonth?: string;
+  endYearMonth?: string;
+};
+
+export type RemoveWorkExperienceOperationInput = {
+  action: "REMOVE";
+  id: string;
+};
+
+export type WorkExperienceOperationInput =
+  | AddWorkExperienceOperationInput
+  | EditWorkExperienceOperationInput
+  | RemoveWorkExperienceOperationInput;
 
 export type ProfileOutput = {
   firstName: string;
