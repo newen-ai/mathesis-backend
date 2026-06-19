@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Prisma } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
 import type { UpdateMyProfileBody, UpdateMyWorkExperiencesBody } from "./profile.schemas";
@@ -7,6 +7,7 @@ import type {
   MyProfileOutput,
   ProfileOutput,
   ProfileWithWorkExperiences,
+  UserSearchResult,
   WorkExperienceOperationInput
 } from "./profile.types";
 
@@ -104,7 +105,133 @@ async function applyWorkExperienceOperation(
 }
 
 export const profileService = {
+  async searchUsersByName(text: string): Promise<UserSearchResult[]> {
+    const normalizedText = text.trim();
+    const tokens = normalizedText.split(/\s+/).filter((token) => token.length > 0);
+    const firstToken = tokens[0] ?? "";
+    const remainingText = tokens.slice(1).join(" ");
+
+    const orConditions: Prisma.ProfileWhereInput[] = [
+      {
+        firstName: {
+          contains: normalizedText,
+          mode: "insensitive"
+        }
+      },
+      {
+        lastName: {
+          contains: normalizedText,
+          mode: "insensitive"
+        }
+      }
+    ];
+
+    if (tokens.length > 1 && remainingText.length > 0) {
+      orConditions.push(
+        {
+          AND: [
+            {
+              firstName: {
+                contains: firstToken,
+                mode: "insensitive"
+              }
+            },
+            {
+              lastName: {
+                contains: remainingText,
+                mode: "insensitive"
+              }
+            }
+          ]
+        },
+        {
+          AND: [
+            {
+              firstName: {
+                contains: remainingText,
+                mode: "insensitive"
+              }
+            },
+            {
+              lastName: {
+                contains: firstToken,
+                mode: "insensitive"
+              }
+            }
+          ]
+        },
+        {
+          AND: tokens.map((token) => ({
+            OR: [
+              {
+                firstName: {
+                  contains: token,
+                  mode: "insensitive"
+                }
+              },
+              {
+                lastName: {
+                  contains: token,
+                  mode: "insensitive"
+                }
+              }
+            ]
+          }))
+        }
+      );
+    }
+
+    const profiles = await prisma.profile.findMany({
+      where: {
+        deletedAt: null,
+        user: {
+          is: {
+            deletedAt: null
+          }
+        },
+        OR: orConditions
+      },
+      select: {
+        userId: true,
+        firstName: true,
+        lastName: true
+      },
+      orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
+      take: 20
+    });
+
+    return profiles;
+  },
+
   async getMyProfile(userId: string): Promise<MyProfileOutput> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        profile: {
+          where: { deletedAt: null },
+          include: {
+            workExperiences: {
+              where: { deletedAt: null },
+              orderBy: { startDate: "desc" }
+            }
+          }
+        }
+      }
+    });
+
+    if (!user || user.deletedAt) {
+      throw new AppError("User not found", StatusCodes.NOT_FOUND);
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      profile: mapProfile(user.profile)
+    };
+  },
+
+  async getProfileByUserId(userId: string): Promise<MyProfileOutput> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {

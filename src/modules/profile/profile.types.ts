@@ -58,3 +58,9 @@ export type MyProfileOutput = {
   role: User["role"];
   profile: ProfileOutput | null;
 };
+
+export type UserSearchResult = {
+  userId: string;
+  firstName: string;
+  lastName: string;
+};

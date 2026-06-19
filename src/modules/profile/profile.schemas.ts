@@ -98,5 +98,25 @@ export const updateMyWorkExperiencesSchema = z.object({
   })
 });
 
+export const searchUsersSchema = z.object({
+  query: z.object({
+    text: z
+      .string()
+      .min(1)
+      .max(160)
+      .refine((value) => value.trim().length > 0, {
+        message: "text cannot be empty"
+      })
+  })
+});
+
+export const getProfileByUserIdSchema = z.object({
+  params: z.object({
+    userId: z.string().min(1)
+  })
+});
+
 export type UpdateMyProfileBody = z.infer<typeof updateMyProfileSchema>["body"];
 export type UpdateMyWorkExperiencesBody = z.infer<typeof updateMyWorkExperiencesSchema>["body"];
+export type SearchUsersQuery = z.infer<typeof searchUsersSchema>["query"];
+export type GetProfileByUserIdParams = z.infer<typeof getProfileByUserIdSchema>["params"];
