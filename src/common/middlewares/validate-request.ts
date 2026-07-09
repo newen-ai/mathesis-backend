@@ -1,7 +1,24 @@
 import { z } from "zod";
-import type { RequestHandler } from "express";
+import type { Request, RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../errors/app-error";
+
+type ParsedRequestData = {
+  body: Request["body"];
+  query: Request["query"];
+  params: Request["params"];
+};
+
+function syncObjectValues(
+  target: Record<string, unknown>,
+  source: Record<string, unknown>
+): void {
+  for (const key of Object.keys(target)) {
+    delete target[key];
+  }
+
+  Object.assign(target, source);
+}
 
 export const validateRequest = (schema: z.ZodTypeAny): RequestHandler => {
   return (req, _res, next) => {
@@ -17,6 +34,12 @@ export const validateRequest = (schema: z.ZodTypeAny): RequestHandler => {
       );
       return;
     }
+
+    const parsedData = parsed.data as ParsedRequestData;
+
+    req.body = parsedData.body;
+    syncObjectValues(req.query as Record<string, unknown>, parsedData.query as Record<string, unknown>);
+    syncObjectValues(req.params as Record<string, unknown>, parsedData.params as Record<string, unknown>);
 
     next();
   };

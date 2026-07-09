@@ -13,6 +13,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ChatType {
+  DIRECT
+  GROUP
+}
+
+enum ChatMemberRole {
+  MEMBER
+  ADMIN
+}
+
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
@@ -22,10 +32,99 @@ model User {
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
 
-  profile   Profile?
+  profile              Profile?
+  connectionsAsUserA   Connection[] @relation("UserConnectionsA")
+  connectionsAsUserB   Connection[] @relation("UserConnectionsB")
+  chatMemberships      ChatMember[]
+  createdChats         Chat[]       @relation("ChatCreatedBy")
+  sentChatMessages     ChatMessage[] @relation("ChatMessageSender")
+  deletedChatMessages  ChatMessage[] @relation("ChatMessageDeletedBy")
 
   @@index([deletedAt])
   @@map("users")
+}
+
+model Chat {
+  id              String      @id @default(cuid())
+  type            ChatType
+  title           String?
+  createdByUserId String      @map("created_by_user_id")
+  directUserLowId  String?     @map("direct_user_low_id")
+  directUserHighId String?     @map("direct_user_high_id")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  deletedAt       DateTime?   @map("deleted_at")
+
+  createdBy       User        @relation("ChatCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  members         ChatMember[]
+  messages        ChatMessage[]
+
+  @@index([deletedAt])
+  @@index([type, deletedAt])
+  @@index([createdByUserId, deletedAt])
+  @@index([directUserLowId, directUserHighId, deletedAt])
+  @@map("chats")
+}
+
+model ChatMember {
+  id        String         @id @default(cuid())
+  chatId    String         @map("chat_id")
+  userId    String         @map("user_id")
+  role      ChatMemberRole @default(MEMBER)
+  lastReadMessageAt DateTime? @map("last_read_message_at")
+  joinedAt  DateTime       @default(now()) @map("joined_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+  leftAt    DateTime?      @map("left_at")
+  deletedAt DateTime?      @map("deleted_at")
+
+  chat      Chat           @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatId, userId])
+  @@index([deletedAt])
+  @@index([chatId, leftAt, deletedAt])
+  @@index([userId, leftAt, deletedAt])
+  @@index([chatId, userId, lastReadMessageAt])
+  @@map("chat_members")
+}
+
+model ChatMessage {
+  id              String    @id @default(cuid())
+  chatId          String    @map("chat_id")
+  senderUserId    String    @map("sender_user_id")
+  content         String
+  editedAt        DateTime? @map("edited_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+  deletedByUserId String?   @map("deleted_by_user_id")
+
+  chat            Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender          User      @relation("ChatMessageSender", fields: [senderUserId], references: [id], onDelete: Cascade)
+  deletedBy       User?     @relation("ChatMessageDeletedBy", fields: [deletedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([deletedAt])
+  @@index([chatId, deletedAt, createdAt(sort: Desc)])
+  @@index([senderUserId, deletedAt])
+  @@map("chat_messages")
+}
+
+model Connection {
+  id        String    @id @default(cuid())
+  userAId   String    @map("user_a_id")
+  userBId   String    @map("user_b_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  userA     User      @relation("UserConnectionsA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB     User      @relation("UserConnectionsB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@index([deletedAt])
+  @@index([userAId, deletedAt])
+  @@index([userBId, deletedAt])
+  @@index([userAId, userBId, deletedAt])
+  @@map("connections")
 }
 
 model Profile {
