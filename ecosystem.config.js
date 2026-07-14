@@ -2,7 +2,7 @@ module.exports = {
     apps : [{
       name: 'mathesis',
       cwd: 'dist/',
-      script: 'index.js',
+      script: 'server.js',
       restart_delay: 1000,
       watch: 'server.js',
       out_file: 'main.log',
