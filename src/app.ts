@@ -27,6 +27,15 @@ const corsOptions = {
 
 export const app = express();
 
+app.use((req, _res, next) => {
+  logger.info("request_incoming", {
+    method: req.method,
+    path: req.originalUrl,
+    origin: req.headers.origin
+  });
+  next();
+});
+
 app.use(helmet());
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions));
