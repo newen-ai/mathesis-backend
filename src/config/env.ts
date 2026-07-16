@@ -35,7 +35,11 @@ const envSchema = z.object({
   JWT_ACCESS_TTL: z.string().default("15m"),
   JWT_ISSUER: z.string().min(1).default("mensa-linkedin-backend"),
   JWT_AUDIENCE: z.string().min(1).default("mensa-linkedin-web"),
-  FRONTEND_ORIGIN: z.string().url().default("http://localhost:3000"),
+  FRONTEND_ORIGIN: z
+    .string()
+    .url()
+    .transform((value) => new URL(value).origin)
+    .default("http://localhost:3000"),
   AUTH_COOKIE_NAME: z.string().min(1).default("ml_access_token"),
   AUTH_COOKIE_SAME_SITE: z.enum(["lax", "strict", "none"]).default("lax"),
   AUTH_COOKIE_SECURE: z.coerce.boolean().default(false)
