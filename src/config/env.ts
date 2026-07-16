@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import fs from "node:fs";
 import path from "node:path";
 import { z } from "zod";
+import { logger } from "../common/utils/logger";
 
 const envModeSchema = z.enum(["local", "dev", "test", "prod"]);
 const rootEnvPath = path.resolve(process.cwd(), ".env");
@@ -57,5 +58,14 @@ if (!parsedEnv.success) {
 if (parsedEnv.data.AUTH_COOKIE_SAME_SITE === "none" && !parsedEnv.data.AUTH_COOKIE_SECURE) {
   throw new Error("Invalid environment configuration: AUTH_COOKIE_SECURE must be true when AUTH_COOKIE_SAME_SITE is none");
 }
+
+logger.info("env_loaded", {
+  envFile: path.basename(envSpecificPath),
+  nodeEnv: parsedEnv.data.NODE_ENV,
+  port: parsedEnv.data.PORT,
+  frontendOrigin: parsedEnv.data.FRONTEND_ORIGIN,
+  authCookieSameSite: parsedEnv.data.AUTH_COOKIE_SAME_SITE,
+  authCookieSecure: parsedEnv.data.AUTH_COOKIE_SECURE
+});
 
 export const env = parsedEnv.data;
