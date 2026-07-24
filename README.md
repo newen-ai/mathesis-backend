@@ -7,6 +7,7 @@ Production-style Node.js + TypeScript backend starter with:
 - Environment validation (`zod` + `dotenv`)
 - Centralized error handling
 - JWT auth service (`register`, `login`, `me`)
+- Registration email delivery through Resend
 - Request validation middleware
 - Structured JSON logging
 - ESLint + Prettier + strict TypeScript
@@ -19,6 +20,7 @@ npm install
 cp .env.example .env
 
 # Set DATABASE_URL in .env (see Database Setup below)
+# Set FRONTEND_BASE_URL and RESEND_API_KEY for registration emails
 
 # Generate Prisma client and run migrations
 npx prisma migrate deploy
@@ -84,6 +86,8 @@ npx prisma studio              # GUI to browse/edit data
 - `POST /api/v1/auth/register` - Register user
 - `POST /api/v1/auth/login` - Login user
 - `GET /api/v1/auth/me` - Get current user (Bearer token required)
+
+The registration flow sends a confirmation email from `no-reply@mail.mathesis.social` to the user's registered email address and includes a link to `${FRONTEND_BASE_URL}/confirm`.
 
 ## Scripts
 

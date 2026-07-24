@@ -4,6 +4,8 @@ import { StatusCodes } from "http-status-codes";
 import { PrismaClient } from "@prisma/client";
 import { env } from "../../config/env";
 import { AppError } from "../../common/errors/app-error";
+import { sendRegistrationEmail } from "../../common/utils/email";
+import { logger } from "../../common/utils/logger";
 import type { AuthPayload, Role, User } from "./auth.types";
 import type { LoginBody, RegisterBody } from "./auth.schemas";
 
@@ -45,6 +47,17 @@ export const authService = {
         passwordHash,
         role: "user"
       }
+    });
+
+    await sendRegistrationEmail({
+      to: newUser.email,
+      confirmUrl: new URL("/confirm", env.FRONTEND_BASE_URL).toString()
+    }).catch((error: unknown) => {
+      logger.warn("registration_email_failed", {
+        userId: newUser.id,
+        email: newUser.email,
+        error
+      });
     });
 
     const payload: AuthPayload = {

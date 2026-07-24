@@ -36,11 +36,12 @@ const envSchema = z.object({
   JWT_ACCESS_TTL: z.string().default("15m"),
   JWT_ISSUER: z.string().min(1).default("mensa-linkedin-backend"),
   JWT_AUDIENCE: z.string().min(1).default("mensa-linkedin-web"),
-  FRONTEND_ORIGIN: z
+  FRONTEND_BASE_URL: z
     .string()
     .url()
-    .transform((value) => new URL(value).origin)
+    .transform((value) => value.replace(/\/+$/, ""))
     .default("http://localhost:3000"),
+  RESEND_API_KEY: z.string().min(1).optional(),
   AUTH_COOKIE_NAME: z.string().min(1).default("ml_access_token"),
   AUTH_COOKIE_SAME_SITE: z.enum(["lax", "strict", "none"]).default("lax"),
   AUTH_COOKIE_SECURE: z.coerce.boolean().default(false)
@@ -59,11 +60,24 @@ if (parsedEnv.data.AUTH_COOKIE_SAME_SITE === "none" && !parsedEnv.data.AUTH_COOK
   throw new Error("Invalid environment configuration: AUTH_COOKIE_SECURE must be true when AUTH_COOKIE_SAME_SITE is none");
 }
 
+if (parsedEnv.data.NODE_ENV === "prod") {
+  const missingProdEnvVars = [
+    !parsedEnv.data.FRONTEND_BASE_URL ? "FRONTEND_BASE_URL" : null,
+    !parsedEnv.data.RESEND_API_KEY ? "RESEND_API_KEY" : null
+  ].filter((value): value is string => value !== null);
+
+  if (missingProdEnvVars.length > 0) {
+    throw new Error(
+      `Invalid environment configuration: ${missingProdEnvVars.join(", ")} must be set in prod`
+    );
+  }
+}
+
 logger.info("env_loaded", {
   envFile: path.basename(envSpecificPath),
   nodeEnv: parsedEnv.data.NODE_ENV,
   port: parsedEnv.data.PORT,
-  frontendOrigin: parsedEnv.data.FRONTEND_ORIGIN,
+  frontendBaseUrl: parsedEnv.data.FRONTEND_BASE_URL,
   authCookieSameSite: parsedEnv.data.AUTH_COOKIE_SAME_SITE,
   authCookieSecure: parsedEnv.data.AUTH_COOKIE_SECURE
 });
