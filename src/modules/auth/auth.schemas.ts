@@ -14,5 +14,12 @@ export const loginSchema = z.object({
   })
 });
 
+export const confirmEmailSchema = z.object({
+  body: z.object({
+    token: z.string().min(1, "Confirmation token is required")
+  })
+});
+
 export type RegisterBody = z.infer<typeof registerSchema>["body"];
 export type LoginBody = z.infer<typeof loginSchema>["body"];
+export type ConfirmEmailBody = z.infer<typeof confirmEmailSchema>["body"];

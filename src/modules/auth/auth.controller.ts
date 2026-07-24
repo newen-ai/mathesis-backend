@@ -2,7 +2,7 @@ import type { CookieOptions, RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
 import { env } from "../../config/env";
 import { authService } from "./auth.service";
-import type { LoginBody, RegisterBody } from "./auth.schemas";
+import type { ConfirmEmailBody, LoginBody, RegisterBody } from "./auth.schemas";
 
 function buildAuthCookieOptions(): CookieOptions {
   return {
@@ -37,6 +37,18 @@ export const login: RequestHandler = async (req, res) => {
   res.status(StatusCodes.OK).json({
     success: true,
     message: "LOGIN_SUCCESSFUL",
+    data: {
+      user: result.user
+    }
+  });
+};
+
+export const confirmEmail: RequestHandler = async (req, res) => {
+  const result = await authService.confirmEmail(req.body as ConfirmEmailBody);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "EMAIL_CONFIRMED",
     data: {
       user: result.user
     }

@@ -84,10 +84,11 @@ npx prisma studio              # GUI to browse/edit data
 - `GET /` - Basic status
 - `GET /api/v1/health` - Health check
 - `POST /api/v1/auth/register` - Register user
+- `POST /api/v1/auth/confirm` - Confirm user email
 - `POST /api/v1/auth/login` - Login user
 - `GET /api/v1/auth/me` - Get current user (Bearer token required)
 
-The registration flow sends a confirmation email from `no-reply@mail.mathesis.social` to the user's registered email address and includes a link to `${FRONTEND_BASE_URL}/confirm`.
+The registration flow sends a confirmation email from `no-reply@mail.mathesis.social` to the user's registered email address and includes a tokenized link to `${FRONTEND_BASE_URL}/confirm`.
 
 ## Scripts
 

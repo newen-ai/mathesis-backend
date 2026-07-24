@@ -6,6 +6,8 @@ export type User = {
   email: string;
   passwordHash: string;
   role: Role;
+  emailConfirmationTokenHash?: string | null;
+  emailConfirmedAt?: Date | null;
 };
 
 export type AuthPayload = {

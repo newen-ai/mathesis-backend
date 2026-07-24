@@ -24,13 +24,15 @@ enum ChatMemberRole {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  passwordHash String  @map("password_hash")
-  role      String    @default("user")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-  deletedAt DateTime? @map("deleted_at")
+  id                          String    @id @default(cuid())
+  email                       String    @unique
+  passwordHash                String    @map("password_hash")
+  role                        String    @default("user")
+  emailConfirmationTokenHash  String?   @unique @map("email_confirmation_token_hash")
+  emailConfirmedAt            DateTime? @map("email_confirmed_at")
+  createdAt                   DateTime  @default(now()) @map("created_at")
+  updatedAt                   DateTime  @updatedAt @map("updated_at")
+  deletedAt                   DateTime? @map("deleted_at")
 
   profile              Profile?
   connectionsAsUserA   Connection[] @relation("UserConnectionsA")
