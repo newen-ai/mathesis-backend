@@ -39,9 +39,45 @@ model User {
   createdChats         Chat[]       @relation("ChatCreatedBy")
   sentChatMessages     ChatMessage[] @relation("ChatMessageSender")
   deletedChatMessages  ChatMessage[] @relation("ChatMessageDeletedBy")
+  feedPosts            FeedPost[]   @relation("FeedPostAuthor")
 
   @@index([deletedAt])
   @@map("users")
+}
+
+model FeedPost {
+  id          String           @id @default(cuid())
+  authorUserId String           @map("author_user_id")
+  content     String?
+  reactionCount Int             @default(0) @map("reaction_count")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  deletedAt   DateTime?        @map("deleted_at")
+
+  author      User             @relation("FeedPostAuthor", fields: [authorUserId], references: [id], onDelete: Cascade)
+  attachments FeedAttachment[]
+
+  @@index([deletedAt])
+  @@index([authorUserId, deletedAt])
+  @@index([createdAt(sort: Desc), deletedAt])
+  @@map("feed_posts")
+}
+
+model FeedAttachment {
+  id          String    @id @default(cuid())
+  feedPostId  String    @map("feed_post_id")
+  fileName    String    @map("file_name")
+  mimeType    String    @map("mime_type")
+  sizeBytes   Int       @map("size_bytes")
+  fileData    Bytes     @map("file_data")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  feedPost    FeedPost  @relation(fields: [feedPostId], references: [id], onDelete: Cascade)
+
+  @@index([deletedAt])
+  @@index([feedPostId, deletedAt])
+  @@map("feed_attachments")
 }
 
 model Chat {
