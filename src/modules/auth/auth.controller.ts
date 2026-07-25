@@ -56,3 +56,14 @@ export const logout: RequestHandler = async (_req, res) => {
     message: "LOGOUT_SUCCESSFUL"
   });
 };
+
+export const session: RequestHandler = async (req, res) => {
+  const userId = req.user?.sub as string;
+  const result = await authService.getSession(userId);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "SESSION_ACTIVE",
+    data: result
+  });
+};

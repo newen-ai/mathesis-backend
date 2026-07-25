@@ -13,3 +13,14 @@ export type AuthPayload = {
   email: string;
   role: Role;
 };
+
+export type SessionUser = {
+  id: string;
+  email: string;
+  role: Role;
+};
+
+export type SessionOutput = {
+  sessionActive: boolean;
+  user: SessionUser;
+};

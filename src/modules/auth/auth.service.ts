@@ -4,7 +4,7 @@ import { StatusCodes } from "http-status-codes";
 import { PrismaClient } from "@prisma/client";
 import { env } from "../../config/env";
 import { AppError } from "../../common/errors/app-error";
-import type { AuthPayload, Role, User } from "./auth.types";
+import type { AuthPayload, Role, SessionOutput, User } from "./auth.types";
 import type { LoginBody, RegisterBody } from "./auth.schemas";
 
 const prisma = new PrismaClient();
@@ -83,6 +83,31 @@ export const authService = {
     return {
       accessToken: buildAccessToken(payload),
       user: sanitizeUser(user as User)
+    };
+  },
+
+  async getSession(userId: string): Promise<SessionOutput> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        deletedAt: true
+      }
+    });
+
+    if (!user || user.deletedAt) {
+      throw new AppError("Session is invalid", StatusCodes.UNAUTHORIZED);
+    }
+
+    return {
+      sessionActive: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role as Role
+      }
     };
   },
 
