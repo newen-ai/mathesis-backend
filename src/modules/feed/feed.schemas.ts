@@ -25,7 +25,15 @@ export const deleteFeedPostSchema = z.object({
   })
 });
 
+export const downloadFeedAttachmentSchema = z.object({
+  params: z.object({
+    postId: z.string().min(1),
+    attachmentId: z.string().min(1)
+  })
+});
+
 export type CreateFeedPostBody = z.infer<typeof createFeedPostSchema>["body"];
 export type ListFeedPostsQuery = z.infer<typeof listFeedPostsSchema>["query"];
 export type DeleteFeedPostParams = z.infer<typeof deleteFeedPostSchema>["params"];
+export type DownloadFeedAttachmentParams = z.infer<typeof downloadFeedAttachmentSchema>["params"];
 export type FeedSortBy = NonNullable<z.infer<typeof feedSortBySchema>>;

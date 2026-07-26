@@ -38,6 +38,13 @@ export type DeleteFeedPostOutput = {
   deletedAt: string;
 };
 
+export type DownloadFeedAttachmentOutput = {
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  fileData: Buffer;
+};
+
 export type FeedPostWithRelations = Prisma.FeedPostGetPayload<{
   include: {
     author: {

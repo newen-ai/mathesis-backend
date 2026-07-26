@@ -4,6 +4,7 @@ import { AppError } from "../../common/errors/app-error";
 import type { CreateFeedPostBody, FeedSortBy } from "./feed.schemas";
 import type {
   CreateFeedPostOutput,
+  DownloadFeedAttachmentOutput,
   DeleteFeedPostOutput,
   FeedAttachmentSummary,
   FeedPostSummary,
@@ -140,6 +141,23 @@ async function assertActiveUser(userId: string): Promise<void> {
   if (!user || user.deletedAt) {
     throw new AppError("User not found", StatusCodes.NOT_FOUND);
   }
+}
+
+async function canViewFeedPost(_currentUserId: string, postId: string): Promise<boolean> {
+  const post = await prisma.feedPost.findFirst({
+    where: {
+      id: postId,
+      deletedAt: null,
+      author: {
+        deletedAt: null
+      }
+    },
+    select: {
+      id: true
+    }
+  });
+
+  return Boolean(post);
 }
 
 function normalizeFeedContent(content: string | undefined): string | null {
@@ -341,5 +359,46 @@ export const feedService = {
       postId,
       deletedAt: new Date().toISOString()
     };
+  },
+
+  async downloadAttachment(
+    currentUserId: string,
+    postId: string,
+    attachmentId: string
+  ): Promise<DownloadFeedAttachmentOutput> {
+    await assertActiveUser(currentUserId);
+
+    const hasPostAccess = await canViewFeedPost(currentUserId, postId);
+
+    if (!hasPostAccess) {
+      throw new AppError("Feed attachment not found", StatusCodes.NOT_FOUND);
+    }
+
+    const attachment = await prisma.feedAttachment.findFirst({
+      where: {
+        id: attachmentId,
+        feedPostId: postId,
+        deletedAt: null,
+        feedPost: {
+          id: postId,
+          deletedAt: null,
+          author: {
+            deletedAt: null
+          }
+        }
+      },
+      select: {
+        fileName: true,
+        mimeType: true,
+        sizeBytes: true,
+        fileData: true
+      }
+    });
+
+    if (!attachment) {
+      throw new AppError("Feed attachment not found", StatusCodes.NOT_FOUND);
+    }
+
+    return attachment;
   }
 };

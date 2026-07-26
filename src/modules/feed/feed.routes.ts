@@ -3,8 +3,13 @@ import multer from "multer";
 import { asyncHandler } from "../../common/errors/async-handler";
 import { requireAuth } from "../../common/middlewares/require-auth";
 import { validateRequest } from "../../common/middlewares/validate-request";
-import { createFeedPost, deleteFeedPost, listFeedPosts } from "./feed.controller";
-import { createFeedPostSchema, deleteFeedPostSchema, listFeedPostsSchema } from "./feed.schemas";
+import { createFeedPost, deleteFeedPost, downloadFeedAttachment, listFeedPosts } from "./feed.controller";
+import {
+  createFeedPostSchema,
+  deleteFeedPostSchema,
+  downloadFeedAttachmentSchema,
+  listFeedPostsSchema
+} from "./feed.schemas";
 
 const feedUpload = multer({
   storage: multer.memoryStorage(),
@@ -23,6 +28,12 @@ feedRouter.post(
   feedUpload.array("pdfFiles", 5),
   validateRequest(createFeedPostSchema),
   asyncHandler(createFeedPost)
+);
+feedRouter.get(
+  "/:postId/attachments/:attachmentId",
+  requireAuth(),
+  validateRequest(downloadFeedAttachmentSchema),
+  asyncHandler(downloadFeedAttachment)
 );
 feedRouter.delete("/:postId", requireAuth(), validateRequest(deleteFeedPostSchema), asyncHandler(deleteFeedPost));
 
