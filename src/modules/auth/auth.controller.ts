@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { env } from "../../config/env";
 import { authService } from "./auth.service";
 import type { LoginBody, RegisterBody } from "./auth.schemas";
+import type { CreateWhitelistRequestBody } from "../whitelist/whitelist.schemas";
 
 function buildAuthCookieOptions(): CookieOptions {
   return {
@@ -64,6 +65,18 @@ export const session: RequestHandler = async (req, res) => {
   res.status(StatusCodes.OK).json({
     success: true,
     message: "SESSION_ACTIVE",
+    data: result
+  });
+};
+
+export const requestWhitelistAccess: RequestHandler = async (req, res) => {
+  const userId = req.user?.sub as string;
+  const body = req.body as CreateWhitelistRequestBody;
+  const result = await authService.createWhitelistRequest(userId, body.message);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "WHITELIST_REQUEST_SUBMITTED",
     data: result
   });
 };

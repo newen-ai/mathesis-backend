@@ -23,9 +23,16 @@ enum ChatMemberRole {
   ADMIN
 }
 
+enum WhitelistRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
+  canonicalEmail String @map("canonical_email")
   passwordHash String  @map("password_hash")
   role      String    @default("user")
   createdAt DateTime  @default(now()) @map("created_at")
@@ -40,9 +47,65 @@ model User {
   sentChatMessages     ChatMessage[] @relation("ChatMessageSender")
   deletedChatMessages  ChatMessage[] @relation("ChatMessageDeletedBy")
   feedPosts            FeedPost[]   @relation("FeedPostAuthor")
+  whitelistRequests    WhitelistRequest[] @relation("WhitelistRequestUser")
+  reviewedWhitelistRequests WhitelistRequest[] @relation("WhitelistRequestReviewer")
+  whitelistAuditsAsActor WhitelistAudit[] @relation("WhitelistAuditActor")
+  whitelistAuditsAsTarget WhitelistAudit[] @relation("WhitelistAuditTarget")
+  whitelistedEmailsCreated WhitelistedEmail[] @relation("WhitelistedEmailCreator")
 
   @@index([deletedAt])
+  @@index([canonicalEmail])
   @@map("users")
+}
+
+model WhitelistedEmail {
+  id             String   @id @default(cuid())
+  canonicalEmail String   @unique @map("canonical_email")
+  createdByUserId String? @map("created_by_user_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  createdByUser  User?    @relation("WhitelistedEmailCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt(sort: Desc)])
+  @@map("whitelisted_emails")
+}
+
+model WhitelistRequest {
+  id              String               @id @default(cuid())
+  userId          String               @map("user_id")
+  canonicalEmail  String               @map("canonical_email")
+  message         String?
+  status          WhitelistRequestStatus @default(PENDING)
+  reviewedByUserId String?             @map("reviewed_by_user_id")
+  reviewedAt      DateTime?            @map("reviewed_at")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  user            User                 @relation("WhitelistRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedByUser  User?                @relation("WhitelistRequestReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([canonicalEmail, status])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("whitelist_requests")
+}
+
+model WhitelistAudit {
+  id              String   @id @default(cuid())
+  action          String
+  canonicalEmail  String   @map("canonical_email")
+  targetUserId    String?  @map("target_user_id")
+  actorUserId     String?  @map("actor_user_id")
+  reason          String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  targetUser      User?    @relation("WhitelistAuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  actorUser       User?    @relation("WhitelistAuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([action, createdAt(sort: Desc)])
+  @@index([canonicalEmail, createdAt(sort: Desc)])
+  @@map("whitelist_audit")
 }
 
 model FeedPost {

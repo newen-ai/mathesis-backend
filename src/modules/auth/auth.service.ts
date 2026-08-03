@@ -4,8 +4,11 @@ import { StatusCodes } from "http-status-codes";
 import { PrismaClient } from "@prisma/client";
 import { env } from "../../config/env";
 import { AppError } from "../../common/errors/app-error";
+import { telegramNotifier } from "../../common/services/telegram-notifier";
+import { maskEmailAddress, normalizeEmailAddress, toCanonicalEmail } from "../../common/utils/email";
 import type { AuthPayload, Role, SessionOutput, User } from "./auth.types";
 import type { LoginBody, RegisterBody } from "./auth.schemas";
+import { whitelistService } from "../whitelist/whitelist.service";
 
 const prisma = new PrismaClient();
 
@@ -27,9 +30,19 @@ function sanitizeUser(user: User) {
   };
 }
 
+function resolveInitialRole(email: string): Role {
+  return env.DEFAULT_ADMIN_EMAILS.includes(email) ? "admin" : "user";
+}
+
+function resolveEffectiveWhitelistState(isWhitelisted: boolean): boolean {
+  return env.WHITELIST_ENABLED ? isWhitelisted : true;
+}
+
 export const authService = {
   async register(input: RegisterBody): Promise<{ accessToken: string; user: object }> {
-    const { email, password } = input;
+    const email = normalizeEmailAddress(input.email);
+    const canonicalEmail = toCanonicalEmail(email);
+    const { password } = input;
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
@@ -42,10 +55,14 @@ export const authService = {
     const newUser = await prisma.user.create({
       data: {
         email,
+        canonicalEmail,
         passwordHash,
-        role: "user"
+        role: resolveInitialRole(email)
       }
     });
+
+    const isWhitelisted = await whitelistService.isCanonicalEmailWhitelisted(canonicalEmail);
+    const effectiveWhitelistState = resolveEffectiveWhitelistState(isWhitelisted);
 
     const payload: AuthPayload = {
       sub: newUser.id,
@@ -53,19 +70,29 @@ export const authService = {
       role: newUser.role as Role
     };
 
+    await telegramNotifier.notifyRegistration({
+      userId: newUser.id,
+      maskedEmail: maskEmailAddress(newUser.email),
+      isWhitelisted
+    });
+
     return {
       accessToken: buildAccessToken(payload),
-      user: sanitizeUser(newUser as User)
+      user: {
+        ...sanitizeUser(newUser as User),
+        isWhitelisted: effectiveWhitelistState
+      }
     };
   },
 
   async login(input: LoginBody): Promise<{ accessToken: string; user: object }> {
-    const { email, password } = input;
+    const email = normalizeEmailAddress(input.email);
+    const { password } = input;
     const user = await prisma.user.findUnique({
       where: { email }
     });
 
-    if (!user) {
+    if (!user || user.deletedAt) {
       throw new AppError("Invalid email or password", StatusCodes.UNAUTHORIZED);
     }
 
@@ -80,9 +107,15 @@ export const authService = {
       role: user.role as Role
     };
 
+    const isWhitelisted = await whitelistService.isCanonicalEmailWhitelisted(user.canonicalEmail);
+    const effectiveWhitelistState = resolveEffectiveWhitelistState(isWhitelisted);
+
     return {
       accessToken: buildAccessToken(payload),
-      user: sanitizeUser(user as User)
+      user: {
+        ...sanitizeUser(user as User),
+        isWhitelisted: effectiveWhitelistState
+      }
     };
   },
 
@@ -93,6 +126,7 @@ export const authService = {
         id: true,
         email: true,
         role: true,
+        canonicalEmail: true,
         deletedAt: true
       }
     });
@@ -101,13 +135,46 @@ export const authService = {
       throw new AppError("Session is invalid", StatusCodes.UNAUTHORIZED);
     }
 
+    const isWhitelisted = await whitelistService.isCanonicalEmailWhitelisted(user.canonicalEmail);
+    const effectiveWhitelistState = resolveEffectiveWhitelistState(isWhitelisted);
+
     return {
       sessionActive: true,
       user: {
         id: user.id,
         email: user.email,
-        role: user.role as Role
+        role: user.role as Role,
+        isWhitelisted: effectiveWhitelistState
       }
+    };
+  },
+
+  async createWhitelistRequest(userId: string, message?: string): Promise<{ requestId: string; status: string }> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        canonicalEmail: true,
+        deletedAt: true
+      }
+    });
+
+    if (!user || user.deletedAt) {
+      throw new AppError("User not found", StatusCodes.NOT_FOUND);
+    }
+
+    const isWhitelisted = await whitelistService.isCanonicalEmailWhitelisted(user.canonicalEmail);
+    if (isWhitelisted) {
+      throw new AppError("User is already whitelisted", StatusCodes.CONFLICT, true, {
+        code: "USER_ALREADY_WHITELISTED"
+      });
+    }
+
+    const request = await whitelistService.createWhitelistRequest(user.id, user.canonicalEmail, message);
+
+    return {
+      requestId: request.requestId,
+      status: request.status
     };
   },
 
