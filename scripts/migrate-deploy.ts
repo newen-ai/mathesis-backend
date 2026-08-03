@@ -42,7 +42,7 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-const result = spawnSync("npx", ["prisma", "migrate", "dev", ...prismaArgs], {
+const result = spawnSync("npx", ["prisma", "migrate", "deploy", ...prismaArgs], {
   stdio: "inherit",
   env: process.env
 });

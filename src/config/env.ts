@@ -4,6 +4,21 @@ import path from "node:path";
 import { z } from "zod";
 import { logger } from "../common/utils/logger";
 
+const envBoolean = z.preprocess((value) => {
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "yes", "on"].includes(normalized)) {
+      return true;
+    }
+
+    if (["false", "0", "no", "off"].includes(normalized)) {
+      return false;
+    }
+  }
+
+  return value;
+}, z.boolean());
+
 const envModeSchema = z.enum(["local", "dev", "test", "prod"]);
 const rootEnvPath = path.resolve(process.cwd(), ".env");
 if (!fs.existsSync(rootEnvPath)) {
@@ -43,7 +58,20 @@ const envSchema = z.object({
     .default("http://localhost:3000"),
   AUTH_COOKIE_NAME: z.string().min(1).default("ml_access_token"),
   AUTH_COOKIE_SAME_SITE: z.enum(["lax", "strict", "none"]).default("lax"),
-  AUTH_COOKIE_SECURE: z.coerce.boolean().default(false)
+  AUTH_COOKIE_SECURE: envBoolean.default(false),
+  WHITELIST_ENABLED: envBoolean.default(false),
+  DEFAULT_ADMIN_EMAILS: z
+    .string()
+    .default("kenrouit@gmail.com")
+    .transform((value) =>
+      value
+        .split(",")
+        .map((email) => email.trim().toLowerCase())
+        .filter((email) => email.length > 0)
+    ),
+  TELEGRAM_REPORTING_ENABLED: envBoolean.default(false),
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
+  TELEGRAM_CHAT_ID: z.string().optional()
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
@@ -59,13 +87,23 @@ if (parsedEnv.data.AUTH_COOKIE_SAME_SITE === "none" && !parsedEnv.data.AUTH_COOK
   throw new Error("Invalid environment configuration: AUTH_COOKIE_SECURE must be true when AUTH_COOKIE_SAME_SITE is none");
 }
 
+if (
+  parsedEnv.data.TELEGRAM_REPORTING_ENABLED &&
+  (!parsedEnv.data.TELEGRAM_BOT_TOKEN || !parsedEnv.data.TELEGRAM_CHAT_ID)
+) {
+  throw new Error("Invalid environment configuration: TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are required when TELEGRAM_REPORTING_ENABLED is true");
+}
+
 logger.info("env_loaded", {
   envFile: path.basename(envSpecificPath),
   nodeEnv: parsedEnv.data.NODE_ENV,
   port: parsedEnv.data.PORT,
   frontendOrigin: parsedEnv.data.FRONTEND_ORIGIN,
   authCookieSameSite: parsedEnv.data.AUTH_COOKIE_SAME_SITE,
-  authCookieSecure: parsedEnv.data.AUTH_COOKIE_SECURE
+  authCookieSecure: parsedEnv.data.AUTH_COOKIE_SECURE,
+  whitelistEnabled: parsedEnv.data.WHITELIST_ENABLED,
+  defaultAdminEmails: parsedEnv.data.DEFAULT_ADMIN_EMAILS,
+  telegramReportingEnabled: parsedEnv.data.TELEGRAM_REPORTING_ENABLED
 });
 
 export const env = parsedEnv.data;

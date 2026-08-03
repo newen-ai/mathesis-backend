@@ -7,6 +7,8 @@ declare global {
         sub: string;
         email: string;
         role: Role;
+        canonicalEmail: string;
+        isWhitelisted: boolean;
       };
     }
   }
