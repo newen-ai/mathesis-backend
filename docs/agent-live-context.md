@@ -311,3 +311,32 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - docs/agent-live-context.md
 - Next:
   - Optionally add a one-click "Llenar area" action to jump from full-fit to cover-fit when desired.
+
+### 2026-08-06 04:05 - CI push trigger + touch typing build fix
+- Agent: GitHub Copilot
+- Summary: Enabled backend CI to trigger on push to dev/stage/main and fixed the frontend build error by widening touch distance helper argument types to accept React touch points.
+- Files changed:
+  - .github/workflows/ci.yml
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Verify next merge to dev creates a backend CI run under Actions.
+
+### 2026-08-06 04:15 - CI scope restricted to dev only
+- Agent: GitHub Copilot
+- Summary: Updated backend CI workflow triggers so it runs only for push and pull_request events targeting dev.
+- Files changed:
+  - .github/workflows/ci.yml
+  - docs/agent-live-context.md
+- Next:
+  - Confirm next push/PR to dev triggers CI as expected and no runs happen for stage/main.
+
+### 2026-08-06 04:30 - Agent command autonomy policy
+- Agent: GitHub Copilot
+- Summary: Added workspace instruction rules so agents automatically run non-destructive verification commands (lint/typecheck/build/test) after meaningful edits without conversational confirmation.
+- Files changed:
+  - AGENTS.md
+  - ../mathesis-ui/AGENTS.md
+  - docs/agent-live-context.md
+- Next:
+  - Set VS Code tool approval preferences to always allow safe terminal commands in this workspace to suppress IDE-level prompts.

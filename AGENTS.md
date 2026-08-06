@@ -20,3 +20,8 @@ Required session entry fields:
 ## Profile Scope Baseline
 - Source UI spec file version comes from backend HTML filename only.
 - Current implementation priority: profile core + experience + education.
+
+## Command Autonomy
+- Agents should run non-destructive verification commands automatically after meaningful edits, without asking for conversational confirmation first.
+- Pre-approved verification commands include: npm run lint, npm run typecheck, npm run build, npm test.
+- Agents should still avoid destructive or state-changing commands unless explicitly requested (for example: database reset, hard git reset, force push).
