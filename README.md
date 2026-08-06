@@ -100,6 +100,15 @@ npx prisma studio              # GUI to browse/edit data
 - Profile and WorkExperience models are ready but routes not yet implemented
 - Soft deletes with `deletedAt` column for data retention
 
+## Live Spec Workflow
+
+This workspace uses two live files to keep backend/frontend aligned with the HTML source of truth:
+
+- `docs/ui-spec-live.md`: version-aware UI scope and implementation status.
+- `docs/agent-live-context.md`: agent handoff and next-step context.
+
+Before coding profile-related changes, read both files. After meaningful changes, update statuses and append a session log entry.
+
 ## Next Steps
 
 1. Add Profile CRUD routes (`GET /api/v1/profiles/:id`, `PATCH`, etc.)

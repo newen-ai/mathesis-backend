@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import type {
   GetProfileByUserIdParams,
   SearchUsersQuery,
+  UpdateMyEducationHistoryBody,
   UpdateMyProfileBody,
   UpdateMyWorkExperiencesBody
 } from "./profile.schemas";
@@ -62,6 +63,20 @@ export const updateMyWorkExperiences: RequestHandler = async (req, res) => {
   res.status(StatusCodes.OK).json({
     success: true,
     message: "WORK_EXPERIENCES_UPDATED",
+    data: result
+  });
+};
+
+export const updateMyEducationHistory: RequestHandler = async (req, res) => {
+  const userId = req.user?.sub;
+  const result = await profileService.updateMyEducationHistory(
+    userId as string,
+    req.body as UpdateMyEducationHistoryBody
+  );
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "EDUCATION_HISTORY_UPDATED",
     data: result
   });
 };

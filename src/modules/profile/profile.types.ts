@@ -1,24 +1,55 @@
-import type { Profile, User, WorkExperience } from "@prisma/client";
+import type { EducationExperience, Profile, User, WorkExperience } from "@prisma/client";
 
 export type ProfileWithWorkExperiences = Pick<
   Profile,
-  "firstName" | "lastName" | "dateOfBirth" | "nationality" | "currentJobTitle" | "currentCompany"
+  | "firstName"
+  | "lastName"
+  | "dateOfBirth"
+  | "nationality"
+  | "currentJobTitle"
+  | "currentCompany"
+  | "about"
+  | "locationCountry"
+  | "locationCity"
+  | "locationPostalCode"
+  | "profileImageUrl"
+  | "profileBannerImageUrl"
 > & {
-  workExperiences: Array<Pick<WorkExperience, "id" | "company" | "jobTitle" | "startDate" | "endDate">>;
+  workExperiences: Array<
+    Pick<WorkExperience, "id" | "company" | "jobTitle" | "description" | "startDate" | "endDate">
+  >;
+  educationExperiences: Array<
+    Pick<
+      EducationExperience,
+      "id" | "institution" | "degree" | "fieldOfStudy" | "startDate" | "endDate" | "description"
+    >
+  >;
 };
 
 export type EmploymentHistoryOutput = {
   id: string;
   company: string;
   jobTitle: string;
+  description: string | null;
   startYearMonth: string;
   endYearMonth: string | null;
+};
+
+export type EducationHistoryOutput = {
+  id: string;
+  institution: string;
+  degree: string;
+  fieldOfStudy: string | null;
+  startYearMonth: string;
+  endYearMonth: string | null;
+  description: string | null;
 };
 
 export type AddWorkExperienceOperationInput = {
   action: "ADD";
   company: string;
   jobTitle: string;
+  description?: string;
   startYearMonth: string;
   endYearMonth?: string;
 };
@@ -28,6 +59,7 @@ export type EditWorkExperienceOperationInput = {
   id: string;
   company?: string;
   jobTitle?: string;
+  description?: string;
   startYearMonth?: string;
   endYearMonth?: string;
 };
@@ -42,6 +74,37 @@ export type WorkExperienceOperationInput =
   | EditWorkExperienceOperationInput
   | RemoveWorkExperienceOperationInput;
 
+export type AddEducationExperienceOperationInput = {
+  action: "ADD";
+  institution: string;
+  degree: string;
+  fieldOfStudy?: string;
+  startYearMonth: string;
+  endYearMonth?: string;
+  description?: string;
+};
+
+export type EditEducationExperienceOperationInput = {
+  action: "EDIT";
+  id: string;
+  institution?: string;
+  degree?: string;
+  fieldOfStudy?: string;
+  startYearMonth?: string;
+  endYearMonth?: string;
+  description?: string;
+};
+
+export type RemoveEducationExperienceOperationInput = {
+  action: "REMOVE";
+  id: string;
+};
+
+export type EducationExperienceOperationInput =
+  | AddEducationExperienceOperationInput
+  | EditEducationExperienceOperationInput
+  | RemoveEducationExperienceOperationInput;
+
 export type ProfileOutput = {
   firstName: string;
   lastName: string;
@@ -49,7 +112,14 @@ export type ProfileOutput = {
   nationality: string | null;
   currentJobTitle: string | null;
   currentCompany: string | null;
+  about: string | null;
+  locationCountry: string | null;
+  locationCity: string | null;
+  locationPostalCode: string | null;
+  profileImageUrl: string | null;
+  profileBannerImageUrl: string | null;
   employmentHistory: EmploymentHistoryOutput[];
+  educationHistory: EducationHistoryOutput[];
 };
 
 export type MyProfileOutput = {

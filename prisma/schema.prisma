@@ -235,12 +235,19 @@ model Profile {
   nationality      String?
   currentJobTitle  String?   @map("current_job_title")
   currentCompany   String?   @map("current_company")
+  about            String?
+  locationCountry  String?   @map("location_country")
+  locationCity     String?   @map("location_city")
+  locationPostalCode String? @map("location_postal_code")
+  profileImageUrl  String?   @map("profile_image_url")
+  profileBannerImageUrl String? @map("profile_banner_image_url")
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
   deletedAt        DateTime? @map("deleted_at")
 
   user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   workExperiences   WorkExperience[]
+  educationExperiences EducationExperience[]
 
   @@index([deletedAt])
   @@map("profiles")
@@ -251,6 +258,7 @@ model WorkExperience {
   profileId String    @map("profile_id")
   company   String
   jobTitle  String    @map("job_title")
+  description String?
   startDate String    @map("start_date") // Format: "YYYY-MM"
   endDate   String?   @map("end_date") // Format: "YYYY-MM", nullable if still working
   createdAt DateTime  @default(now()) @map("created_at")
@@ -262,4 +270,24 @@ model WorkExperience {
   @@index([deletedAt])
   @@index([profileId, deletedAt, startDate(sort: Desc)])
   @@map("work_experiences")
+}
+
+model EducationExperience {
+  id           String    @id @default(cuid())
+  profileId    String    @map("profile_id")
+  institution  String
+  degree       String
+  fieldOfStudy String?   @map("field_of_study")
+  startDate    String    @map("start_date") // Format: "YYYY-MM"
+  endDate      String?   @map("end_date") // Format: "YYYY-MM", nullable if still studying
+  description  String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+
+  profile      Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([deletedAt])
+  @@index([profileId, deletedAt, startDate(sort: Desc)])
+  @@map("education_experiences")
 }
