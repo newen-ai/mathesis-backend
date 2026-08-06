@@ -2,10 +2,18 @@ import { Router } from "express";
 import { asyncHandler } from "../../common/errors/async-handler";
 import { requireAuth } from "../../common/middlewares/require-auth";
 import { validateRequest } from "../../common/middlewares/validate-request";
-import { myProfile, profileByUserId, searchUsers, updateMyWorkExperiences, upsertMyProfile } from "./profile.controller";
+import {
+	myProfile,
+	profileByUserId,
+	searchUsers,
+	updateMyEducationHistory,
+	updateMyWorkExperiences,
+	upsertMyProfile
+} from "./profile.controller";
 import {
 	getProfileByUserIdSchema,
 	searchUsersSchema,
+	updateMyEducationHistorySchema,
 	updateMyProfileSchema,
 	updateMyWorkExperiencesSchema
 } from "./profile.schemas";
@@ -21,6 +29,12 @@ profileRouter.patch(
 	requireAuth(),
 	validateRequest(updateMyWorkExperiencesSchema),
 	asyncHandler(updateMyWorkExperiences)
+);
+profileRouter.patch(
+	"/education-history",
+	requireAuth(),
+	validateRequest(updateMyEducationHistorySchema),
+	asyncHandler(updateMyEducationHistory)
 );
 
 export { profileRouter };
