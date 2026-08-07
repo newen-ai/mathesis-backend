@@ -3,12 +3,13 @@ import { asyncHandler } from "../../common/errors/async-handler";
 import { requireAuth } from "../../common/middlewares/require-auth";
 import { validateRequest } from "../../common/middlewares/validate-request";
 import { createWhitelistRequestSchema } from "../whitelist/whitelist.schemas";
-import { login, logout, register, requestWhitelistAccess, session } from "./auth.controller";
+import { confirmEmail, login, logout, register, requestWhitelistAccess, session } from "./auth.controller";
 import { loginSchema, registerSchema } from "./auth.schemas";
 
 const authRouter = Router();
 
 authRouter.post("/register", validateRequest(registerSchema), asyncHandler(register));
+authRouter.get("/confirm", asyncHandler(confirmEmail));
 authRouter.post("/login", validateRequest(loginSchema), asyncHandler(login));
 authRouter.get("/session", requireAuth({ skipWhitelist: true }), asyncHandler(session));
 authRouter.post(

@@ -35,6 +35,8 @@ model User {
   canonicalEmail String @map("canonical_email")
   passwordHash String  @map("password_hash")
   role      String    @default("user")
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  emailVerificationToken String? @unique @map("email_verification_token")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")

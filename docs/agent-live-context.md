@@ -363,3 +363,33 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - docs/agent-live-context.md
 - Next:
   - Do a quick visual QA pass in /perfil (light + dark theme) to confirm contrast and hierarchy match Home.
+
+### 2026-08-07 01:20 - Email confirmation flow
+- Agent: GitHub Copilot
+- Summary: Added a token-based email confirmation flow that creates a verification token at registration, exposes a public /auth/confirm endpoint, and persists email_verified_at in the database when the confirmation link is visited. The UI now includes a confirmation page at /confirm that completes the verification handshake and shows a success/error state.
+- Files changed:
+  - prisma/schema.prisma
+  - prisma/migrations/20260807120000_add_email_verification/migration.sql
+  - src/modules/auth/auth.service.ts
+  - src/modules/auth/auth.controller.ts
+  - src/modules/auth/auth.routes.ts
+  - ../mathesis-ui/src/lib/api/auth.ts
+  - ../mathesis-ui/src/app/confirm/page.tsx
+  - test/integration/auth.integration.test.ts
+  - docs/agent-live-context.md
+- Next:
+  - Hook the real email sender into the registration flow once an SMTP/resend provider is configured, so the confirmation link is actually emailed rather than only returned in the registration response.
+  - Verify the confirmation page in the browser once the frontend is running.
+
+### 2026-08-07 02:30 - Registration success redirect
+- Agent: GitHub Copilot
+- Summary: Redirected successful registrations to a standalone /registro/enviado page that shows the submitted email and keeps the page outside the platform navbar shell. Also refactored the /confirm flow to avoid the prerender-time useSearchParams issue by moving token handling into a client leaf component.
+- Files changed:
+  - ../mathesis-ui/src/app/registro/page.tsx
+  - ../mathesis-ui/src/app/registro/enviado/page.tsx
+  - ../mathesis-ui/src/app/confirm/page.tsx
+  - ../mathesis-ui/src/app/confirm/ConfirmClient.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Confirm the /registro/enviado copy and spacing in the browser.
+  - Keep the confirm page token handling aligned with future auth flow changes if the response shape changes again.
