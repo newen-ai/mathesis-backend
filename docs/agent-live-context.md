@@ -340,3 +340,26 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - docs/agent-live-context.md
 - Next:
   - Set VS Code tool approval preferences to always allow safe terminal commands in this workspace to suppress IDE-level prompts.
+
+### 2026-08-06 11:10 - Backend workflow disabled
+- Agent: GitHub Copilot
+- Summary: Removed backend GitHub Actions workflow file so backend has no active CI workflow for now, per current delivery scope.
+- Files changed:
+  - .github/workflows/ci.yml (deleted)
+  - docs/agent-live-context.md
+- Next:
+  - Reintroduce backend workflow when backend CI scope is ready.
+  - If UI pushes still do not trigger, verify repository-level Actions settings and branch targeting in the UI repository.
+
+### 2026-08-06 11:45 - Profile/Home color token parity pass
+- Agent: GitHub Copilot
+- Summary: Normalized profile-related font and control colors to the same shared theme tokens used on Home (text-primary/secondary/soft, line, surface variants), removing hardcoded slate shades in profile/edit cards and image editor modals.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileFormCard.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/ExperienceCard.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/EducationCard.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileInitializationView.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Do a quick visual QA pass in /perfil (light + dark theme) to confirm contrast and hierarchy match Home.
