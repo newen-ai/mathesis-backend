@@ -37,6 +37,8 @@ model User {
   role      String    @default("user")
   emailVerifiedAt DateTime? @map("email_verified_at")
   emailVerificationToken String? @unique @map("email_verification_token")
+  passwordResetToken String? @unique @map("password_reset_token")
+  passwordResetTokenExpiresAt DateTime? @map("password_reset_token_expires_at")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")

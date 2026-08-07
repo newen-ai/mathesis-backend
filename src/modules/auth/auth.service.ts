@@ -6,10 +6,15 @@ import { PrismaClient } from "@prisma/client";
 import { env } from "../../config/env";
 import { AppError } from "../../common/errors/app-error";
 import { telegramNotifier } from "../../common/services/telegram-notifier";
-import { sendVerificationEmail } from "../../common/services/email.service";
+import { sendPasswordResetEmail, sendVerificationEmail } from "../../common/services/email.service";
 import { maskEmailAddress, normalizeEmailAddress, toCanonicalEmail } from "../../common/utils/email";
 import type { AuthPayload, Role, SessionOutput, User } from "./auth.types";
-import type { LoginBody, RegisterBody } from "./auth.schemas";
+import type {
+  ConfirmPasswordResetBody,
+  LoginBody,
+  RegisterBody,
+  RequestPasswordResetBody
+} from "./auth.schemas";
 import { whitelistService } from "../whitelist/whitelist.service";
 
 const prisma = new PrismaClient();
@@ -42,6 +47,27 @@ function resolveEffectiveWhitelistState(isWhitelisted: boolean): boolean {
 
 function generateEmailVerificationToken(): string {
   return randomBytes(32).toString("hex");
+}
+
+function generatePasswordResetToken(): string {
+  return randomBytes(32).toString("hex");
+}
+
+const passwordResetRateLimitStore = new Map<string, number[]>();
+
+function isPasswordResetRateLimited(canonicalEmail: string, now: number): boolean {
+  const oneHourAgo = now - 60 * 60 * 1000;
+  const history = passwordResetRateLimitStore.get(canonicalEmail) ?? [];
+  const recentHistory = history.filter((timestamp) => timestamp >= oneHourAgo);
+
+  if (recentHistory.length >= env.PASSWORD_RESET_REQUESTS_PER_HOUR) {
+    passwordResetRateLimitStore.set(canonicalEmail, recentHistory);
+    return true;
+  }
+
+  recentHistory.push(now);
+  passwordResetRateLimitStore.set(canonicalEmail, recentHistory);
+  return false;
 }
 
 export const authService = {
@@ -125,6 +151,86 @@ export const authService = {
     return {
       success: true,
       message: "EMAIL_VERIFIED"
+    };
+  },
+
+  async requestPasswordReset(input: RequestPasswordResetBody): Promise<{ success: boolean; message: string }> {
+    const email = normalizeEmailAddress(input.email);
+    const canonicalEmail = toCanonicalEmail(email);
+    const now = Date.now();
+
+    if (isPasswordResetRateLimited(canonicalEmail, now)) {
+      return {
+        success: true,
+        message: "PASSWORD_RESET_EMAIL_SENT"
+      };
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user || user.deletedAt) {
+      return {
+        success: true,
+        message: "PASSWORD_RESET_EMAIL_SENT"
+      };
+    }
+
+    const token = generatePasswordResetToken();
+    const expiresAt = new Date(now + env.PASSWORD_RESET_TTL_MINUTES * 60 * 1000);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken: token,
+        passwordResetTokenExpiresAt: expiresAt
+      }
+    });
+
+    const resetUrl = new URL("/reset-password", env.FRONTEND_ORIGIN);
+    resetUrl.searchParams.set("token", token);
+
+    await sendPasswordResetEmail({
+      email: user.email,
+      resetUrl: resetUrl.toString(),
+      expiresInMinutes: env.PASSWORD_RESET_TTL_MINUTES
+    });
+
+    return {
+      success: true,
+      message: "PASSWORD_RESET_EMAIL_SENT"
+    };
+  },
+
+  async confirmPasswordReset(input: ConfirmPasswordResetBody): Promise<{ success: boolean; message: string }> {
+    const token = input.token.trim();
+
+    const user = await prisma.user.findFirst({
+      where: {
+        passwordResetToken: token,
+        deletedAt: null
+      }
+    });
+
+    if (!user || !user.passwordResetTokenExpiresAt || user.passwordResetTokenExpiresAt.getTime() < Date.now()) {
+      throw new AppError("Invalid or expired reset token", StatusCodes.BAD_REQUEST);
+    }
+
+    const passwordHash = await bcrypt.hash(input.newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        passwordResetToken: null,
+        passwordResetTokenExpiresAt: null
+      }
+    });
+
+    return {
+      success: true,
+      message: "PASSWORD_RESET_SUCCESSFUL"
     };
   },
 

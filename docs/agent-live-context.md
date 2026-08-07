@@ -393,3 +393,180 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next:
   - Confirm the /registro/enviado copy and spacing in the browser.
   - Keep the confirm page token handling aligned with future auth flow changes if the response shape changes again.
+
+### 2026-08-07 07:47 - Forgot-password page 1 (request view) kickoff
+- Agent: GitHub Copilot
+- Summary: Started forgot-password flow implementation with the first request-email page at /forgot-password, wired the login CTA to this route, and built the page to match provided desktop/mobile references with light and dark mode parity using existing theme tokens.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/app/login/page.tsx
+  - ../mathesis-ui/src/app/forgot-password/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Review screenshot parity for /forgot-password in both light and dark modes and apply UI corrections.
+  - Implement /forgot-password/sent (page 2) once page 1 is approved.
+
+### 2026-08-07 07:55 - Forgot-password login-size parity refinement
+- Agent: GitHub Copilot
+- Summary: Refined /forgot-password typography and spacing to align with login page sizing system (form width, labels, input height, button size, and desktop/mobilized text scales) while preserving the forgot-password layout/content.
+- Files changed:
+  - ../mathesis-ui/src/app/forgot-password/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Validate updated visual parity between /login and /forgot-password in light and dark themes.
+  - Proceed to /forgot-password/sent after page 1 approval.
+
+### 2026-08-07 08:01 - Forgot-password page 2 (sent view)
+- Agent: GitHub Copilot
+- Summary: Implemented /forgot-password/sent with login-consistent auth layout, light/dark token-based styling, query-param email resolution, masked email display, and actions to return to login or restart with another email.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/app/forgot-password/sent/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Review /forgot-password/sent in light and dark themes for screenshot parity adjustments.
+  - Proceed to page 3 reset form after page 2 approval.
+
+### 2026-08-07 08:17 - Forgot-password mobile parity fix pass
+- Agent: GitHub Copilot
+- Summary: Reworked mobile layout for both /forgot-password and /forgot-password/sent to match expected pattern: dedicated navy top header section, white content block below, adjusted spacing/typography, and preserved desktop split behavior and theme token compatibility.
+- Files changed:
+  - ../mathesis-ui/src/app/forgot-password/page.tsx
+  - ../mathesis-ui/src/app/forgot-password/sent/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Validate both pages against updated mobile screenshots in light and dark modes.
+  - Proceed to page 3 after page 2 visual signoff.
+
+### 2026-08-07 08:27 - Frontend UI guideline live file + mobile scale correction
+- Agent: GitHub Copilot
+- Summary: Added a frontend live UI-guidelines file and enforced AGENTS instruction to read/update it for UI direction changes. Also reduced oversized mobile font scales on forgot-password pages and changed top mobile helper from static "Ayuda con tu contrasena" text to clickable "Atras" linking to /login.
+- Files changed:
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/AGENTS.md
+  - ../mathesis-ui/src/app/forgot-password/page.tsx
+  - ../mathesis-ui/src/app/forgot-password/sent/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Validate mobile visual parity for both forgot-password pages after typography reduction.
+  - Continue to page 3 implementation once page 2 visuals are approved.
+
+### 2026-08-07 08:42 - Sent page title scale + redundant action removal
+- Agent: GitHub Copilot
+- Summary: Updated /forgot-password/sent heading scale to 1.35rem and removed the "Usar otro email" action because the mobile top "Atras" control already covers the return path.
+- Files changed:
+  - ../mathesis-ui/src/app/forgot-password/sent/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Confirm visual parity for /forgot-password/sent after heading size update.
+  - Continue to page 3 once page 2 is approved.
+
+### 2026-08-07 08:46 - Spanish orthography enforcement in FE copy
+- Agent: GitHub Copilot
+- Summary: Replaced remaining "contrasena" occurrences with "contraseña" in forgot-password sent copy and added explicit frontend guideline rules requiring Spanish accents and "ñ" in all UI text.
+- Files changed:
+  - ../mathesis-ui/src/app/forgot-password/sent/page.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/agent-live-context.md
+- Next:
+  - Keep Spanish copy in auth flow aligned with orthography rules during page 3 implementation.
+  - Continue forgot-password flow after final page 2 signoff.
+
+### 2026-08-07 08:54 - Shared logo/basePath helper refactor
+- Agent: GitHub Copilot
+- Summary: Centralized repeated logo/basePath path logic into `src/lib/assets.ts` and refactored login, registro, forgot-password pages, top bar, and app layout to use shared exports. Added FE guideline rule to avoid redefining asset path constants per file.
+- Files changed:
+  - ../mathesis-ui/src/lib/assets.ts
+  - ../mathesis-ui/src/app/layout.tsx
+  - ../mathesis-ui/src/app/login/page.tsx
+  - ../mathesis-ui/src/app/registro/page.tsx
+  - ../mathesis-ui/src/app/forgot-password/page.tsx
+  - ../mathesis-ui/src/app/forgot-password/sent/page.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/agent-live-context.md
+- Next:
+  - Reuse `src/lib/assets.ts` for any future shared static asset path additions.
+  - Continue forgot-password flow implementation after current UI signoff.
+
+### 2026-08-07 09:03 - Shared email utility extraction (DRY)
+- Agent: GitHub Copilot
+- Summary: Extracted repeated frontend email helper logic into `src/lib/utils/email.ts` (normalize input, resolve query param, mask email) and refactored forgot-password/login/registro pages to consume shared helpers. Updated FE live guidelines with a reusable-function lookup map and explicit anti-duplication rule.
+- Files changed:
+  - ../mathesis-ui/src/lib/utils/email.ts
+  - ../mathesis-ui/src/app/forgot-password/sent/page.tsx
+  - ../mathesis-ui/src/app/registro/enviado/page.tsx
+  - ../mathesis-ui/src/app/login/page.tsx
+  - ../mathesis-ui/src/app/forgot-password/page.tsx
+  - ../mathesis-ui/src/app/registro/page.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/agent-live-context.md
+- Next:
+  - Check shared utility modules first before adding page-local helper functions.
+  - Continue forgot-password flow implementation after page 2 UI signoff.
+
+### 2026-08-07 09:21 - Reset-password page (page 3) implementation
+- Agent: GitHub Copilot
+- Summary: Implemented `/reset-password` from provided mobile screenshot with inferred desktop parity from existing auth pages. Added token-aware submit flow, password confirmation, requirement checklist bars, service error popup integration, and redirect to `/login` on success. Added `resetPassword` API client call to `/auth/confirm-reset`.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/lib/api/auth.ts
+  - ../mathesis-ui/src/app/reset-password/page.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/agent-live-context.md
+- Next:
+  - Verify visual parity of `/reset-password` in light and dark themes (mobile + desktop).
+  - Wire backend endpoints/token validation if not yet available.
+
+### 2026-08-07 09:55 - Password reset migration recovery
+- Agent: GitHub Copilot
+- Summary: Resolved a failed local Prisma migration by marking `20260807120000_add_email_verification` as applied after confirming its columns already existed in the database, then reran `npm run migrate:deploy local` successfully. Also updated the deploy helper to run `prisma generate` after a successful deploy so the generated client stays in sync with newly applied schema fields.
+- Files changed:
+  - scripts/migrate-deploy.ts
+  - docs/agent-live-context.md
+- Next:
+  - Keep using `npm run migrate:deploy <env>` for future schema changes, and resolve any failed migration entries before deploying new ones.
+  - If a local dev database drifts again, inspect `_prisma_migrations` first before resetting it.
+
+### 2026-08-07 10:10 - Shared Resend email helper
+- Agent: GitHub Copilot
+- Summary: Consolidated the duplicate Resend API request/response logic in `src/common/services/email.service.ts` into one generic `sendResendEmail` helper, then kept verification and password reset mailers as thin subject/body wrappers.
+- Files changed:
+  - src/common/services/email.service.ts
+  - docs/agent-live-context.md
+- Next:
+  - Reuse `sendResendEmail` for any future auth or notification emails that target Resend.
+  - Keep email-specific content in the caller and transport-specific code in the shared helper.
+
+### 2026-08-07 10:25 - Shared auth password schema
+- Agent: GitHub Copilot
+- Summary: Centralized auth password validation in `src/modules/auth/auth.schemas.ts` by introducing one shared `passwordSchema` and reusing it for register, login, and password reset flows so the password policy stays consistent.
+- Files changed:
+  - src/modules/auth/auth.schemas.ts
+  - docs/agent-live-context.md
+- Next:
+  - Reuse `passwordSchema` anywhere else the backend accepts a password field.
+  - Keep login/register/reset password validation aligned if the password policy changes again.
+
+### 2026-08-07 09:31 - Reset-password header and semaphore refinement
+- Agent: GitHub Copilot
+- Summary: Set `Creá una nueva contraseña` heading size to 1.35rem, removed `Restablecer acceso` eyebrow from reset-password headers, generalized page-local password evaluation into shared `src/lib/utils/password.ts`, and updated semaphore behavior to weak/normal/strong states (red/yellow/green bar patterns).
+- Files changed:
+  - ../mathesis-ui/src/lib/utils/password.ts
+  - ../mathesis-ui/src/app/reset-password/page.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/agent-live-context.md
+- Next:
+  - Validate `/reset-password` visual parity in light/dark with updated title scale and header simplification.
+  - Reuse `src/lib/utils/password.ts` for future password forms to avoid duplication.
+
+### 2026-08-07 09:38 - Reset-password success feedback before redirect
+- Agent: GitHub Copilot
+- Summary: Replaced immediate post-submit redirect with inline success feedback state on `/reset-password`, added automatic redirect to `/login` after 2 seconds, and included a manual "Ir ahora a iniciar sesión" button for immediate navigation.
+- Files changed:
+  - ../mathesis-ui/src/app/reset-password/page.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/agent-live-context.md
+- Next:
+  - Validate success-state visuals in light/dark themes and confirm redirect timing feels right.
+  - Continue backend wiring for reset-token validation and confirm-reset endpoint behavior.
