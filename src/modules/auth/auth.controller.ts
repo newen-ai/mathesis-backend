@@ -29,6 +29,19 @@ export const register: RequestHandler = async (req, res) => {
   });
 };
 
+export const confirmEmail: RequestHandler = async (req, res) => {
+  const token = typeof req.query.token === "string" ? req.query.token : "";
+  const result = await authService.confirmEmail(token);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: result.message,
+    data: {
+      confirmed: true
+    }
+  });
+};
+
 export const login: RequestHandler = async (req, res) => {
   const result = await authService.login(req.body as LoginBody);
   const cookieOptions = buildAuthCookieOptions();

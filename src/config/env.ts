@@ -71,7 +71,9 @@ const envSchema = z.object({
     ),
   TELEGRAM_REPORTING_ENABLED: envBoolean.default(false),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
-  TELEGRAM_CHAT_ID: z.string().optional()
+  TELEGRAM_CHAT_ID: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default("no-reply@mail.mathesis.social")
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

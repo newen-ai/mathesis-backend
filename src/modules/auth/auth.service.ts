@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { StatusCodes } from "http-status-codes";
@@ -5,6 +6,7 @@ import { PrismaClient } from "@prisma/client";
 import { env } from "../../config/env";
 import { AppError } from "../../common/errors/app-error";
 import { telegramNotifier } from "../../common/services/telegram-notifier";
+import { sendVerificationEmail } from "../../common/services/email.service";
 import { maskEmailAddress, normalizeEmailAddress, toCanonicalEmail } from "../../common/utils/email";
 import type { AuthPayload, Role, SessionOutput, User } from "./auth.types";
 import type { LoginBody, RegisterBody } from "./auth.schemas";
@@ -38,6 +40,10 @@ function resolveEffectiveWhitelistState(isWhitelisted: boolean): boolean {
   return env.WHITELIST_ENABLED ? isWhitelisted : true;
 }
 
+function generateEmailVerificationToken(): string {
+  return randomBytes(32).toString("hex");
+}
+
 export const authService = {
   async register(input: RegisterBody): Promise<{ accessToken: string; user: object }> {
     const email = normalizeEmailAddress(input.email);
@@ -52,12 +58,14 @@ export const authService = {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const emailVerificationToken = generateEmailVerificationToken();
     const newUser = await prisma.user.create({
       data: {
         email,
         canonicalEmail,
         passwordHash,
-        role: resolveInitialRole(email)
+        role: resolveInitialRole(email),
+        emailVerificationToken
       }
     });
 
@@ -76,12 +84,47 @@ export const authService = {
       isWhitelisted
     });
 
+    const verificationUrl = new URL("/confirm", env.FRONTEND_ORIGIN);
+    verificationUrl.searchParams.set("token", emailVerificationToken);
+
+    await sendVerificationEmail({
+      email: newUser.email,
+      verificationUrl: verificationUrl.toString()
+    });
+
     return {
       accessToken: buildAccessToken(payload),
       user: {
         ...sanitizeUser(newUser as User),
         isWhitelisted: effectiveWhitelistState
       }
+    };
+  },
+
+  async confirmEmail(token: string): Promise<{ success: boolean; message: string }> {
+    if (!token.trim()) {
+      throw new AppError("Verification token is required", StatusCodes.BAD_REQUEST);
+    }
+
+    const user = await prisma.user.findFirst({
+      where: { emailVerificationToken: token }
+    });
+
+    if (!user) {
+      throw new AppError("Invalid or expired confirmation token", StatusCodes.BAD_REQUEST);
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerifiedAt: new Date(),
+        emailVerificationToken: null
+      }
+    });
+
+    return {
+      success: true,
+      message: "EMAIL_VERIFIED"
     };
   },
 
