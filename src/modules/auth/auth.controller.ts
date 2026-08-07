@@ -2,7 +2,12 @@ import type { CookieOptions, RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
 import { env } from "../../config/env";
 import { authService } from "./auth.service";
-import type { LoginBody, RegisterBody } from "./auth.schemas";
+import type {
+  ConfirmPasswordResetBody,
+  LoginBody,
+  RegisterBody,
+  RequestPasswordResetBody
+} from "./auth.schemas";
 import type { CreateWhitelistRequestBody } from "../whitelist/whitelist.schemas";
 
 function buildAuthCookieOptions(): CookieOptions {
@@ -54,6 +59,24 @@ export const login: RequestHandler = async (req, res) => {
     data: {
       user: result.user
     }
+  });
+};
+
+export const requestPasswordReset: RequestHandler = async (req, res) => {
+  const result = await authService.requestPasswordReset(req.body as RequestPasswordResetBody);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: result.message
+  });
+};
+
+export const confirmPasswordReset: RequestHandler = async (req, res) => {
+  const result = await authService.confirmPasswordReset(req.body as ConfirmPasswordResetBody);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: result.message
   });
 };
 

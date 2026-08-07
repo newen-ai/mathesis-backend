@@ -12,6 +12,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Profile core: name, surname, date of birth, nationality, headline, current company, about, location.
 - Experience section: editable operations and read-only rendering.
 - Academics/Education section: editable operations and read-only rendering.
+- Authentication: forgot-password flow (Page 1 request view implemented; Page 2 sent view implemented; Page 3 reset-password view implemented; dark/light parity required per page).
 
 ## Profile Field Matrix
 | Section | Field | Backend status | Frontend status | Notes |
@@ -56,3 +57,15 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 ### 2026-08-06 - Added profile image URLs
 - Added profile image URL and banner image URL to profile core model and UI.
 - Header rendering now uses these URLs with fallback styles when not provided.
+
+### 2026-08-07 - Forgot-password flow kickoff
+- Started authentication forgot-password implementation with a page-by-page workflow.
+- Established requirement that each new forgot-password page must be completed in both light and dark modes before signoff.
+
+### 2026-08-07 - Forgot-password page 2
+- Implemented the sent-confirmation view route at /forgot-password/sent.
+- Added masked-email rendering and consistent light/dark styling aligned with login-scale auth pages.
+
+### 2026-08-07 - Forgot-password page 3
+- Implemented reset-password view route at /reset-password using mobile screenshot as source and desktop style inferred from existing auth views.
+- Added new-password + confirmation form, visual requirement checklist bars, and redirect flow on successful submission.

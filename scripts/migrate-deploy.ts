@@ -52,4 +52,18 @@ if (result.error) {
   process.exit(1);
 }
 
-process.exit(result.status ?? 1);
+if ((result.status ?? 1) !== 0) {
+  process.exit(result.status ?? 1);
+}
+
+const generateResult = spawnSync("npx", ["prisma", "generate"], {
+  stdio: "inherit",
+  env: process.env
+});
+
+if (generateResult.error) {
+  console.error(generateResult.error.message);
+  process.exit(1);
+}
+
+process.exit(generateResult.status ?? 1);
