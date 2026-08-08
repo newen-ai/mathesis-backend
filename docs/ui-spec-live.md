@@ -13,6 +13,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Experience section: editable operations and read-only rendering.
 - Academics/Education section: editable operations and read-only rendering.
 - Authentication: forgot-password flow (Page 1 request view implemented; Page 2 sent view implemented; Page 3 reset-password view implemented; dark/light parity required per page).
+- Platform navigation: desktop topbar profile menu (avatar-triggered panel), with profile header bound to user profile data and first-pass interaction limits (logout functional, route-backed entries functional, placeholder entries visible without route behavior).
 
 ## Profile Field Matrix
 | Section | Field | Backend status | Frontend status | Notes |
@@ -69,3 +70,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 ### 2026-08-07 - Forgot-password page 3
 - Implemented reset-password view route at /reset-password using mobile screenshot as source and desktop style inferred from existing auth views.
 - Added new-password + confirmation form, visual requirement checklist bars, and redirect flow on successful submission.
+
+### 2026-08-08 - Desktop topbar profile menu scope kickoff
+- Added desktop avatar-triggered profile menu scope to implementation tracking for v0.2 parity iteration.
+- Established first-pass behavior constraints: logout operational; existing route-backed items navigable; non-routed items rendered as visual placeholders.

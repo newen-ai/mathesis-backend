@@ -570,3 +570,25 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next:
   - Validate success-state visuals in light/dark themes and confirm redirect timing feels right.
   - Continue backend wiring for reset-token validation and confirm-reset endpoint behavior.
+
+### 2026-08-08 13:20 - Desktop topbar profile menu implementation
+- Agent: GitHub Copilot
+- Summary: Implemented a desktop-first avatar-triggered profile menu in the topbar to mirror the provided layout, bound menu header identity fields to live profile data, and enabled first-pass interactions (logout functional, existing route-backed items navigable, placeholders visible without navigation). Mobile menu behavior was preserved for later dedicated UI work.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Perform screenshot-based visual tuning pass for desktop menu typography and spacing against the latest reference.
+  - Hook remaining placeholder menu items to routes once their corresponding pages are implemented.
+
+### 2026-08-08 13:26 - Desktop topbar menu size reduction
+- Agent: GitHub Copilot
+- Summary: Reduced the desktop profile menu footprint further by centralizing shared menu typography values in global CSS and trimming the panel width, padding, and label sizes to better match the full-page screenshot.
+- Files changed:
+  - ../mathesis-ui/src/app/globals.css
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Check the smaller menu in-browser against the full-page comparison and only nudge if any remaining mismatch is still visually large.
