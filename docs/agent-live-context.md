@@ -621,5 +621,16 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
   - ../mathesis-ui/src/app/(platform)/_components/home/CatchyPhrasesBanner.tsx
   - docs/agent-live-context.md
+  - docs/ui-spec-live.md
 - Next:
   - Keep future CSS utility names under `mathesis-` prefix for consistency.
+
+### 2026-08-09 00:00 - Feed reactions kickoff
+- Agent: GitHub Copilot
+- Summary: Started feed reaction implementation work with a future-proof single-reaction backend/db shape and matching Valorar / Valorado UI copy target.
+- Files changed:
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next:
+  - Add feed reaction model, toggle endpoint, and list payload enrichment in the backend.
+  - Wire the feed card button to persisted reaction state in the UI.

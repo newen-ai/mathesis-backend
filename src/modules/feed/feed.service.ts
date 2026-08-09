@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
-import type { CreateFeedPostBody, FeedSortBy } from "./feed.schemas";
+import type { CreateFeedPostBody, FeedPostReactionValue, FeedSortBy } from "./feed.schemas";
 import type {
   CreateFeedPostOutput,
   DownloadFeedAttachmentOutput,
@@ -10,7 +10,8 @@ import type {
   FeedPostSummary,
   FeedPostWithRelations,
   FeedUserSummary,
-  ListFeedPostsOutput
+  ListFeedPostsOutput,
+  ToggleFeedPostReactionOutput
 } from "./feed.types";
 
 const prisma = new PrismaClient();
@@ -87,19 +88,23 @@ function mapAttachments(attachments: Array<{ id: string; fileName: string; mimeT
   }));
 }
 
-function mapFeedPost(post: FeedPostWithRelations): FeedPostSummary {
+function mapFeedPost(post: FeedPostWithRelations, currentUserId: string): FeedPostSummary {
+  const currentUserReactionValue = post.reactions.find((reaction) => reaction.userId === currentUserId)?.reactionValue ?? null;
+
   return {
     id: post.id,
     authorUserId: post.authorUserId,
     author: mapUserSummary(post.author),
     content: post.content,
     attachments: mapAttachments(post.attachments),
+    reactionCount: post.reactionCount,
+    currentUserReactionValue,
     createdAt: post.createdAt.toISOString(),
     updatedAt: post.updatedAt.toISOString()
   };
 }
 
-function buildFeedPostInclude() {
+function buildFeedPostInclude(currentUserId: string) {
   return {
     author: {
       select: {
@@ -113,6 +118,15 @@ function buildFeedPostInclude() {
             deletedAt: true
           }
         }
+      }
+    },
+    reactions: {
+      where: {
+        userId: currentUserId
+      },
+      select: {
+        userId: true,
+        reactionValue: true
       }
     },
     attachments: {
@@ -190,7 +204,7 @@ function assertPdfFiles(files: UploadedPdfFile[]): void {
   }
 }
 
-async function loadFeedPosts(limit: number, sortBy: FeedDbSortBy): Promise<FeedPostSummary[]> {
+async function loadFeedPosts(limit: number, sortBy: FeedDbSortBy, currentUserId: string): Promise<FeedPostSummary[]> {
   const sortConfig = FEED_SORT_CONFIG[sortBy];
 
   const posts = await prisma.feedPost.findMany({
@@ -202,15 +216,15 @@ async function loadFeedPosts(limit: number, sortBy: FeedDbSortBy): Promise<FeedP
         }
       }
     },
-    include: buildFeedPostInclude(),
+    include: buildFeedPostInclude(currentUserId),
     orderBy: sortConfig.orderBy,
     take: limit
   });
 
-  return posts.map((post) => mapFeedPost(post));
+  return posts.map((post) => mapFeedPost(post, currentUserId));
 }
 
-async function loadFeedPostsByIdsInOrder(postIds: string[]): Promise<FeedPostSummary[]> {
+async function loadFeedPostsByIdsInOrder(postIds: string[], currentUserId: string): Promise<FeedPostSummary[]> {
   if (postIds.length === 0) {
     return [];
   }
@@ -227,7 +241,7 @@ async function loadFeedPostsByIdsInOrder(postIds: string[]): Promise<FeedPostSum
         }
       }
     },
-    include: buildFeedPostInclude()
+    include: buildFeedPostInclude(currentUserId)
   });
 
   const byId = new Map(posts.map((post) => [post.id, post]));
@@ -235,10 +249,10 @@ async function loadFeedPostsByIdsInOrder(postIds: string[]): Promise<FeedPostSum
   return postIds
     .map((postId) => byId.get(postId))
     .filter((post): post is FeedPostWithRelations => Boolean(post))
-    .map((post) => mapFeedPost(post));
+    .map((post) => mapFeedPost(post, currentUserId));
 }
 
-async function loadHotFeedPosts(limit: number, gravity: number): Promise<FeedPostSummary[]> {
+async function loadHotFeedPosts(limit: number, gravity: number, currentUserId: string): Promise<FeedPostSummary[]> {
   const scoredRows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
     SELECT fp.id
     FROM feed_posts fp
@@ -255,7 +269,26 @@ async function loadHotFeedPosts(limit: number, gravity: number): Promise<FeedPos
   `);
 
   const postIds = scoredRows.map((row) => row.id);
-  return loadFeedPostsByIdsInOrder(postIds);
+  return loadFeedPostsByIdsInOrder(postIds, currentUserId);
+}
+
+async function loadFeedPostById(postId: string, currentUserId: string): Promise<FeedPostSummary> {
+  const post = await prisma.feedPost.findFirst({
+    where: {
+      id: postId,
+      deletedAt: null,
+      author: {
+        deletedAt: null
+      }
+    },
+    include: buildFeedPostInclude(currentUserId)
+  });
+
+  if (!post) {
+    throw new AppError("Feed post not found", StatusCodes.NOT_FOUND);
+  }
+
+  return mapFeedPost(post, currentUserId);
 }
 
 export const feedService = {
@@ -282,44 +315,16 @@ export const feedService = {
           }))
         }
       },
-      include: {
-        author: {
-          select: {
-            id: true,
-            profile: {
-              select: {
-                firstName: true,
-                lastName: true,
-                currentJobTitle: true,
-                currentCompany: true,
-                deletedAt: true
-              }
-            }
-          }
-        },
-        attachments: {
-          where: {
-            deletedAt: null
-          },
-          select: {
-            id: true,
-            fileName: true,
-            mimeType: true,
-            sizeBytes: true
-          },
-          orderBy: {
-            createdAt: "asc"
-          }
-        }
-      }
+      include: buildFeedPostInclude(currentUserId)
     });
 
     return {
-      post: mapFeedPost(post)
+      post: mapFeedPost(post, currentUserId)
     };
   },
 
   async listFeedPosts(
+    currentUserId: string,
     limit?: number,
     sortBy: FeedSortBy = DEFAULT_FEED_SORT_BY,
     gravity = DEFAULT_FEED_HOT_GRAVITY
@@ -328,12 +333,95 @@ export const feedService = {
 
     if (sortBy === "HOT") {
       return {
-        posts: await loadHotFeedPosts(safeLimit, gravity)
+        posts: await loadHotFeedPosts(safeLimit, gravity, currentUserId)
       };
     }
 
     return {
-      posts: await loadFeedPosts(safeLimit, sortBy)
+      posts: await loadFeedPosts(safeLimit, sortBy, currentUserId)
+    };
+  },
+
+  async toggleReaction(
+    currentUserId: string,
+    postId: string,
+    reactionValue: FeedPostReactionValue
+  ): Promise<ToggleFeedPostReactionOutput> {
+    await assertActiveUser(currentUserId);
+
+    const hasPostAccess = await canViewFeedPost(currentUserId, postId);
+
+    if (!hasPostAccess) {
+      throw new AppError("Feed post not found", StatusCodes.NOT_FOUND);
+    }
+
+    const existingReaction = await prisma.feedPostReaction.findUnique({
+      where: {
+        feedPostId_userId: {
+          feedPostId: postId,
+          userId: currentUserId
+        }
+      },
+      select: {
+        id: true,
+        reactionValue: true
+      }
+    });
+
+    if (existingReaction && existingReaction.reactionValue === reactionValue) {
+      await prisma.$transaction([
+        prisma.feedPostReaction.delete({
+          where: {
+            feedPostId_userId: {
+              feedPostId: postId,
+              userId: currentUserId
+            }
+          }
+        }),
+        prisma.feedPost.update({
+          where: {
+            id: postId
+          },
+          data: {
+            reactionCount: {
+              decrement: 1
+            }
+          }
+        })
+      ]);
+    } else if (existingReaction) {
+      await prisma.feedPostReaction.update({
+        where: {
+          id: existingReaction.id
+        },
+        data: {
+          reactionValue
+        }
+      });
+    } else {
+      await prisma.$transaction([
+        prisma.feedPostReaction.create({
+          data: {
+            feedPostId: postId,
+            userId: currentUserId,
+            reactionValue
+          }
+        }),
+        prisma.feedPost.update({
+          where: {
+            id: postId
+          },
+          data: {
+            reactionCount: {
+              increment: 1
+            }
+          }
+        })
+      ]);
+    }
+
+    return {
+      post: await loadFeedPostById(postId, currentUserId)
     };
   },
 

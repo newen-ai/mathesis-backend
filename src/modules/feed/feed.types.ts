@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import type { FeedPostReactionValue } from "./feed.schemas";
 
 export type FeedUserSummary = {
   userId: string;
@@ -15,12 +16,19 @@ export type FeedAttachmentSummary = {
   sizeBytes: number;
 };
 
+export type FeedPostReactionSummary = {
+  userId: string;
+  reactionValue: FeedPostReactionValue;
+};
+
 export type FeedPostSummary = {
   id: string;
   authorUserId: string;
   author: FeedUserSummary;
   content: string | null;
   attachments: FeedAttachmentSummary[];
+  reactionCount: number;
+  currentUserReactionValue: FeedPostReactionValue | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -43,6 +51,10 @@ export type DownloadFeedAttachmentOutput = {
   mimeType: string;
   sizeBytes: number;
   fileData: Buffer;
+};
+
+export type ToggleFeedPostReactionOutput = {
+  post: FeedPostSummary;
 };
 
 export type FeedPostWithRelations = Prisma.FeedPostGetPayload<{
@@ -73,6 +85,15 @@ export type FeedPostWithRelations = Prisma.FeedPostGetPayload<{
       };
       orderBy: {
         createdAt: "asc";
+      };
+    };
+    reactions: {
+      where: {
+        userId: string;
+      };
+      select: {
+        userId: true;
+        reactionValue: true;
       };
     };
   };

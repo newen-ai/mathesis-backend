@@ -78,3 +78,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 ### 2026-08-08 - Desktop topbar role-based quick nav and icon parity
 - Updated desktop horizontal topbar quick-nav behavior to enforce role-based option count: non-admin users see Feed, Mensajes, Notificaciones; admin users see those three plus Admin.
 - Updated desktop quick-nav iconography to use HTML v0.2 symbol geometry parity (feed, message, bell, settings) through extracted UI icon components.
+
+### 2026-08-09 - Feed reaction scope kickoff
+- Added feed post reaction implementation scope with a single current reaction and future-proof backend/db shape.
+- Current UI copy target for the feed action button is Valorar / Valorado based on the current user's reaction state.

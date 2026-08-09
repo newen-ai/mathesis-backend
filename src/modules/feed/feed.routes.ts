@@ -3,12 +3,13 @@ import multer from "multer";
 import { asyncHandler } from "../../common/errors/async-handler";
 import { requireAuth } from "../../common/middlewares/require-auth";
 import { validateRequest } from "../../common/middlewares/validate-request";
-import { createFeedPost, deleteFeedPost, downloadFeedAttachment, listFeedPosts } from "./feed.controller";
+import { createFeedPost, deleteFeedPost, downloadFeedAttachment, listFeedPosts, toggleFeedPostReaction } from "./feed.controller";
 import {
   createFeedPostSchema,
   deleteFeedPostSchema,
   downloadFeedAttachmentSchema,
-  listFeedPostsSchema
+  listFeedPostsSchema,
+  toggleFeedPostReactionSchema
 } from "./feed.schemas";
 
 const feedUpload = multer({
@@ -22,6 +23,12 @@ const feedUpload = multer({
 const feedRouter = Router();
 
 feedRouter.get("/", requireAuth(), validateRequest(listFeedPostsSchema), asyncHandler(listFeedPosts));
+feedRouter.post(
+  "/:postId/reactions",
+  requireAuth(),
+  validateRequest(toggleFeedPostReactionSchema),
+  asyncHandler(toggleFeedPostReaction)
+);
 feedRouter.post(
   "/",
   requireAuth(),
