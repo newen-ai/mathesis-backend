@@ -49,8 +49,8 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   JWT_ACCESS_SECRET: z.string().min(10, "JWT_ACCESS_SECRET must be at least 10 chars"),
   JWT_ACCESS_TTL: z.string().default("15m"),
-  JWT_ISSUER: z.string().min(1).default("mensa-linkedin-backend"),
-  JWT_AUDIENCE: z.string().min(1).default("mensa-linkedin-web"),
+  JWT_ISSUER: z.string().min(1).default("mathesis-backend"),
+  JWT_AUDIENCE: z.string().min(1).default("mathesis-web"),
   FRONTEND_ORIGIN: z
     .string()
     .url()

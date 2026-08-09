@@ -592,3 +592,34 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - docs/agent-live-context.md
 - Next:
   - Check the smaller menu in-browser against the full-page comparison and only nudge if any remaining mismatch is still visually large.
+
+### 2026-08-08 14:10 - Desktop topbar 3/4 role options + HTML icon extraction
+- Agent: GitHub Copilot
+- Summary: Implemented desktop horizontal topbar role gating so non-admin users now see exactly Feed, Mensajes, Notificaciones while admin users see those three plus Admin, and replaced desktop quick-nav markers with extracted HTML v0.2 icon components (feed, message, bell, settings geometry).
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/app/(platform)/_components/DesktopTopbarIcons.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - ../mathesis-ui/src/app/globals.css
+  - docs/agent-live-context.md
+- Next:
+  - Validate screenshot-level visual parity for icon sizing/alignment against the latest topbar reference.
+  - Confirm final admin icon preference (settings vs brand mark) if design direction changes.
+
+### 2026-08-08 14:35 - Rename linkedin classes/selectors to mathesis
+- Agent: GitHub Copilot
+- Summary: Renamed all remaining `linkedin-` prefixed class names and matching CSS selectors to `mathesis-` across shell, card, topbar, nav, composer trigger, and phrase banner naming to align project vocabulary while preserving behavior.
+- Files changed:
+  - ../mathesis-ui/src/app/globals.css
+  - ../mathesis-ui/src/components/ui/AppCard.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/ModulePage.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/auth/SessionGate.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileInitializationView.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/HomeView.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/ComposerCard.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/CatchyPhrasesBanner.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Keep future CSS utility names under `mathesis-` prefix for consistency.

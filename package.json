@@ -1,5 +1,5 @@
 {
-  "name": "mensa-linkedin-backend",
+  "name": "mathesis-backend",
   "version": "1.0.0",
   "description": "Node.js TypeScript backend starter",
   "main": "dist/server.js",

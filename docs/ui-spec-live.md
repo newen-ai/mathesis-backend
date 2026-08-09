@@ -74,3 +74,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 ### 2026-08-08 - Desktop topbar profile menu scope kickoff
 - Added desktop avatar-triggered profile menu scope to implementation tracking for v0.2 parity iteration.
 - Established first-pass behavior constraints: logout operational; existing route-backed items navigable; non-routed items rendered as visual placeholders.
+
+### 2026-08-08 - Desktop topbar role-based quick nav and icon parity
+- Updated desktop horizontal topbar quick-nav behavior to enforce role-based option count: non-admin users see Feed, Mensajes, Notificaciones; admin users see those three plus Admin.
+- Updated desktop quick-nav iconography to use HTML v0.2 symbol geometry parity (feed, message, bell, settings) through extracted UI icon components.
