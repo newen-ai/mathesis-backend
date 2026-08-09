@@ -29,6 +29,10 @@ enum WhitelistRequestStatus {
   REJECTED
 }
 
+enum FeedPostReactionValue {
+  value
+}
+
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
@@ -51,6 +55,7 @@ model User {
   sentChatMessages     ChatMessage[] @relation("ChatMessageSender")
   deletedChatMessages  ChatMessage[] @relation("ChatMessageDeletedBy")
   feedPosts            FeedPost[]   @relation("FeedPostAuthor")
+  feedPostReactions    FeedPostReaction[] @relation("FeedPostReactionUser")
   whitelistRequests    WhitelistRequest[] @relation("WhitelistRequestUser")
   reviewedWhitelistRequests WhitelistRequest[] @relation("WhitelistRequestReviewer")
   whitelistAuditsAsActor WhitelistAudit[] @relation("WhitelistAuditActor")
@@ -123,11 +128,29 @@ model FeedPost {
 
   author      User             @relation("FeedPostAuthor", fields: [authorUserId], references: [id], onDelete: Cascade)
   attachments FeedAttachment[]
+  reactions   FeedPostReaction[]
 
   @@index([deletedAt])
   @@index([authorUserId, deletedAt])
   @@index([createdAt(sort: Desc), deletedAt])
   @@map("feed_posts")
+}
+
+model FeedPostReaction {
+  id           String                @id @default(cuid())
+  feedPostId   String                @map("feed_post_id")
+  userId       String                @map("user_id")
+  reactionValue FeedPostReactionValue @map("reaction_value")
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @updatedAt @map("updated_at")
+
+  feedPost     FeedPost              @relation(fields: [feedPostId], references: [id], onDelete: Cascade)
+  user         User                  @relation("FeedPostReactionUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([feedPostId, userId])
+  @@index([feedPostId])
+  @@index([userId])
+  @@map("feed_post_reactions")
 }
 
 model FeedAttachment {

@@ -4,6 +4,8 @@ import type {
   CreateFeedPostBody,
   DeleteFeedPostParams,
   DownloadFeedAttachmentParams,
+  ToggleFeedPostReactionBody,
+  ToggleFeedPostReactionParams,
   ListFeedPostsQuery
 } from "./feed.schemas";
 import { feedService } from "./feed.service";
@@ -40,12 +42,26 @@ export const createFeedPost: RequestHandler = async (req, res) => {
 };
 
 export const listFeedPosts: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
   const query = req.query as ListFeedPostsQuery;
-  const result = await feedService.listFeedPosts(query.limit, query.sortBy, query.gravity);
+  const result = await feedService.listFeedPosts(currentUserId, query.limit, query.sortBy, query.gravity);
 
   res.status(StatusCodes.OK).json({
     success: true,
     message: "FEED_POSTS_LISTED",
+    data: result
+  });
+};
+
+export const toggleFeedPostReaction: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
+  const { postId } = req.params as ToggleFeedPostReactionParams;
+  const body = req.body as ToggleFeedPostReactionBody;
+  const result = await feedService.toggleReaction(currentUserId, postId, body.reactionValue);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "FEED_POST_REACTION_TOGGLED",
     data: result
   });
 };
