@@ -634,3 +634,46 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next:
   - Add feed reaction model, toggle endpoint, and list payload enrichment in the backend.
   - Wire the feed card button to persisted reaction state in the UI.
+
+### 2026-08-09 16:15 - Frontend avatar consistency pass
+- Agent: GitHub Copilot
+- Summary: Standardized frontend avatar rendering so all updated surfaces now use profile image when available and consistently fall back to two initials, replacing mixed single-initial implementations.
+- Files changed:
+  - ../mathesis-ui/src/lib/utils/name.ts
+  - ../mathesis-ui/src/components/ui/UserAvatar.tsx
+  - ../mathesis-ui/src/app/(platform)/_lib/hooks/useProfessionalProfile.ts
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/HomeView.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/ComposerCard.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/FeedPostCard.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
+  - ../mathesis-ui/src/app/(platform)/mensajes/page.tsx
+  - ../mathesis-ui/src/lib/api/profile.ts
+  - ../mathesis-ui/src/lib/api/feed.ts
+  - ../mathesis-ui/src/lib/api/chat.ts
+  - docs/agent-live-context.md
+- Next:
+  - If backend payloads are expanded further with profile image fields in additional endpoints, continue routing them through `UserAvatar` to keep behavior consistent.
+  - Run a quick manual UI sweep of feed/topbar/mensajes to confirm visual parity across desktop and mobile states.
+
+### 2026-08-09 16:32 - Feed author avatar payload fix
+- Agent: GitHub Copilot
+- Summary: Fixed feed author payload serialization so each post now includes `author.profileImageUrl`, enabling the frontend feed card to render profile photos instead of falling back to initials when an image exists.
+- Files changed:
+  - src/modules/feed/feed.types.ts
+  - src/modules/feed/feed.service.ts
+  - docs/agent-live-context.md
+- Next:
+  - Restart/redeploy backend service so the updated feed payload is served to the UI.
+  - Verify feed cards display profile images for users with `profileImageUrl` and two-initial fallback otherwise.
+
+### 2026-08-09 16:45 - Messages avatar payload fix
+- Agent: GitHub Copilot
+- Summary: Fixed chat payload serialization so chat members and message senders now include `profileImageUrl`, enabling the mensajes UI to render profile photos instead of initials when an image exists.
+- Files changed:
+  - src/modules/chat/chat.types.ts
+  - src/modules/chat/chat.service.ts
+  - docs/agent-live-context.md
+- Next:
+  - Restart/redeploy backend service so updated chat payloads are served to the UI.
+  - Verify mensajes thread list and contact picker display profile images for users with `profileImageUrl` and two-initial fallback otherwise.

@@ -5,6 +5,7 @@ export type FeedUserSummary = {
   userId: string;
   firstName: string | null;
   lastName: string | null;
+  profileImageUrl: string | null;
   currentJobTitle: string | null;
   currentCompany: string | null;
 };
@@ -66,6 +67,7 @@ export type FeedPostWithRelations = Prisma.FeedPostGetPayload<{
           select: {
             firstName: true;
             lastName: true;
+            profileImageUrl: true;
             currentJobTitle: true;
             currentCompany: true;
             deletedAt: true;

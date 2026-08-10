@@ -70,6 +70,7 @@ function mapUserSummary(user: {
   profile: {
     firstName: string;
     lastName: string;
+    profileImageUrl: string | null;
     currentJobTitle: string | null;
     currentCompany: string | null;
     deletedAt: Date | null;
@@ -81,6 +82,7 @@ function mapUserSummary(user: {
     userId: user.id,
     firstName: profile?.firstName ?? null,
     lastName: profile?.lastName ?? null,
+    profileImageUrl: profile?.profileImageUrl ?? null,
     currentJobTitle: profile?.currentJobTitle ?? null,
     currentCompany: profile?.currentCompany ?? null
   };
@@ -95,6 +97,7 @@ function mapMembers(
       profile: {
         firstName: string;
         lastName: string;
+        profileImageUrl: string | null;
         currentJobTitle: string | null;
         currentCompany: string | null;
         deletedAt: Date | null;
@@ -122,6 +125,7 @@ function mapMessage(message: {
     profile: {
       firstName: string;
       lastName: string;
+      profileImageUrl: string | null;
       currentJobTitle: string | null;
       currentCompany: string | null;
       deletedAt: Date | null;
@@ -155,6 +159,7 @@ function mapChatDetail(chat: {
       profile: {
         firstName: string;
         lastName: string;
+        profileImageUrl: string | null;
         currentJobTitle: string | null;
         currentCompany: string | null;
         deletedAt: Date | null;
@@ -208,6 +213,7 @@ async function getAccessibleChat(currentUserId: string, chatId: string) {
                 select: {
                   firstName: true,
                   lastName: true,
+                  profileImageUrl: true,
                   currentJobTitle: true,
                   currentCompany: true,
                   deletedAt: true
@@ -444,6 +450,7 @@ export const chatService = {
                     select: {
                       firstName: true,
                       lastName: true,
+                      profileImageUrl: true,
                       currentJobTitle: true,
                       currentCompany: true,
                       deletedAt: true
@@ -496,6 +503,7 @@ export const chatService = {
                       select: {
                         firstName: true,
                         lastName: true,
+                        profileImageUrl: true,
                         currentJobTitle: true,
                         currentCompany: true,
                         deletedAt: true
@@ -555,6 +563,7 @@ export const chatService = {
                     select: {
                       firstName: true,
                       lastName: true,
+                      profileImageUrl: true,
                       currentJobTitle: true,
                       currentCompany: true,
                       deletedAt: true
@@ -633,6 +642,7 @@ export const chatService = {
                   select: {
                     firstName: true,
                     lastName: true,
+                    profileImageUrl: true,
                     currentJobTitle: true,
                     currentCompany: true,
                     deletedAt: true
@@ -761,6 +771,7 @@ export const chatService = {
               select: {
                 firstName: true,
                 lastName: true,
+                profileImageUrl: true,
                 currentJobTitle: true,
                 currentCompany: true,
                 deletedAt: true
@@ -815,6 +826,7 @@ export const chatService = {
               select: {
                 firstName: true,
                 lastName: true,
+                profileImageUrl: true,
                 currentJobTitle: true,
                 currentCompany: true,
                 deletedAt: true
@@ -928,6 +940,7 @@ export const chatService = {
               select: {
                 firstName: true,
                 lastName: true,
+                profileImageUrl: true,
                 currentJobTitle: true,
                 currentCompany: true,
                 deletedAt: true
@@ -1102,6 +1115,7 @@ export const chatService = {
                   select: {
                     firstName: true,
                     lastName: true,
+                    profileImageUrl: true,
                     currentJobTitle: true,
                     currentCompany: true,
                     deletedAt: true

@@ -63,6 +63,7 @@ function mapUserSummary(user: {
   profile: {
     firstName: string;
     lastName: string;
+    profileImageUrl: string | null;
     currentJobTitle: string | null;
     currentCompany: string | null;
     deletedAt: Date | null;
@@ -74,6 +75,7 @@ function mapUserSummary(user: {
     userId: user.id,
     firstName: profile?.firstName ?? null,
     lastName: profile?.lastName ?? null,
+    profileImageUrl: profile?.profileImageUrl ?? null,
     currentJobTitle: profile?.currentJobTitle ?? null,
     currentCompany: profile?.currentCompany ?? null
   };
@@ -113,6 +115,7 @@ function buildFeedPostInclude(currentUserId: string) {
           select: {
             firstName: true,
             lastName: true,
+            profileImageUrl: true,
             currentJobTitle: true,
             currentCompany: true,
             deletedAt: true
