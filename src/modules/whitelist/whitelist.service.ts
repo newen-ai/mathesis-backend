@@ -1,13 +1,12 @@
-import { PrismaClient, WhitelistRequestStatus } from "@prisma/client";
+import { WhitelistRequestStatus } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
+import { prisma } from "../../common/prisma";
 
 type PaginationInput = {
   limit: number;
   offset: number;
 };
-
-const prisma = new PrismaClient();
 
 const DEFAULT_PAGINATION_LIMIT = 50;
 const MAX_PAGINATION_LIMIT = 200;

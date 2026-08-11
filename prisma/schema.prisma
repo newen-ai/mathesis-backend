@@ -33,6 +33,14 @@ enum FeedPostReactionValue {
   value
 }
 
+enum ContactMessageCategory {
+  GENERAL_INQUIRY
+  TECHNICAL_ISSUE
+  SUGGESTION
+  BUG_REPORT
+  OTHER
+}
+
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
@@ -43,6 +51,8 @@ model User {
   emailVerificationToken String? @unique @map("email_verification_token")
   passwordResetToken String? @unique @map("password_reset_token")
   passwordResetTokenExpiresAt DateTime? @map("password_reset_token_expires_at")
+  authSessionVersion Int @default(1) @map("auth_session_version")
+  themePreference String? @default("light") @map("theme_preference")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
@@ -61,6 +71,7 @@ model User {
   whitelistAuditsAsActor WhitelistAudit[] @relation("WhitelistAuditActor")
   whitelistAuditsAsTarget WhitelistAudit[] @relation("WhitelistAuditTarget")
   whitelistedEmailsCreated WhitelistedEmail[] @relation("WhitelistedEmailCreator")
+  contactMessages      ContactMessage[] @relation("ContactMessageUser")
 
   @@index([deletedAt])
   @@index([canonicalEmail])
@@ -317,4 +328,18 @@ model EducationExperience {
   @@index([deletedAt])
   @@index([profileId, deletedAt, startDate(sort: Desc)])
   @@map("education_experiences")
+}
+
+model ContactMessage {
+  id        String                   @id @default(cuid())
+  userId    String                   @map("user_id")
+  category  ContactMessageCategory
+  details   String
+  createdAt DateTime                 @default(now()) @map("created_at")
+
+  user      User                     @relation("ContactMessageUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([category, createdAt(sort: Desc)])
+  @@map("contact_messages")
 }

@@ -1,6 +1,7 @@
-import { ChatMemberRole, ChatType, PrismaClient } from "@prisma/client";
+import { ChatMemberRole, ChatType } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
+import { prisma } from "../../common/prisma";
 import type {
   AddGroupMembersOutput,
   ChatDetail,
@@ -21,7 +22,6 @@ import type {
   UpdateGroupConfigOutput
 } from "./chat.types";
 
-const prisma = new PrismaClient();
 const DEFAULT_CHAT_LIST_LIMIT = 30;
 const DEFAULT_MESSAGE_PAGE_LIMIT = 30;
 

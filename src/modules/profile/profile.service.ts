@@ -1,6 +1,7 @@
-import { PrismaClient, type Prisma } from "@prisma/client";
+import { type Prisma } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
+import { prisma } from "../../common/prisma";
 import type {
   UpdateMyEducationHistoryBody,
   UpdateMyProfileBody,
@@ -17,12 +18,7 @@ import type {
   WorkExperienceOperationInput
 } from "./profile.types";
 
-const prisma = new PrismaClient();
-
-type TransactionClient = Omit<
-  PrismaClient,
-  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
->;
+type TransactionClient = Prisma.TransactionClient;
 
 function buildProfileWriteData(input: UpdateMyProfileBody) {
   return {
@@ -585,6 +581,55 @@ export const profileService = {
       email: user.email,
       role: user.role,
       profile: mapProfile(updatedProfile)
+    };
+  },
+
+  async getMyPreferences(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        deletedAt: true,
+        themePreference: true
+      }
+    });
+
+    if (!user || user.deletedAt) {
+      throw new AppError("User not found", StatusCodes.NOT_FOUND);
+    }
+
+    return {
+      themePreference: user.themePreference ?? "light"
+    };
+  },
+
+  async updateMyPreferences(userId: string, input: { themePreference?: string }) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user || user.deletedAt) {
+      throw new AppError("User not found", StatusCodes.NOT_FOUND);
+    }
+
+    const updateData: Partial<{
+      themePreference: string;
+    }> = {};
+    if (input.themePreference) {
+      updateData.themePreference = input.themePreference;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        themePreference: true
+      }
+    });
+
+    return {
+      themePreference: updatedUser.themePreference ?? "light"
     };
   }
 };

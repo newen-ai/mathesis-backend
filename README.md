@@ -1,4 +1,4 @@
-# Mensa LinkedIn Backend
+# Mathesis Backend
 
 Production-style Node.js + TypeScript backend starter with:
 
@@ -33,16 +33,8 @@ Server default URL: `http://localhost:4000`
 ### Option 1: Local PostgreSQL (Docker)
 
 ```bash
-# Start PostgreSQL container
-docker run --name postgres-mensa \
-	-e POSTGRES_USER=user \
-	-e POSTGRES_PASSWORD=password \
-	-e POSTGRES_DB=mensa_linkedin \
-	-p 5432:5432 \
-	-d postgres:16
-
 # Update .env with:
-DATABASE_URL="postgresql://user:password@localhost:5432/mensa_linkedin"
+DATABASE_URL="postgresql://user:password@localhost:5432/mathesis"
 ```
 
 ### Option 2: Cloud-Hosted (Recommended for Dev/Prod)

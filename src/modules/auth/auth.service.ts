@@ -2,22 +2,21 @@ import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { StatusCodes } from "http-status-codes";
-import { PrismaClient } from "@prisma/client";
 import { env } from "../../config/env";
 import { AppError } from "../../common/errors/app-error";
+import { prisma } from "../../common/prisma";
 import { telegramNotifier } from "../../common/services/telegram-notifier";
 import { sendPasswordResetEmail, sendVerificationEmail } from "../../common/services/email.service";
 import { maskEmailAddress, normalizeEmailAddress, toCanonicalEmail } from "../../common/utils/email";
 import type { AuthPayload, Role, SessionOutput, User } from "./auth.types";
 import type {
+  ChangePasswordBody,
   ConfirmPasswordResetBody,
   LoginBody,
   RegisterBody,
   RequestPasswordResetBody
 } from "./auth.schemas";
 import { whitelistService } from "../whitelist/whitelist.service";
-
-const prisma = new PrismaClient();
 
 function buildAccessToken(payload: AuthPayload): string {
   const expiresIn = env.JWT_ACCESS_TTL as jwt.SignOptions["expiresIn"];
@@ -27,6 +26,20 @@ function buildAccessToken(payload: AuthPayload): string {
     issuer: env.JWT_ISSUER,
     audience: env.JWT_AUDIENCE
   });
+}
+
+function buildAuthPayload(input: {
+  id: string;
+  email: string;
+  role: string;
+  authSessionVersion: number;
+}): AuthPayload {
+  return {
+    sub: input.id,
+    email: input.email,
+    role: input.role as Role,
+    authSessionVersion: input.authSessionVersion
+  };
 }
 
 function sanitizeUser(user: User) {
@@ -98,11 +111,12 @@ export const authService = {
     const isWhitelisted = await whitelistService.isCanonicalEmailWhitelisted(canonicalEmail);
     const effectiveWhitelistState = resolveEffectiveWhitelistState(isWhitelisted);
 
-    const payload: AuthPayload = {
-      sub: newUser.id,
+    const payload = buildAuthPayload({
+      id: newUser.id,
       email: newUser.email,
-      role: newUser.role as Role
-    };
+      role: newUser.role,
+      authSessionVersion: newUser.authSessionVersion
+    });
 
     await telegramNotifier.notifyRegistration({
       userId: newUser.id,
@@ -223,6 +237,9 @@ export const authService = {
       where: { id: user.id },
       data: {
         passwordHash,
+        authSessionVersion: {
+          increment: 1
+        },
         passwordResetToken: null,
         passwordResetTokenExpiresAt: null
       }
@@ -231,6 +248,47 @@ export const authService = {
     return {
       success: true,
       message: "PASSWORD_RESET_SUCCESSFUL"
+    };
+  },
+
+  async changePassword(userId: string, input: ChangePasswordBody): Promise<{ success: boolean; message: string; accessToken: string }> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user || user.deletedAt) {
+      throw new AppError("User not found", StatusCodes.NOT_FOUND);
+    }
+
+    const isMatch = await bcrypt.compare(input.currentPassword, user.passwordHash);
+    if (!isMatch) {
+      throw new AppError("Current password is incorrect", StatusCodes.UNAUTHORIZED);
+    }
+
+    const passwordHash = await bcrypt.hash(input.newPassword, 10);
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        authSessionVersion: {
+          increment: 1
+        }
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        authSessionVersion: true
+      }
+    });
+
+    const accessToken = buildAccessToken(buildAuthPayload(updatedUser));
+
+    return {
+      success: true,
+      message: "PASSWORD_CHANGED",
+      accessToken
     };
   },
 
@@ -250,11 +308,12 @@ export const authService = {
       throw new AppError("Invalid email or password", StatusCodes.UNAUTHORIZED);
     }
 
-    const payload: AuthPayload = {
-      sub: user.id,
+    const payload = buildAuthPayload({
+      id: user.id,
       email: user.email,
-      role: user.role as Role
-    };
+      role: user.role,
+      authSessionVersion: user.authSessionVersion
+    });
 
     const isWhitelisted = await whitelistService.isCanonicalEmailWhitelisted(user.canonicalEmail);
     const effectiveWhitelistState = resolveEffectiveWhitelistState(isWhitelisted);

@@ -1,6 +1,7 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
+import { prisma } from "../../common/prisma";
 import type { CreateFeedPostBody, FeedPostReactionValue, FeedSortBy } from "./feed.schemas";
 import type {
   CreateFeedPostOutput,
@@ -14,7 +15,6 @@ import type {
   ToggleFeedPostReactionOutput
 } from "./feed.types";
 
-const prisma = new PrismaClient();
 const DEFAULT_FEED_LIMIT = 20;
 const MAX_FEED_LIMIT = 50;
 const MAX_FEED_CONTENT_LENGTH = 4000;

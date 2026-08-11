@@ -35,7 +35,15 @@ export const confirmPasswordResetSchema = z.object({
   })
 });
 
+export const changePasswordSchema = z.object({
+  body: z.object({
+    currentPassword: z.string().min(1),
+    newPassword: passwordSchema
+  })
+});
+
 export type RegisterBody = z.infer<typeof registerSchema>["body"];
 export type LoginBody = z.infer<typeof loginSchema>["body"];
 export type RequestPasswordResetBody = z.infer<typeof requestPasswordResetSchema>["body"];
 export type ConfirmPasswordResetBody = z.infer<typeof confirmPasswordResetSchema>["body"];
+export type ChangePasswordBody = z.infer<typeof changePasswordSchema>["body"];

@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { env } from "../../config/env";
 import { authService } from "./auth.service";
 import type {
+  ChangePasswordBody,
   ConfirmPasswordResetBody,
   LoginBody,
   RegisterBody,
@@ -73,6 +74,18 @@ export const requestPasswordReset: RequestHandler = async (req, res) => {
 
 export const confirmPasswordReset: RequestHandler = async (req, res) => {
   const result = await authService.confirmPasswordReset(req.body as ConfirmPasswordResetBody);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: result.message
+  });
+};
+
+export const changePassword: RequestHandler = async (req, res) => {
+  const result = await authService.changePassword(req.user?.sub as string, req.body as ChangePasswordBody);
+  const cookieOptions = buildAuthCookieOptions();
+
+  res.cookie(env.AUTH_COOKIE_NAME, result.accessToken, cookieOptions);
 
   res.status(StatusCodes.OK).json({
     success: true,

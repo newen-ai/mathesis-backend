@@ -23,7 +23,7 @@ integrationDescribe("email confirmation integration", () => {
 
     const registerResponse = await request(app)
       .post("/api/v1/auth/register")
-      .send({ email, password: "password123" });
+      .send({ email, password: "Password123!" });
 
     expect(registerResponse.status).toBe(201);
     expect(registerResponse.body?.data?.verificationUrl).toContain("/confirm?token=");
@@ -47,6 +47,63 @@ integrationDescribe("email confirmation integration", () => {
 
     expect(updatedUser?.emailVerifiedAt).not.toBeNull();
     expect(updatedUser?.emailVerificationToken).toBeNull();
+  });
+
+  it("changes the password, keeps current session active, and invalidates other sessions", async () => {
+    const email = randomEmail("change-password");
+    createdEmails.push(email);
+    canonicalEmails.add(toCanonicalEmail(email));
+
+    const registerResponse = await request(app)
+      .post("/api/v1/auth/register")
+      .send({ email, password: "Password123!" });
+
+    expect(registerResponse.status).toBe(201);
+
+    const currentSessionAgent = request.agent(app);
+    const otherSessionAgent = request.agent(app);
+
+    const loginResponse = await currentSessionAgent.post("/api/v1/auth/login").send({
+      email,
+      password: "Password123!"
+    });
+
+    expect(loginResponse.status).toBe(200);
+
+    const otherLoginResponse = await otherSessionAgent.post("/api/v1/auth/login").send({
+      email,
+      password: "Password123!"
+    });
+
+    expect(otherLoginResponse.status).toBe(200);
+
+    const changePasswordResponse = await currentSessionAgent.post("/api/v1/auth/change-password").send({
+      currentPassword: "Password123!",
+      newPassword: "NewPassword456!"
+    });
+
+    expect(changePasswordResponse.status).toBe(200);
+    expect(changePasswordResponse.body?.message).toBe("PASSWORD_CHANGED");
+
+    const currentSessionResponse = await currentSessionAgent.get("/api/v1/auth/session");
+    expect(currentSessionResponse.status).toBe(200);
+
+    const otherSessionResponse = await otherSessionAgent.get("/api/v1/auth/session");
+    expect(otherSessionResponse.status).toBe(401);
+
+    const oldPasswordLoginResponse = await request(app).post("/api/v1/auth/login").send({
+      email,
+      password: "Password123!"
+    });
+
+    expect(oldPasswordLoginResponse.status).toBe(401);
+
+    const newPasswordLoginResponse = await request(app).post("/api/v1/auth/login").send({
+      email,
+      password: "NewPassword456!"
+    });
+
+    expect(newPasswordLoginResponse.status).toBe(200);
   });
 });
 
