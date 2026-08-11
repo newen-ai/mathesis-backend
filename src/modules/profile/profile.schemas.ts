@@ -206,6 +206,14 @@ export const updateMyEducationHistorySchema = z.object({
   })
 });
 
+export const getMyPreferencesSchema = z.object({});
+
+export const updateMyPreferencesSchema = z.object({
+  body: z.object({
+    themePreference: z.enum(["light", "dark"]).optional()
+  })
+});
+
 export const searchUsersSchema = z.object({
   query: z.object({
     text: z
@@ -227,5 +235,6 @@ export const getProfileByUserIdSchema = z.object({
 export type UpdateMyProfileBody = z.infer<typeof updateMyProfileSchema>["body"];
 export type UpdateMyWorkExperiencesBody = z.infer<typeof updateMyWorkExperiencesSchema>["body"];
 export type UpdateMyEducationHistoryBody = z.infer<typeof updateMyEducationHistorySchema>["body"];
+export type UpdateMyPreferencesBody = z.infer<typeof updateMyPreferencesSchema>["body"];
 export type SearchUsersQuery = z.infer<typeof searchUsersSchema>["query"];
 export type GetProfileByUserIdParams = z.infer<typeof getProfileByUserIdSchema>["params"];

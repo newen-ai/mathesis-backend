@@ -1,16 +1,14 @@
 import type { RequestHandler } from "express";
-import { PrismaClient } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../errors/app-error";
 import { authService } from "../../modules/auth/auth.service";
 import { roles, type Role } from "../../modules/auth/auth.types";
 import { env } from "../../config/env";
+import { prisma } from "../prisma";
 
 type RequireAuthOptions = {
   skipWhitelist?: boolean;
 };
-
-const prisma = new PrismaClient();
 
 function getTokenFromCookieHeader(cookieHeader: string | undefined, cookieName: string): string | undefined {
   if (!cookieHeader) {
@@ -50,12 +48,19 @@ export const requireAuth = (...args: Array<Role | RequireAuthOptions>): RequestH
           id: true,
           email: true,
           role: true,
+          authSessionVersion: true,
           canonicalEmail: true,
           deletedAt: true
         }
       });
 
       if (!user || user.deletedAt) {
+        next(new AppError("Session is invalid", StatusCodes.UNAUTHORIZED));
+        return;
+      }
+
+      const tokenSessionVersion = payload.authSessionVersion ?? 1;
+      if (tokenSessionVersion !== user.authSessionVersion) {
         next(new AppError("Session is invalid", StatusCodes.UNAUTHORIZED));
         return;
       }

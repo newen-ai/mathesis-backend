@@ -6,6 +6,7 @@ export type User = {
   email: string;
   canonicalEmail: string;
   passwordHash: string;
+  authSessionVersion: number;
   role: Role;
 };
 
@@ -13,6 +14,7 @@ export type AuthPayload = {
   sub: string;
   email: string;
   role: Role;
+  authSessionVersion: number;
 };
 
 export type SessionUser = {

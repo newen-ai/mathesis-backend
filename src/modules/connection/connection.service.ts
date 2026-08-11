@@ -1,14 +1,12 @@
-import { PrismaClient } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
+import { prisma } from "../../common/prisma";
 import type {
   ConnectUserOutput,
   ConnectionUserSummary,
   DisconnectUserOutput,
   MyConnectionsOutput
 } from "./connection.types";
-
-const prisma = new PrismaClient();
 
 function normalizePair(userOneId: string, userTwoId: string): [string, string] {
   return userOneId < userTwoId ? [userOneId, userTwoId] : [userTwoId, userOneId];

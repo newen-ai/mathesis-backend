@@ -4,6 +4,7 @@ import type {
   GetProfileByUserIdParams,
   SearchUsersQuery,
   UpdateMyEducationHistoryBody,
+  UpdateMyPreferencesBody,
   UpdateMyProfileBody,
   UpdateMyWorkExperiencesBody
 } from "./profile.schemas";
@@ -77,6 +78,31 @@ export const updateMyEducationHistory: RequestHandler = async (req, res) => {
   res.status(StatusCodes.OK).json({
     success: true,
     message: "EDUCATION_HISTORY_UPDATED",
+    data: result
+  });
+};
+
+export const getMyPreferences: RequestHandler = async (req, res) => {
+  const userId = req.user?.sub;
+  const result = await profileService.getMyPreferences(userId as string);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "PREFERENCES_RETRIEVED",
+    data: result
+  });
+};
+
+export const updateMyPreferences: RequestHandler = async (req, res) => {
+  const userId = req.user?.sub;
+  const result = await profileService.updateMyPreferences(
+    userId as string,
+    req.body as UpdateMyPreferencesBody
+  );
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "PREFERENCES_UPDATED",
     data: result
   });
 };

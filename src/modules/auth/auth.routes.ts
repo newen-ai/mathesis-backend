@@ -4,6 +4,7 @@ import { requireAuth } from "../../common/middlewares/require-auth";
 import { validateRequest } from "../../common/middlewares/validate-request";
 import { createWhitelistRequestSchema } from "../whitelist/whitelist.schemas";
 import {
+	changePassword,
 	confirmEmail,
 	confirmPasswordReset,
 	login,
@@ -14,6 +15,7 @@ import {
 	session
 } from "./auth.controller";
 import {
+	changePasswordSchema,
 	confirmPasswordResetSchema,
 	loginSchema,
 	registerSchema,
@@ -26,6 +28,7 @@ authRouter.post("/register", validateRequest(registerSchema), asyncHandler(regis
 authRouter.get("/confirm", asyncHandler(confirmEmail));
 authRouter.post("/request-reset", validateRequest(requestPasswordResetSchema), asyncHandler(requestPasswordReset));
 authRouter.post("/confirm-reset", validateRequest(confirmPasswordResetSchema), asyncHandler(confirmPasswordReset));
+authRouter.post("/change-password", requireAuth({ skipWhitelist: true }), validateRequest(changePasswordSchema), asyncHandler(changePassword));
 authRouter.post("/login", validateRequest(loginSchema), asyncHandler(login));
 authRouter.get("/session", requireAuth({ skipWhitelist: true }), asyncHandler(session));
 authRouter.post(

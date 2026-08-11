@@ -224,6 +224,21 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - Validate /perfil academics add/edit/delete/save interactions and spacing against the reference screenshot.
   - Optionally implement true drag-and-drop ordering if required for academics.
 
+### 2026-08-10 23:45 - Authenticated password change end-to-end
+- Agent: GitHub Copilot
+- Summary: Implemented authenticated password change from Configuración by adding backend route/controller/service/schema support (`POST /auth/change-password`) and wiring the frontend change-password page to submit to the real endpoint with response-based UI feedback.
+- Files changed:
+  - docs/ui-spec-live.md
+  - src/modules/auth/auth.schemas.ts
+  - src/modules/auth/auth.controller.ts
+  - src/modules/auth/auth.routes.ts
+  - src/modules/auth/auth.service.ts
+  - test/integration/auth.integration.test.ts
+  - ../mathesis-ui/src/lib/api/auth.ts
+  - ../mathesis-ui/src/app/(platform)/account/configuration/change-password/page.tsx
+- Next:
+  - Run full integration suite after aligning legacy integration fixtures with current password policy validation requirements.
+
 ### 2026-08-06 01:35 - Header eye-button for readonly self preview
 - Agent: GitHub Copilot
 - Summary: Added a new header button styled like the edit CTA but with an eye icon, wired to redirect to /perfil?userId=<current user id> so users can preview their own profile as others see it.
@@ -677,3 +692,93 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next:
   - Restart/redeploy backend service so updated chat payloads are served to the UI.
   - Verify mensajes thread list and contact picker display profile images for users with `profileImageUrl` and two-initial fallback otherwise.
+
+### 2026-08-10 14:09 - Configuración UI first pass
+- Agent: GitHub Copilot
+- Summary: Implemented the first-pass Configuración UI at /account/configuration for mobile and desktop, moved the active dark-mode control into the page, removed the standalone topbar theme toggles, and wired menu access to the new route.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/src/lib/theme/useUiTheme.ts
+  - ../mathesis-ui/src/app/(platform)/account/configuration/page.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Review the new Configuración page visually against the provided screenshots and adjust spacing/iconography if needed.
+  - Confirm whether placeholder rows should remain non-functional until their dedicated screens are provided.
+  - After UI approval, add backend preference persistence for theme and hydrate Configuración from that API.
+
+### 2026-08-10 14:19 - Bloqueados panel prototype in Configuración
+- Agent: GitHub Copilot
+- Summary: Added interactive Bloqueados row behavior to open a blocked-users panel with example records, including per-user reminder comments shown under each user to represent the future block-reason note.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/app/(platform)/account/configuration/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Replace example blocked-users rows with backend data once a blocked-users table and endpoints are implemented.
+  - Add create/update flow for the block-reason note when block actions are wired.
+
+### 2026-08-10 15:00 - Change-password page UI
+- Agent: GitHub Copilot
+- Summary: Created dedicated change-password page at /account/configuration/change-password matching both desktop (gold left panel + right form) and mobile (back button + stacked form) reference screenshots. Includes password strength semaphore, frontend validation, and success state. Submit is a UI placeholder pending backend endpoint. Wired Cambiar contraseña row in Configuración to navigate to the new route.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/account/configuration/change-password/page.tsx
+  - ../mathesis-ui/src/app/(platform)/account/configuration/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Implement POST /auth/change-password backend endpoint (currentPassword, newPassword) and wire it to the form's onSubmit.
+  - Replace the setTimeout placeholder with the real API call once backend is ready.
+
+### 2026-08-10 14:24 - Bloqueados dedicated page redesign
+- Agent: GitHub Copilot
+- Summary: Replaced the Bloqueados overlay interaction with a dedicated route page matching the provided desktop reference, including a back button to return to the previous view, warning copy block, example blocked user card with reminder note, and informational right rail.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/src/app/(platform)/account/configuration/page.tsx
+  - ../mathesis-ui/src/app/(platform)/account/configuration/blocked/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Replace example blocked record(s) with API-backed blocked-users data once backend tables/endpoints exist.
+  - Wire Desbloquear and block-reason creation/editing actions after backend scope is approved.
+
+### 2026-08-10 23:58 - Password eye-toggle across all fields
+- Agent: GitHub Copilot
+- Summary: Added a shared eye-toggle password input component and replaced every password field in login, registration, reset-password, and authenticated change-password pages so users can switch between hidden and visible password text consistently.
+- Files changed:
+  - ../mathesis-ui/src/components/ui/PasswordInput.tsx
+  - ../mathesis-ui/src/app/login/page.tsx
+  - ../mathesis-ui/src/app/registro/page.tsx
+  - ../mathesis-ui/src/app/reset-password/page.tsx
+  - ../mathesis-ui/src/app/(platform)/account/configuration/change-password/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Run a quick manual UX pass in mobile and desktop to confirm icon tap target and spacing are comfortable on all auth screens.
+
+### 2026-08-10 23:59 - Dark-mode gold eye icon styling
+- Agent: GitHub Copilot
+- Summary: Updated the shared password visibility toggle styles to use theme tokens and apply brand gold in dark mode for better contrast and visual consistency.
+- Files changed:
+  - ../mathesis-ui/src/components/ui/PasswordInput.tsx
+  - ../mathesis-ui/src/app/globals.css
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/agent-live-context.md
+- Next:
+  - Validate the updated icon color on login, registro, reset-password, and configuración/change-password pages in dark mode.
+
+### 2026-08-10 23:59 - Invalidate other sessions on password change
+- Agent: GitHub Copilot
+- Summary: Implemented auth session version rotation so password changes invalidate other active sessions while preserving the current session with a refreshed token.
+- Files changed:
+  - prisma/schema.prisma
+  - prisma/migrations/20260810235900_add_auth_session_version/migration.sql
+  - src/modules/auth/auth.types.ts
+  - src/modules/auth/auth.service.ts
+  - src/modules/auth/auth.controller.ts
+  - src/common/middlewares/require-auth.ts
+  - test/integration/auth.integration.test.ts
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next:
+  - Run the full integration suite after legacy fixtures across all integration files are updated to strong passwords compliant with current auth policy.

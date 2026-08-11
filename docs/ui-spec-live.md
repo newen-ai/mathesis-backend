@@ -12,8 +12,9 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Profile core: name, surname, date of birth, nationality, headline, current company, about, location.
 - Experience section: editable operations and read-only rendering.
 - Academics/Education section: editable operations and read-only rendering.
-- Authentication: forgot-password flow (Page 1 request view implemented; Page 2 sent view implemented; Page 3 reset-password view implemented; dark/light parity required per page).
+- Authentication: forgot-password flow (Page 1 request view implemented; Page 2 sent view implemented; Page 3 reset-password view implemented; dark/light parity required per page) and authenticated change-password flow implemented end-to-end.
 - Platform navigation: desktop topbar profile menu (avatar-triggered panel), with profile header bound to user profile data and first-pass interaction limits (logout functional, route-backed entries functional, placeholder entries visible without route behavior).
+- Configuration: main settings page only, reached from the topbar menu at /account/configuration, with the first pass covering both desktop and mobile. Mobile entry must match the provided screenshot; desktop should follow the HTML v0.2 settings reference. Dark-mode control moves from the topbar into this page.
 
 ## Profile Field Matrix
 | Section | Field | Backend status | Frontend status | Notes |
@@ -82,3 +83,23 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 ### 2026-08-09 - Feed reaction scope kickoff
 - Added feed post reaction implementation scope with a single current reaction and future-proof backend/db shape.
 - Current UI copy target for the feed action button is Valorar / Valorado based on the current user's reaction state.
+
+### 2026-08-10 - Configuration page scope kickoff
+- Added main configuration page scope to implementation tracking for HTML v0.2 parity.
+- Established first-pass constraints: route path /account/configuration, Spanish UI copy, mobile screenshot parity on entry, desktop settings-reference parity, and relocation of the dark-mode control out of the topbar.
+
+### 2026-08-10 - Bloqueados interaction prototype
+- Added first-pass Bloqueados interaction from Configuración to open an in-app blocked-users panel in UI.
+- Current implementation uses example rows only (no backend persistence yet) and includes a per-user reminder comment displayed below each blocked user, matching the intended future "motivo del bloqueo" behavior.
+
+### 2026-08-10 - Bloqueados dedicated page pass
+- Replaced the Bloqueados overlay prototype with a dedicated route-based page to match the provided desktop reference layout.
+- Current implementation remains example-data only (no backend persistence yet), with reminder comments shown under each blocked user and a back control next to the "Bloqueados" title.
+
+### 2026-08-10 - Authenticated change-password flow
+- Added backend authenticated password-change endpoint (`POST /auth/change-password`) with current-password verification and password policy validation.
+- Wired the frontend `/account/configuration/change-password` form to submit against the backend endpoint and show success/error states from the real response.
+
+### 2026-08-10 - Password change invalidates other sessions
+- Enhanced authenticated password-change behavior so changing a password invalidates other active sessions while keeping the current session active.
+- Implemented token-version rotation in backend auth flow and middleware validation to reject stale tokens after password updates.
