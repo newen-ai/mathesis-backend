@@ -72,6 +72,7 @@ model User {
   whitelistAuditsAsTarget WhitelistAudit[] @relation("WhitelistAuditTarget")
   whitelistedEmailsCreated WhitelistedEmail[] @relation("WhitelistedEmailCreator")
   contactMessages      ContactMessage[] @relation("ContactMessageUser")
+  badges               UserBadge[]
 
   @@index([deletedAt])
   @@index([canonicalEmail])
@@ -342,4 +343,20 @@ model ContactMessage {
   @@index([userId, createdAt(sort: Desc)])
   @@index([category, createdAt(sort: Desc)])
   @@map("contact_messages")
+}
+
+model UserBadge {
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  badgeSlug  String    @map("badge_slug")
+  grantedAt  DateTime  @default(now()) @map("granted_at")
+  revokedAt  DateTime? @map("revoked_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, badgeSlug])
+  @@map("user_badges")
 }

@@ -10,6 +10,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 
 ## Implementation Scope (Current)
 - Profile core: name, surname, date of birth, nationality, headline, current company, about, location.
+- Profile badges: render active user badges below profile name in /perfil hero header.
 - Experience section: editable operations and read-only rendering.
 - Academics/Education section: editable operations and read-only rendering.
 - Authentication: forgot-password flow (Page 1 request view implemented; Page 2 sent view implemented; Page 3 reset-password view implemented; dark/light parity required per page) and authenticated change-password flow implemented end-to-end.
@@ -31,6 +32,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 | Core | locationPostalCode | implemented | implemented | |
 | Core | profileImageUrl | implemented | implemented | URL-based profile photo |
 | Core | profileBannerImageUrl | implemented | implemented | URL-based profile banner |
+| Core | badges | implemented | implemented | Rendered below profile name; label derives from slug words in Title Case |
 | Experience | employmentHistory | implemented | implemented | refined edit UX |
 | Experience | employmentHistory.description | implemented | implemented | 300 chars in UI |
 | Education | educationHistory | implemented | implemented | dedicated patch endpoint |
@@ -103,3 +105,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 ### 2026-08-10 - Password change invalidates other sessions
 - Enhanced authenticated password-change behavior so changing a password invalidates other active sessions while keeping the current session active.
 - Implemented token-version rotation in backend auth flow and middleware validation to reject stale tokens after password updates.
+
+### 2026-08-12 - Profile badges render pass
+- Added profile badge rendering scope to show active user badges in the perfil header under the display name.
+- Badge labels are derived from slug values using word splitting on underscore and per-word title casing.

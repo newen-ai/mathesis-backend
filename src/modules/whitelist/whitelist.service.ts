@@ -2,6 +2,7 @@ import { WhitelistRequestStatus } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
 import { prisma } from "../../common/prisma";
+import { badgeService, BADGE_SLUGS } from "../badge/badge.service";
 
 type PaginationInput = {
   limit: number;
@@ -205,6 +206,8 @@ export const whitelistService = {
       });
     });
 
+    await badgeService.grantBadge(targetUserId, BADGE_SLUGS.MENSA_ARGENTINA);
+
     return {
       id: user.id,
       email: user.email,
@@ -276,6 +279,8 @@ export const whitelistService = {
         }
       });
     });
+
+    await badgeService.grantBadge(request.userId, BADGE_SLUGS.MENSA_ARGENTINA);
 
     return {
       requestId: request.id,
