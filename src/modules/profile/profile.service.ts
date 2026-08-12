@@ -37,7 +37,10 @@ function buildProfileWriteData(input: UpdateMyProfileBody) {
   };
 }
 
-function mapProfile(profile: ProfileWithWorkExperiences | null): ProfileOutput | null {
+function mapProfile(
+  profile: ProfileWithWorkExperiences | null,
+  badges: Array<{ badgeSlug: string }>
+): ProfileOutput | null {
   if (!profile) {
     return null;
   }
@@ -55,6 +58,7 @@ function mapProfile(profile: ProfileWithWorkExperiences | null): ProfileOutput |
     locationPostalCode: profile.locationPostalCode,
     profileImageUrl: profile.profileImageUrl,
     profileBannerImageUrl: profile.profileBannerImageUrl,
+    badges: badges.map((badge) => ({ slug: badge.badgeSlug })),
     employmentHistory: profile.workExperiences.map((experience) => ({
       id: experience.id,
       company: experience.company,
@@ -300,6 +304,11 @@ export const profileService = {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
+        badges: {
+          where: { revokedAt: null },
+          select: { badgeSlug: true },
+          orderBy: { grantedAt: "asc" }
+        },
         profile: {
           where: { deletedAt: null },
           include: {
@@ -324,7 +333,7 @@ export const profileService = {
       id: user.id,
       email: user.email,
       role: user.role,
-      profile: mapProfile(user.profile)
+      profile: mapProfile(user.profile, user.badges)
     };
   },
 
@@ -332,6 +341,11 @@ export const profileService = {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
+        badges: {
+          where: { revokedAt: null },
+          select: { badgeSlug: true },
+          orderBy: { grantedAt: "asc" }
+        },
         profile: {
           where: { deletedAt: null },
           include: {
@@ -356,13 +370,20 @@ export const profileService = {
       id: user.id,
       email: user.email,
       role: user.role,
-      profile: mapProfile(user.profile)
+      profile: mapProfile(user.profile, user.badges)
     };
   },
 
   async upsertMyProfile(userId: string, input: UpdateMyProfileBody): Promise<MyProfileOutput> {
     const user = await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
+      include: {
+        badges: {
+          where: { revokedAt: null },
+          select: { badgeSlug: true },
+          orderBy: { grantedAt: "asc" }
+        }
+      }
     });
 
     if (!user || user.deletedAt) {
@@ -482,7 +503,7 @@ export const profileService = {
       id: user.id,
       email: user.email,
       role: user.role,
-      profile: mapProfile(updatedProfile)
+      profile: mapProfile(updatedProfile, user.badges)
     };
   },
 
@@ -493,6 +514,11 @@ export const profileService = {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
+        badges: {
+          where: { revokedAt: null },
+          select: { badgeSlug: true },
+          orderBy: { grantedAt: "asc" }
+        },
         profile: {
           where: { deletedAt: null }
         }
@@ -531,7 +557,7 @@ export const profileService = {
       id: user.id,
       email: user.email,
       role: user.role,
-      profile: mapProfile(updatedProfile)
+      profile: mapProfile(updatedProfile, user.badges)
     };
   },
 
@@ -542,6 +568,11 @@ export const profileService = {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
+        badges: {
+          where: { revokedAt: null },
+          select: { badgeSlug: true },
+          orderBy: { grantedAt: "asc" }
+        },
         profile: {
           where: { deletedAt: null }
         }
@@ -580,7 +611,7 @@ export const profileService = {
       id: user.id,
       email: user.email,
       role: user.role,
-      profile: mapProfile(updatedProfile)
+      profile: mapProfile(updatedProfile, user.badges)
     };
   },
 

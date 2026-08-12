@@ -17,6 +17,7 @@ import type {
   RequestPasswordResetBody
 } from "./auth.schemas";
 import { whitelistService } from "../whitelist/whitelist.service";
+import { badgeService, BADGE_SLUGS } from "../badge/badge.service";
 
 function buildAccessToken(payload: AuthPayload): string {
   const expiresIn = env.JWT_ACCESS_TTL as jwt.SignOptions["expiresIn"];
@@ -110,6 +111,10 @@ export const authService = {
 
     const isWhitelisted = await whitelistService.isCanonicalEmailWhitelisted(canonicalEmail);
     const effectiveWhitelistState = resolveEffectiveWhitelistState(isWhitelisted);
+
+    if (effectiveWhitelistState) {
+      await badgeService.grantBadge(newUser.id, BADGE_SLUGS.MENSA_ARGENTINA);
+    }
 
     const payload = buildAuthPayload({
       id: newUser.id,

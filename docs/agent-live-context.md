@@ -782,3 +782,20 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - docs/agent-live-context.md
 - Next:
   - Run the full integration suite after legacy fixtures across all integration files are updated to strong passwords compliant with current auth policy.
+
+### 2026-08-12 10:30 - Profile badge UI wired to backend badge slugs
+- Agent: GitHub Copilot
+- Summary: Exposed active user badges in profile API responses and replaced the hardcoded perfil header chip with dynamic badge chips rendered under the profile name using slug-to-title formatting with integral sign prefix.
+- Files changed:
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - src/modules/profile/profile.types.ts
+  - src/modules/profile/profile.service.ts
+  - ../mathesis-ui/src/lib/api/profile.ts
+  - ../mathesis-ui/src/app/(platform)/_lib/hooks/useProfessionalProfile.ts
+  - ../mathesis-ui/src/lib/utils/badge.ts
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
+- Next:
+  - Run a quick manual check in /perfil for users with 0, 1, and multiple active badges to confirm wrapping and spacing.
+  - If design requires special aliasing (for example "AR" instead of "Argentina"), add optional label overrides per slug in the UI utility.
