@@ -618,6 +618,23 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - ../mathesis-ui/src/app/globals.css
   - docs/agent-live-context.md
 - Next:
+
+### 2026-08-13 10:15 - Enterprise edit and delete flow
+- Agent: GitHub Copilot
+- Summary: Added owner-scoped enterprise update and delete backend routes, wired list-card actions to the real API, and created the dynamic edit page for /my-enterprises/[enterpriseId]/edit so admins can update or remove their own company entries.
+- Files changed:
+  - src/modules/enterprise/enterprise.schemas.ts
+  - src/modules/enterprise/enterprise.service.ts
+  - src/modules/enterprise/enterprise.controller.ts
+  - src/modules/enterprise/enterprise.routes.ts
+  - ../mathesis-ui/src/lib/api/enterprise.ts
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/page.tsx
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/[enterpriseId]/edit/page.tsx
+  - docs/ui-spec-live.md
+- Next actions:
+  - Validate the edit/delete flow with a browser run and confirm the final static export route constraint is met.
+  - Keep future enterprise changes limited to the current owner-scoped contract unless product rules expand again.
+
   - Validate screenshot-level visual parity for icon sizing/alignment against the latest topbar reference.
   - Confirm final admin icon preference (settings vs brand mark) if design direction changes.
 
@@ -799,3 +816,112 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next:
   - Run a quick manual check in /perfil for users with 0, 1, and multiple active badges to confirm wrapping and spacing.
   - If design requires special aliasing (for example "AR" instead of "Argentina"), add optional label overrides per slug in the UI utility.
+
+### 2026-08-12 11:20 - Mis empresas UI first pass
+- Agent: GitHub Copilot
+- Summary: Implemented first-pass My Enterprises screen at /my-enterprises with screenshot-aligned desktop layout, mobile-consistent responsive behavior, two hardcoded enterprise rows, and placeholder-only action buttons. Wired both existing "Mis Empresas" drawer entries (desktop + mobile) to this route.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Implement backend enterprise model + endpoints and replace hardcoded rows with API data.
+  - Wire CTA/button actions (crear, editar, eliminar, ver directorio) once backend scope starts.
+
+### 2026-08-12 11:45 - Enterprises typography scale + dark-mode status contrast
+- Agent: GitHub Copilot
+- Summary: Fixed low-contrast "Aprobada" badge styling in dark mode and introduced a shared 5-step typography scale utility in global styles, then refactored /my-enterprises to use the shared classes instead of ad-hoc font-size values.
+- Files changed:
+  - ../mathesis-ui/src/app/globals.css
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Apply the new text-scale utility classes gradually across other existing UI pages to reduce one-off size values.
+  - Keep enterprise status chips on token-based classes for future API-driven status variants.
+
+### 2026-08-12 12:05 - Crear nueva empresa navigation + form screen
+- Agent: GitHub Copilot
+- Summary: Wired the "Crear nueva empresa" action on /my-enterprises to open /my-enterprises/create and implemented the requested form screen with screenshot-aligned structure, preserving placeholder-only behavior and setting the primary CTA text to "Crear empresa".
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/page.tsx
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/create/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Connect the create form to backend enterprise creation/request endpoint when backend phase starts.
+  - Replace placeholder form submission with API validation and success/error states.
+
+### 2026-08-12 12:30 - Dark/light theme parity hardening for enterprises UI
+- Agent: GitHub Copilot
+- Summary: Improved dark-theme readability by replacing light-only heading/button text colors in enterprise pages with semantic theme-aware tokens/classes from globals.css, and updated agent instruction files to require dark/light validation and token-first color usage for future UI tasks.
+- Files changed:
+  - ../mathesis-ui/src/app/globals.css
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/page.tsx
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/create/page.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/AGENTS.md
+  - docs/agent-live-context.md
+- Next:
+  - Apply semantic heading/button/link color classes gradually across other platform pages still using light-only navy or fixed hex text colors.
+  - Keep new UI pages token-first and verify light/dark parity before signoff.
+
+### 2026-08-12 12:55 - Crear empresa required validation + submit redirect
+- Agent: GitHub Copilot
+- Summary: Converted /my-enterprises/create to a client form with required validation for "Nombre de la empresa" and "Tu rol", showing inline field-level errors when missing and redirecting to /my-enterprises when submission is valid. Also synchronized the live spec source to the newly added v0.4 HTML file.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/create/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Replace current redirect-only submit flow with backend request submission and success/error toasts once API is available.
+  - Reuse the same client validation rules in backend DTO/schema to keep parity.
+
+### 2026-08-12 13:35 - Enterprises backend endpoints + UI wiring
+- Agent: GitHub Copilot
+- Summary: Implemented the first backend slice for enterprises with Prisma model/migration and authenticated endpoints to create and list the current user's enterprises. Wired frontend create/list pages to these endpoints, preserving field validation and redirect behavior after successful creation.
+- Files changed:
+  - prisma/schema.prisma
+  - prisma/migrations/20260812143000_add_enterprises_module/migration.sql
+  - src/modules/enterprise/enterprise.types.ts
+  - src/modules/enterprise/enterprise.schemas.ts
+  - src/modules/enterprise/enterprise.service.ts
+  - src/modules/enterprise/enterprise.controller.ts
+  - src/modules/enterprise/enterprise.routes.ts
+  - src/routes/index.ts
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/lib/api/enterprise.ts
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/page.tsx
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/create/page.tsx
+  - ../mathesis-ui/src/app/globals.css
+  - docs/agent-live-context.md
+- Next:
+  - Add backend update/delete enterprise endpoints and connect existing UI placeholder actions.
+  - Add integration tests for enterprise create/list authorization and validation paths.
+
+### 2026-08-12 13:55 - Enterprises list friendly empty-state fallback
+- Agent: GitHub Copilot
+- Summary: Updated /my-enterprises list loading UX so failed/empty fetch cases no longer show a red technical error banner and instead fall back to a friendly empty-state message indicating the user still has no created companies.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Add explicit API error typing on the frontend to distinguish true server failures from expected empty-list states once backend error contracts are finalized.
+
+### 2026-08-12 14:10 - Enterprise status removal (UI + backend + DB)
+- Agent: GitHub Copilot
+- Summary: Removed enterprise approval/pending/rejected status from the product scope by deleting status rendering in the UI list, removing status from API types/contracts, and dropping the Enterprise status column/enum/index in Prisma with a dedicated migration.
+- Files changed:
+  - prisma/schema.prisma
+  - prisma/migrations/20260812152000_drop_enterprise_status/migration.sql
+  - src/modules/enterprise/enterprise.types.ts
+  - src/modules/enterprise/enterprise.service.ts
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/lib/api/enterprise.ts
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/page.tsx
+  - ../mathesis-ui/src/app/globals.css
+  - docs/agent-live-context.md
+- Next:
+  - Apply the new migration in each environment to remove the status column from existing databases.
+  - Remove any future status-related business logic from upcoming edit/delete enterprise endpoints.

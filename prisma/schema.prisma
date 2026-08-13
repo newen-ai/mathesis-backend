@@ -73,6 +73,7 @@ model User {
   whitelistedEmailsCreated WhitelistedEmail[] @relation("WhitelistedEmailCreator")
   contactMessages      ContactMessage[] @relation("ContactMessageUser")
   badges               UserBadge[]
+  enterprises          Enterprise[]
 
   @@index([deletedAt])
   @@index([canonicalEmail])
@@ -359,4 +360,22 @@ model UserBadge {
   @@index([userId])
   @@index([userId, badgeSlug])
   @@map("user_badges")
+}
+
+model Enterprise {
+  id            String           @id @default(cuid())
+  ownerUserId   String           @map("owner_user_id")
+  name          String
+  role          String
+  website       String?
+  description   String?
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  deletedAt     DateTime?        @map("deleted_at")
+
+  owner         User             @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  @@index([deletedAt])
+  @@index([ownerUserId, deletedAt, createdAt(sort: Desc)])
+  @@map("enterprises")
 }
