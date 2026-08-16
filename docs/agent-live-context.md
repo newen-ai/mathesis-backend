@@ -925,3 +925,111 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next:
   - Apply the new migration in each environment to remove the status column from existing databases.
   - Remove any future status-related business logic from upcoming edit/delete enterprise endpoints.
+
+### 2026-08-15 11:40 - Admin dashboard tab contrast pass
+- Agent: GitHub Copilot
+- Summary: Updated admin dashboard tab states to improve readability by using navy/blue styling for inactive items and gold styling for active items, including the nested whitelist view tabs. Added this direction to UI live guidelines to keep future admin UI changes consistent.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/admin/page.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/agent-live-context.md
+- Next:
+  - Validate the updated tab contrast manually in both light and dark themes on /admin.
+  - Apply the same color-state pattern to any future admin tab groups for visual consistency.
+
+### 2026-08-15 12:05 - Mathesis admin Mensa management UX pass
+- Agent: GitHub Copilot
+- Summary: Refined the Mathesis admin Mensa panel to show only current Mensa Empresarios admins in the list, switched list rows to navy backgrounds for readability, and added an "Agregar admin" searchable popup to grant ME admin access. Removed the top-level "Recargar datos" and "Abrir dashboard de Mensa Empresarios" actions from the Mathesis admin dashboard and increased contrast for admin subtitle/summary/helper texts.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/admin/page.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/ModulePage.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/agent-live-context.md
+- Next:
+  - Validate the new popup flow and ME-admin-only list behavior manually in light and dark themes.
+  - Apply the same contrast approach to any remaining low-contrast admin copy if found during QA.
+
+### 2026-08-15 12:25 - Companies admin route rename + style parity
+- Agent: GitHub Copilot
+- Summary: Renamed the dedicated Mensa admin UI route to `/admin/companies-admin`, kept `/admin/mensa-admin` as a compatibility redirect, and applied the same high-contrast blue-background/white-text styling to the companies-admin request and access lists.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/admin/companies-admin/page.tsx
+  - ../mathesis-ui/src/app/(platform)/admin/mensa-admin/page.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/agent-live-context.md
+- Next:
+  - Validate manual navigation and redirect behavior between `/admin/mensa-admin` and `/admin/companies-admin`.
+  - Confirm readability in both light and dark themes for all list cards and chips on companies-admin.
+
+### 2026-08-15 12:45 - Companies admin tabs + icon actions, legacy route removed
+- Agent: GitHub Copilot
+- Summary: Removed the old `mensa-admin` route completely, converted `/admin/companies-admin` into two tabs (pending requests and approved users), added icon-only approve/reject actions for pending requests, and added an icon action to remove approved users from Mensa Empresarios access.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/admin/companies-admin/page.tsx
+  - ../mathesis-ui/src/lib/utils/admin-mock.ts
+  - ../mathesis-ui/src/app/(platform)/admin/mensa-admin/page.tsx (deleted)
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/agent-live-context.md
+- Next:
+  - Manually verify tab switching and icon actions in `/admin/companies-admin` on both desktop and mobile.
+  - Confirm remove-access behavior aligns with expected ME admin governance rules before backend implementation.
+
+### 2026-08-15 13:30 - Mensa Empresarios backend + frontend integration
+- Agent: GitHub Copilot
+- Summary: Replaced all mock localStorage data with a real backend implementation. Added `mensaEmpresariosAdminAt` to User model, created `MensaBadgeRequest` model and migration, built a companies module (service/schemas/controller/routes), registered it at `/api/v1/admin/companies/*`. Updated frontend admin/page.tsx Mensa tab and companies-admin/page.tsx to call the real API. Deleted admin-mock.ts. TypeCheck and lint pass on both workspaces.
+- Files changed:
+  - prisma/schema.prisma
+  - prisma/migrations/20260815140000_add_mensa_empresarios_admin_and_badge_requests/migration.sql
+  - src/modules/companies/companies.service.ts
+  - src/modules/companies/companies.schemas.ts
+  - src/modules/companies/companies.controller.ts
+  - src/modules/companies/companies.routes.ts
+  - src/routes/index.ts
+  - ../mathesis-ui/src/lib/api/admin.ts
+  - ../mathesis-ui/src/app/(platform)/admin/page.tsx
+  - ../mathesis-ui/src/app/(platform)/admin/companies-admin/page.tsx
+  - ../mathesis-ui/src/lib/utils/admin-mock.ts (deleted)
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next:
+  - Run `prisma migrate deploy` against the target database to apply the new migration.
+  - Validate the full admin flows end-to-end (badge request approve/reject, member removal, admin grant/revoke, search).
+
+### 2026-08-15 14:05 - Companies dashboard ME-only access enforcement
+- Agent: GitHub Copilot
+- Summary: Removed the Mathesis admin role bypass from companies dashboard middleware so only users with `mensaEmpresariosAdminAt` can access companies-admin routes. This aligns the backend policy with the product rule that only ME admins can use the ME dashboard.
+- Files changed:
+  - src/modules/companies/companies.routes.ts
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next:
+  - Verify access matrix manually: non-ME users (including role=admin without ME flag) should get 403 on `/api/v1/admin/companies/access-check`; ME admins should get 200.
+  - Validate companies-admin frontend behavior after auth change (authorized view vs access denied state).
+
+### 2026-08-15 14:18 - Companies access-denied back navigation
+- Agent: GitHub Copilot
+- Summary: Added a visible "Volver al inicio" action on the companies-admin forbidden state so users denied ME-admin access can return to home in one click.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/admin/companies-admin/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Validate the forbidden state on `/admin/companies-admin` in light and dark themes and confirm the new button routes to `/`.
+
+### 2026-08-15 15:00 - Home Mensa membership CTA state-driven flow
+- Agent: GitHub Copilot
+- Summary: Implemented a state-driven Mensa Empresarios CTA in Home right sidebar with three states: request membership, cancel open request, and go-to-Mensa label when badge is active. Added authenticated backend endpoints for membership state, create request, and cancel request so this flow can be reused from future UI entry points.
+- Files changed:
+  - src/modules/companies/companies.service.ts
+  - src/modules/companies/companies.schemas.ts
+  - src/modules/companies/companies.controller.ts
+  - src/modules/companies/companies.routes.ts
+  - ../mathesis-ui/src/lib/api/admin.ts
+  - ../mathesis-ui/src/app/(platform)/_components/home/HomeView.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/RightSidebar.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next:
+  - Confirm CTA transitions end-to-end on `/` for: no badge/no request, pending request, and active badge.
+  - Decide final redirect target for `Ir a Mensa Empresarios` and replace temporary placeholder behavior.
+

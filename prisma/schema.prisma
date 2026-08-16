@@ -29,6 +29,12 @@ enum WhitelistRequestStatus {
   REJECTED
 }
 
+enum MensaBadgeRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum FeedPostReactionValue {
   value
 }
@@ -53,6 +59,7 @@ model User {
   passwordResetTokenExpiresAt DateTime? @map("password_reset_token_expires_at")
   authSessionVersion Int @default(1) @map("auth_session_version")
   themePreference String? @default("light") @map("theme_preference")
+  mensaEmpresariosAdminAt DateTime? @map("mensa_empresarios_admin_at")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
@@ -74,6 +81,8 @@ model User {
   contactMessages      ContactMessage[] @relation("ContactMessageUser")
   badges               UserBadge[]
   enterprises          Enterprise[]
+  mensaBadgeRequests          MensaBadgeRequest[] @relation("MensaBadgeRequestUser")
+  reviewedMensaBadgeRequests  MensaBadgeRequest[] @relation("MensaBadgeRequestReviewer")
 
   @@index([deletedAt])
   @@index([canonicalEmail])
@@ -360,6 +369,25 @@ model UserBadge {
   @@index([userId])
   @@index([userId, badgeSlug])
   @@map("user_badges")
+}
+
+model MensaBadgeRequest {
+  id               String                   @id @default(cuid())
+  userId           String                   @map("user_id")
+  badgeSlug        String                   @map("badge_slug")
+  message          String?
+  status           MensaBadgeRequestStatus  @default(PENDING)
+  reviewedByUserId String?                  @map("reviewed_by_user_id")
+  reviewedAt       DateTime?                @map("reviewed_at")
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
+
+  user             User  @relation("MensaBadgeRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy       User? @relation("MensaBadgeRequestReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([badgeSlug, status, createdAt(sort: Desc)])
+  @@index([userId, badgeSlug])
+  @@map("mensa_badge_requests")
 }
 
 model Enterprise {

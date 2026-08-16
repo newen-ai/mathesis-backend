@@ -136,3 +136,25 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 ### 2026-08-12 - Enterprise status removed
 - Removed enterprise status chips from /my-enterprises UI.
 - Dropped enterprise status field from backend API contracts and Prisma Enterprise model, with migration removing column/index/enum.
+
+### 2026-08-15 - Mensa Empresarios admin UI mock pass
+- Added UI scope for a split admin experience with Mathesis admin tabs and a separate Mensa Empresarios admin dashboard.
+- Established mock localStorage-driven data model for badge requests, ME admin assignment, and badge/role state before backend persistence exists.
+- The Mathesis admin can manage ME admin assignment and review pending badge requests; the ME admin dashboard shows badge-request rows with combined name + surname and profile links.
+
+### 2026-08-15 - Mensa Empresarios full backend + frontend integration
+- Added `mensaEmpresariosAdminAt` column to `users` table and new `mensa_badge_requests` table with `MensaBadgeRequestStatus` enum.
+- Added backend `companies` module under `src/modules/companies/` with service, schemas, controller, and routes.
+- Registered routes at `GET/POST/DELETE /api/v1/admin/companies/*`.
+- ME admin access: `mensaEmpresariosAdminAt IS NOT NULL` for the companies dashboard routes.
+- Removed all mock localStorage data from admin UI and wired admin/page.tsx Mensa tab and companies-admin/page.tsx to real API.
+- Deleted `src/lib/utils/admin-mock.ts` from frontend.
+
+### 2026-08-15 - Companies dashboard access hardening
+- Tightened companies dashboard authorization to ME-admin-only.
+- Mathesis admin role alone no longer grants access to `/api/v1/admin/companies/badge-requests`, `/api/v1/admin/companies/members`, or `/api/v1/admin/companies/access-check`.
+
+### 2026-08-15 - Home Mensa membership CTA state machine
+- Added state-driven CTA behavior in Home for Mensa Empresarios membership.
+- CTA states are: `Solicitar membresía` (no badge, no pending request), `Cancelar solicitud` (pending request open), and `Ir a Mensa Empresarios` (active badge).
+- Added authenticated membership endpoints for self-service state/read/create/cancel to support this CTA from multiple UI locations.
