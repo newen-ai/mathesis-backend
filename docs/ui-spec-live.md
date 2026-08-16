@@ -3,9 +3,9 @@
 Purpose: Keep backend and frontend aligned with the current HTML source of truth and track implementation deltas by HTML filename version.
 
 ## Active Spec Source
-- HTML file: html/Mathesis_MVP_Unificado_v0.2.html
+- HTML file: html/Mathesis_MVP_Unificado_v0.4.html
 - Version source of truth: filename suffix only (v0.2, v0.3, ...)
-- Last sync date: 2026-08-05
+- Last sync date: 2026-08-12
 - Scope owner: backend + frontend
 
 ## Implementation Scope (Current)
@@ -16,6 +16,10 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Authentication: forgot-password flow (Page 1 request view implemented; Page 2 sent view implemented; Page 3 reset-password view implemented; dark/light parity required per page) and authenticated change-password flow implemented end-to-end.
 - Platform navigation: desktop topbar profile menu (avatar-triggered panel), with profile header bound to user profile data and first-pass interaction limits (logout functional, route-backed entries functional, placeholder entries visible without route behavior).
 - Configuration: main settings page only, reached from the topbar menu at /account/configuration, with the first pass covering both desktop and mobile. Mobile entry must match the provided screenshot; desktop should follow the HTML v0.2 settings reference. Dark-mode control moves from the topbar into this page.
+- Enterprises: /my-enterprises now loads from backend endpoint GET /api/v1/enterprises/my, creates via POST /api/v1/enterprises, updates via PATCH /api/v1/enterprises/:enterpriseId, and deletes via DELETE /api/v1/enterprises/:enterpriseId.
+- Enterprises: creation request form route at /my-enterprises/create keeps required-field client validation (Nombre de la empresa and Tu rol), shows inline per-field errors, and redirects to /my-enterprises after successful backend creation.
+- Enterprises: each card in /my-enterprises offers edit and delete actions; edit uses /my-enterprises/[enterpriseId]/edit with prefilled data and save-back to the backend.
+- Enterprises: status labels/chips were removed from both backend contracts and UI rendering (status column dropped from DB schema).
 
 ## Profile Field Matrix
 | Section | Field | Backend status | Frontend status | Notes |
@@ -109,3 +113,48 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 ### 2026-08-12 - Profile badges render pass
 - Added profile badge rendering scope to show active user badges in the perfil header under the display name.
 - Badge labels are derived from slug values using word splitting on underscore and per-word title casing.
+
+### 2026-08-12 - Mis empresas UI first pass
+- Added frontend route /my-enterprises and wired "Mis Empresas" topbar menu entries (desktop + mobile drawer) to this path.
+- Implemented screenshot-aligned page structure with two hardcoded enterprises and non-functional action buttons as UI placeholders pending backend.
+
+### 2026-08-12 - Crear empresa form UI pass
+- Added frontend route /my-enterprises/create and wired the /my-enterprises "Crear nueva empresa" CTA to navigate to it.
+- Implemented screenshot-aligned request form UI and set the primary action label to "Crear empresa" (no backend submit yet).
+
+### 2026-08-12 - Active source bumped to v0.4
+- Updated live spec source to html/Mathesis_MVP_Unificado_v0.4.html after new HTML version was added.
+
+### 2026-08-12 - Crear empresa form validation + redirect
+- Added client-side required validation for "Nombre de la empresa" and "Tu rol" with mandatory markers and inline error messages below each invalid field.
+- On successful submit, the form now redirects back to /my-enterprises (backend integration remains pending).
+
+### 2026-08-12 - Enterprises backend first pass
+- Added backend enterprises module with authenticated endpoints GET /api/v1/enterprises/my and POST /api/v1/enterprises.
+- Added Prisma enterprise model/migration and wired frontend pages so create submits to backend and list reads backend data.
+
+### 2026-08-12 - Enterprise status removed
+- Removed enterprise status chips from /my-enterprises UI.
+- Dropped enterprise status field from backend API contracts and Prisma Enterprise model, with migration removing column/index/enum.
+
+### 2026-08-15 - Mensa Empresarios admin UI mock pass
+- Added UI scope for a split admin experience with Mathesis admin tabs and a separate Mensa Empresarios admin dashboard.
+- Established mock localStorage-driven data model for badge requests, ME admin assignment, and badge/role state before backend persistence exists.
+- The Mathesis admin can manage ME admin assignment and review pending badge requests; the ME admin dashboard shows badge-request rows with combined name + surname and profile links.
+
+### 2026-08-15 - Mensa Empresarios full backend + frontend integration
+- Added `mensaEmpresariosAdminAt` column to `users` table and new `mensa_badge_requests` table with `MensaBadgeRequestStatus` enum.
+- Added backend `companies` module under `src/modules/companies/` with service, schemas, controller, and routes.
+- Registered routes at `GET/POST/DELETE /api/v1/admin/companies/*`.
+- ME admin access: `mensaEmpresariosAdminAt IS NOT NULL` for the companies dashboard routes.
+- Removed all mock localStorage data from admin UI and wired admin/page.tsx Mensa tab and companies-admin/page.tsx to real API.
+- Deleted `src/lib/utils/admin-mock.ts` from frontend.
+
+### 2026-08-15 - Companies dashboard access hardening
+- Tightened companies dashboard authorization to ME-admin-only.
+- Mathesis admin role alone no longer grants access to `/api/v1/admin/companies/badge-requests`, `/api/v1/admin/companies/members`, or `/api/v1/admin/companies/access-check`.
+
+### 2026-08-15 - Home Mensa membership CTA state machine
+- Added state-driven CTA behavior in Home for Mensa Empresarios membership.
+- CTA states are: `Solicitar membresía` (no badge, no pending request), `Cancelar solicitud` (pending request open), and `Ir a Mensa Empresarios` (active badge).
+- Added authenticated membership endpoints for self-service state/read/create/cancel to support this CTA from multiple UI locations.

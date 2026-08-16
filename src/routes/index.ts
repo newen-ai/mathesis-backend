@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { authRouter } from "../modules/auth/auth.routes";
 import { chatRouter } from "../modules/chat/chat.routes";
+import { companiesRouter } from "../modules/companies/companies.routes";
 import { connectionRouter } from "../modules/connection/connection.routes";
+import { enterpriseRouter } from "../modules/enterprise/enterprise.routes";
 import { feedRouter } from "../modules/feed/feed.routes";
 import { healthRouter } from "../modules/health/health.routes";
 import { profileRouter } from "../modules/profile/profile.routes";
@@ -13,10 +15,12 @@ const apiRouter = Router();
 apiRouter.use("/health", healthRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/profile", profileRouter);
+apiRouter.use("/enterprises", enterpriseRouter);
 apiRouter.use("/connections", connectionRouter);
 apiRouter.use("/feed", feedRouter);
 apiRouter.use("/chats", chatRouter);
 apiRouter.use("/support", supportRouter);
 apiRouter.use("/admin/whitelist", whitelistAdminRouter);
+apiRouter.use("/admin/companies", companiesRouter);
 
 export { apiRouter };
