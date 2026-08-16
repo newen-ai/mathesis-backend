@@ -1033,3 +1033,16 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - Confirm CTA transitions end-to-end on `/` for: no badge/no request, pending request, and active badge.
   - Decide final redirect target for `Ir a Mensa Empresarios` and replace temporary placeholder behavior.
 
+### 2026-08-16 00:35 - Temporary ME admin topbar shortcut
+- Agent: GitHub Copilot
+- Summary: Added a temporary topbar shortcut for ME admins only, driven by the companies access-check endpoint, so testers can jump directly to `/admin/companies-admin` from the main navigation.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - ../mathesis-ui/src/lib/api/admin.ts
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next:
+  - Verify the shortcut appears for ME admins and remains hidden for non-ME users.
+  - Remove the shortcut once the permanent navigation path is decided.
+

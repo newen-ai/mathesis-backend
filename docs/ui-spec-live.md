@@ -158,3 +158,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Added state-driven CTA behavior in Home for Mensa Empresarios membership.
 - CTA states are: `Solicitar membresía` (no badge, no pending request), `Cancelar solicitud` (pending request open), and `Ir a Mensa Empresarios` (active badge).
 - Added authenticated membership endpoints for self-service state/read/create/cancel to support this CTA from multiple UI locations.
+
+### 2026-08-16 - Temporary ME admin topbar shortcut
+- Added a temporary topbar shortcut for users with Mensa Empresarios admin access.
+- The shortcut links directly to `/admin/companies-admin` and is hidden for users who do not pass the ME admin access check.
