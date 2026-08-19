@@ -15,11 +15,19 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Academics/Education section: editable operations and read-only rendering.
 - Authentication: forgot-password flow (Page 1 request view implemented; Page 2 sent view implemented; Page 3 reset-password view implemented; dark/light parity required per page) and authenticated change-password flow implemented end-to-end.
 - Platform navigation: desktop topbar profile menu (avatar-triggered panel), with profile header bound to user profile data and first-pass interaction limits (logout functional, route-backed entries functional, placeholder entries visible without route behavior).
+- Platform navigation: add an Ateneo entry that routes directly to `/ateneo` (explore groups), available in desktop topbar and mobile drawer personal menu.
 - Configuration: main settings page only, reached from the topbar menu at /account/configuration, with the first pass covering both desktop and mobile. Mobile entry must match the provided screenshot; desktop should follow the HTML v0.2 settings reference. Dark-mode control moves from the topbar into this page.
 - Enterprises: /my-enterprises now loads from backend endpoint GET /api/v1/enterprises/my, creates via POST /api/v1/enterprises, updates via PATCH /api/v1/enterprises/:enterpriseId, and deletes via DELETE /api/v1/enterprises/:enterpriseId.
 - Enterprises: creation request form route at /my-enterprises/create keeps required-field client validation (Nombre de la empresa and Tu rol), shows inline per-field errors, and redirects to /my-enterprises after successful backend creation.
 - Enterprises: each card in /my-enterprises offers edit and delete actions; edit uses /my-enterprises/[enterpriseId]/edit with prefilled data and save-back to the backend.
 - Enterprises: status labels/chips were removed from both backend contracts and UI rendering (status column dropped from DB schema).
+- Ateneo (backend-integrated): `/ateneo` is the dedicated 3-column feed page with middle-column topics loaded from backend endpoint `GET /api/v1/ateneo/feed`.
+- Ateneo (backend-integrated): `/ateneo/groups` uses backend endpoint `GET /api/v1/ateneo/groups?tab=...` for tabbed group browsing (`Tus grupos`, `Descubrir`, `Grupos que administrás`).
+- Ateneo (backend-integrated): group/topic/detail flows (`/ateneo/groups/:groupId`, `/ateneo/groups/:groupId/new-topic`, `/ateneo/groups/:groupId/topics/:topicId`) are runtime-backed by `GET/POST /api/v1/ateneo/groups/:groupId/topics*` and topic-comment endpoints.
+- Ateneo (backend-integrated): non-member users can open a group detail preview (`/ateneo/groups/:groupId`) to read basic metadata (name, description, rules) and join in place via `POST /api/v1/ateneo/groups/:groupId/join`; topics remain member-only until join succeeds.
+- Ateneo (backend-integrated): group settings can restrict topic creation and commenting to admins only; the frontend hides the corresponding CTAs and the backend rejects bypass attempts for those actions.
+- Ateneo (backend-integrated): group middle-column header actions include an info page (`/ateneo/groups/:groupId/info`), a members page (`/ateneo/groups/:groupId/members`), and an admin-only edit page (`/ateneo/groups/:groupId/edit`) that reuses the new-group form prefilled with the current group data.
+- Ateneo (compatibility): `/ateneo/feed` redirects to `/ateneo`.
 
 ## Profile Field Matrix
 | Section | Field | Backend status | Frontend status | Notes |
@@ -162,3 +170,50 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 ### 2026-08-16 - Temporary ME admin topbar shortcut
 - Added a temporary topbar shortcut for users with Mensa Empresarios admin access.
 - The shortcut links directly to `/admin/companies-admin` and is hidden for users who do not pass the ME admin access check.
+
+### 2026-08-16 - Ateneo explore groups first UI pass
+- Added a new Ateneo navigation entry that opens `/ateneo` directly from desktop topbar and mobile drawer.
+- Implemented the first Ateneo screen (`Explorar Grupos`) with mock-only structures and data, including search plus tabbed sections (`Tus grupos`, `Descubrir`, `Grupos que administrás`) replacing stacked section blocks.
+- Added reusable mock icon-catalog entries for future create-group and related Ateneo forms.
+
+### 2026-08-16 - Ateneo create-group route (mock functional redirect)
+- Wired all `Crear grupo` triggers in `/ateneo` to route to `/ateneo/create`.
+- Implemented `/ateneo/create` as a mock functional form with the requested fields: icon, name, description, rules, language, badges (multi-checkbox), official-group toggle, create-topics mode, and comments mode.
+- Submit flow is UI-only for now and redirects back to `/ateneo` after mock creation.
+
+### 2026-08-16 - Ateneo member-group navigation
+- Added member-group navigation from `/ateneo` cards so groups where the user is currently a member route to a dedicated group URL (`/ateneo/groups/:groupId`).
+- Added a first-pass group page shell (mock only) with group header, visible rules section, and a placeholder `Crear tema` action.
+
+### 2026-08-16 - Ateneo group view 3-column desktop pass
+- Updated `/ateneo/groups/:groupId` desktop composition to a three-column layout: left placeholder panel (`Coming soon`), middle group view with rules and popular topics feed cards, and right `Descubrí Mathesis` cards.
+- Mobile keeps a single-column focus on the middle content while hiding left/right columns.
+
+### 2026-08-18 - Ateneo new-topic composer UI mock pass
+- Added a mock local composer to the middle group-feed view so the `+ Nuevo tema` CTA opens a draft form, accepts title/description/tone values, and prepends a new topic item to the visible feed list without persistence.
+- Current behavior is intentionally frontend-only and does not yet hit backend storage or create a persisted discussion record.
+
+### 2026-08-17 - Ateneo feed/new-topic page split
+- Split the group middle experience into two dedicated route-level pages that share the same 3-column layout shell.
+- `/ateneo/groups/:groupId` now hosts the feed-focused middle component, while `/ateneo/groups/:groupId/new-topic` hosts the new-topic middle component.
+- Left (`AteneoExploreGroups`) and right (`DiscoverMathesis`) columns remain shared across both pages.
+
+### 2026-08-17 - Ateneo topic detail view
+- Replaced the mock topic composer with a feed-like single-post detail experience for the middle column on `/ateneo/groups/:groupId/new-topic`.
+- The card keeps the persistent left/right columns and focuses the middle area on the post content, feed-style reaction buttons, and a bookmark action that triggers a "Coming soon" toast.
+- Reaction and comments follow the current feed UI language while the detailed evaluation list uses a lightweight, coherent selector pattern consistent with the existing platform aesthetic.
+
+### 2026-08-19 - Ateneo non-member group preview and join
+- Enabled discover/non-member group navigation to open `/ateneo/groups/:groupId` instead of blocking click-through.
+- Added non-member group preview mode in middle column showing basic group data and rules, with a real `Unirse al grupo` action.
+- Added backend join endpoint and post-join refresh flow so the preview seamlessly transitions into full member topic feed access.
+
+### 2026-08-19 - Ateneo admin-only topic/comment permissions
+- Added admin-only topic creation and comment creation enforcement to group settings.
+- The create-topic route and topic discussion UI now hide their corresponding action buttons for non-admin members when a group is configured for admins-only interaction.
+- Backend bypass attempts for topic and comment creation are rejected even if the user skips the UI.
+
+### 2026-08-19 - Ateneo group header actions and edit page
+- Added the group info, members, and admin-only edit actions to the middle-column header area.
+- Added backend group members and group update endpoints to support the members list page and the prefilled group-edit page.
+- Reused the new-group form for the edit screen so the configuration page keeps the same UI while loading the current values.

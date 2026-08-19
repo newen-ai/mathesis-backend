@@ -47,6 +47,21 @@ enum ContactMessageCategory {
   OTHER
 }
 
+enum AteneoTopicTone {
+  LIBRE
+  SERIO
+  RECOMENDADO
+}
+
+enum AteneoPermissionMode {
+  free
+  admins
+}
+
+enum AteneoReactionValue {
+  value
+}
+
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
@@ -83,10 +98,163 @@ model User {
   enterprises          Enterprise[]
   mensaBadgeRequests          MensaBadgeRequest[] @relation("MensaBadgeRequestUser")
   reviewedMensaBadgeRequests  MensaBadgeRequest[] @relation("MensaBadgeRequestReviewer")
+  ateneoGroupMemberships      AteneoGroupMember[]
+  ateneoGroupsCreated         AteneoGroup[]       @relation("AteneoGroupCreatedBy")
+  ateneoTopicsAuthored        AteneoTopic[]       @relation("AteneoTopicAuthor")
+  ateneoTopicCommentsAuthored AteneoTopicComment[] @relation("AteneoTopicCommentAuthor")
+  ateneoTopicCommentsMentioned AteneoTopicComment[] @relation("AteneoTopicCommentMentionUser")
+  ateneoTopicReactions        AteneoTopicReaction[]
+  ateneoTopicCommentReactions AteneoTopicCommentReaction[]
 
   @@index([deletedAt])
   @@index([canonicalEmail])
   @@map("users")
+}
+
+model AteneoGroup {
+  id                String    @id @default(cuid())
+  slug              String    @unique
+  name              String
+  description       String?
+  createTopicsMode  AteneoPermissionMode @default(free) @map("create_topics_mode")
+  commentsMode      AteneoPermissionMode @default(free) @map("comments_mode")
+  memberSubtitle    String    @default("0 miembros") @map("member_subtitle")
+  activityLabel     String    @default("Sin actividad") @map("activity_label")
+  icon              String    @default("community")
+  isOfficial        Boolean   @default(false) @map("is_official")
+  createdByUserId   String    @map("created_by_user_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  deletedAt         DateTime? @map("deleted_at")
+
+  createdBy         User              @relation("AteneoGroupCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
+  rules             AteneoGroupRule[]
+  memberships       AteneoGroupMember[]
+  topics            AteneoTopic[]
+
+  @@index([deletedAt])
+  @@index([createdByUserId, deletedAt])
+  @@map("ateneo_groups")
+}
+
+model AteneoGroupRule {
+  id          String    @id @default(cuid())
+  groupId     String    @map("group_id")
+  text        String
+  position    Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  group       AteneoGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId, deletedAt, position])
+  @@map("ateneo_group_rules")
+}
+
+model AteneoGroupMember {
+  id          String    @id @default(cuid())
+  groupId     String    @map("group_id")
+  userId      String    @map("user_id")
+  isAdmin     Boolean   @default(false) @map("is_admin")
+  isPinned    Boolean   @default(false) @map("is_pinned")
+  joinedAt    DateTime  @default(now()) @map("joined_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  leftAt      DateTime? @map("left_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  group       AteneoGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([groupId, deletedAt, leftAt])
+  @@index([userId, deletedAt, leftAt])
+  @@index([isPinned, userId, deletedAt])
+  @@map("ateneo_group_members")
+}
+
+model AteneoTopic {
+  id              String          @id @default(cuid())
+  groupId         String          @map("group_id")
+  authorUserId    String          @map("author_user_id")
+  title           String
+  description     String
+  tone            AteneoTopicTone @default(LIBRE)
+  reactionCount   Int             @default(0) @map("reaction_count")
+  commentCount    Int             @default(0) @map("comment_count")
+  isRecommended   Boolean         @default(false) @map("is_recommended")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  deletedAt       DateTime?       @map("deleted_at")
+
+  group           AteneoGroup             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  author          User                    @relation("AteneoTopicAuthor", fields: [authorUserId], references: [id], onDelete: Cascade)
+  comments        AteneoTopicComment[]
+  reactions       AteneoTopicReaction[]
+
+  @@index([groupId, deletedAt, createdAt(sort: Desc)])
+  @@index([authorUserId, deletedAt])
+  @@index([isRecommended, deletedAt, createdAt(sort: Desc)])
+  @@map("ateneo_topics")
+}
+
+model AteneoTopicComment {
+  id                  String    @id @default(cuid())
+  topicId             String    @map("topic_id")
+  authorUserId        String    @map("author_user_id")
+  content             String
+  parentCommentId     String?   @map("parent_comment_id")
+  mentionUserId       String?   @map("mention_user_id")
+  reactionCount       Int       @default(0) @map("reaction_count")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  deletedAt           DateTime? @map("deleted_at")
+
+  topic               AteneoTopic          @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  author              User                 @relation("AteneoTopicCommentAuthor", fields: [authorUserId], references: [id], onDelete: Cascade)
+  parentComment       AteneoTopicComment?  @relation("AteneoCommentReplies", fields: [parentCommentId], references: [id], onDelete: SetNull)
+  replies             AteneoTopicComment[] @relation("AteneoCommentReplies")
+  mentionUser         User?                @relation("AteneoTopicCommentMentionUser", fields: [mentionUserId], references: [id], onDelete: SetNull)
+  reactions           AteneoTopicCommentReaction[]
+
+  @@index([topicId, deletedAt, createdAt(sort: Asc)])
+  @@index([authorUserId, deletedAt])
+  @@index([parentCommentId, deletedAt])
+  @@map("ateneo_topic_comments")
+}
+
+model AteneoTopicReaction {
+  id              String              @id @default(cuid())
+  topicId         String              @map("topic_id")
+  userId          String              @map("user_id")
+  reactionValue   AteneoReactionValue @map("reaction_value")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  topic           AteneoTopic         @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([topicId, userId])
+  @@index([topicId])
+  @@index([userId])
+  @@map("ateneo_topic_reactions")
+}
+
+model AteneoTopicCommentReaction {
+  id              String              @id @default(cuid())
+  commentId       String              @map("comment_id")
+  userId          String              @map("user_id")
+  reactionValue   AteneoReactionValue @map("reaction_value")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  comment         AteneoTopicComment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@index([commentId])
+  @@index([userId])
+  @@map("ateneo_topic_comment_reactions")
 }
 
 model WhitelistedEmail {
