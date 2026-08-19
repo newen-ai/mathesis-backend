@@ -239,6 +239,78 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next:
   - Run full integration suite after aligning legacy integration fixtures with current password policy validation requirements.
 
+### 2026-08-19 15:20 - Ateneo non-member preview + join
+- Agent: GitHub Copilot
+- Summary: Implemented non-member group preview and join flow by opening discover groups to their detail page, exposing public group metadata/rules for non-members, and adding a backend join endpoint that enables full member access after joining.
+- Files changed:
+  - docs/ui-spec-live.md
+  - src/modules/ateneo/ateneo.schemas.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - src/modules/ateneo/ateneo.controller.ts
+  - src/modules/ateneo/ateneo.routes.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoExploreGroups.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupsExplorer.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+- Next:
+  - Validate join flow end-to-end against real API auth session.
+  - Confirm non-members still cannot access topic/comment endpoints before joining.
+
+### 2026-08-19 16:00 - Ateneo admin-only topic/comment gating
+- Agent: GitHub Copilot
+- Summary: Added persisted admin-only permission modes for topic creation and commenting in Ateneo groups, enforced them in backend create endpoints, and hid the matching create/comment CTAs in the frontend when the current user is not an admin.
+- Files changed:
+  - docs/ui-spec-live.md
+  - prisma/schema.prisma
+  - prisma/migrations/20260819150000_add_ateneo_group_permission_modes/migration.sql
+  - src/modules/ateneo/ateneo.schemas.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/create/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+- Next:
+  - Confirm the existing groups that should use admin-only settings are created/edited with the new mode values.
+  - Optionally add read-only explanatory copy where users hit the hidden-CTA state on the new-topic and discussion screens.
+
+### 2026-08-19 16:25 - Ateneo group action pages
+- Agent: GitHub Copilot
+- Summary: Started implementation of the group header action buttons and their destination pages: info, members, and admin-only edit with prefilled config.
+- Files changed:
+  - docs/ui-spec-live.md
+- Next:
+  - Add backend group members/update endpoints.
+  - Wire the header buttons into the group middle column.
+  - Reuse the new-group form for the edit page.
+
+### 2026-08-19 17:00 - Ateneo group info/members/edit completed
+- Agent: GitHub Copilot
+- Summary: Finished the Ateneo middle-column header actions and destination pages: info, members, and admin-only edit. Added backend members/update endpoints and reused the new-group form for the edit UI.
+- Files changed:
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+  - prisma/schema.prisma
+  - src/modules/ateneo/ateneo.schemas.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - src/modules/ateneo/ateneo.controller.ts
+  - src/modules/ateneo/ateneo.routes.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupHeaderActions.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupForm.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupInfoPanel.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupMembersPanel.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupEditPanel.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/info/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/members/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/edit/page.tsx
+- Next:
+  - Optionally add admin-only hint copy to the info/members pages if the UX needs to explain the edit affordance.
+
 ### 2026-08-06 01:35 - Header eye-button for readonly self preview
 - Agent: GitHub Copilot
 - Summary: Added a new header button styled like the edit CTA but with an eye icon, wired to redirect to /perfil?userId=<current user id> so users can preview their own profile as others see it.
@@ -760,6 +832,17 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - Replace example blocked record(s) with API-backed blocked-users data once backend tables/endpoints exist.
   - Wire Desbloquear and block-reason creation/editing actions after backend scope is approved.
 
+### 2026-08-18 14:15 - Ateneo new-topic composer UI mock pass
+- Agent: GitHub Copilot
+- Summary: Added a local mock composer to the group feed so the `+ Nuevo tema` control opens a draft form, accepts title/description/tone values, and prepends a new topic entry to the visible feed list without backend persistence.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Verify the composer visually in the browser and polish copy/spacing if needed.
+  - Decide whether the next iteration should include actual validation states or backend persistence once the UI is approved.
+
 ### 2026-08-10 23:58 - Password eye-toggle across all fields
 - Agent: GitHub Copilot
 - Summary: Added a shared eye-toggle password input component and replaced every password field in login, registration, reset-password, and authenticated change-password pages so users can switch between hidden and visible password text consistently.
@@ -1045,4 +1128,298 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next:
   - Verify the shortcut appears for ME admins and remains hidden for non-ME users.
   - Remove the shortcut once the permanent navigation path is decided.
+
+### 2026-08-16 02:05 - Ateneo explore groups first screen (UI mock pass)
+- Agent: GitHub Copilot
+- Summary: Added an Ateneo entry in platform navigation and implemented the first Ateneo screen at `/ateneo` as a mock-only explore-groups page with search and tabbed groups (`Tus grupos`, `Descubrir`, `Grupos que administrás`) aligned to the provided desktop/mobile references.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/DesktopTopbarIcons.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_lib/mock-data.ts
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next:
+  - Validate `/ateneo` in light and dark themes on desktop and mobile.
+  - Continue with the next Ateneo screen after user approval of this first screen.
+
+### 2026-08-16 02:28 - Ateneo create-group flow wiring (UI mock pass)
+- Agent: GitHub Copilot
+- Summary: Implemented functional redirection for all `Crear grupo` actions in `/ateneo` to `/ateneo/create`, and built a mock-only create-group form screen with the requested field set and redirect-back submit behavior.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/create/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_lib/mock-data.ts
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next:
+  - Validate `/ateneo/create` in light and dark themes on desktop and mobile.
+  - Move to the next Ateneo screen after user feedback.
+
+### 2026-08-16 02:41 - Ateneo create form layout + badge multiselect refinement
+- Agent: GitHub Copilot
+- Summary: Updated `/ateneo/create` so `Crear temas` and `Comentarios` render on the same row, replaced `Insignias requeridas` checkbox grid with a multiselect dropdown interaction, and removed the `Mathesis` badge from mock badge options.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/create/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_lib/mock-data.ts
+  - docs/agent-live-context.md
+- Next:
+  - Validate the new multiselect behavior and row layout on desktop and mobile.
+  - Continue with the next Ateneo screen after user approval.
+
+### 2026-08-16 02:52 - Ateneo create action placement + title back control
+- Agent: GitHub Copilot
+- Summary: Moved the `Crear` action to the bottom of the `/ateneo/create` form and added a classic back-chevron control beside the `Nuevo grupo` title.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/create/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Validate spacing parity for the new header row and bottom action placement in desktop/mobile.
+
+### 2026-08-16 02:57 - Ateneo create button right alignment
+- Agent: GitHub Copilot
+- Summary: Aligned the bottom `Crear` button to the right side of the `/ateneo/create` form as requested.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/create/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Continue with the next Ateneo screen adjustments from user feedback.
+
+### 2026-08-16 03:07 - Ateneo member-group card redirect
+- Agent: GitHub Copilot
+- Summary: Implemented click-to-open behavior for groups where the user is already a member and routed them to `/ateneo/groups/:groupId`; added a first-pass group destination screen with group context and visible rules.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_lib/mock-data.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/page.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next:
+  - Validate group-card routing behavior on all Ateneo tabs.
+  - Implement the full per-group screen layout once provided.
+
+### 2026-08-16 03:16 - Ateneo static export dynamic-route fix
+- Agent: GitHub Copilot
+- Summary: Fixed the `/ateneo/groups/[groupId]` build error under `output: export` by converting the page to a server-rendered dynamic route and adding `generateStaticParams()` from Ateneo mock member groups.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Confirm static export/build runs without missing `generateStaticParams` errors.
+
+### 2026-08-16 03:28 - Ateneo group page 3-column desktop layout
+- Agent: GitHub Copilot
+- Summary: Implemented screenshot-aligned 3-column desktop layout for `/ateneo/groups/:groupId` while keeping the existing topbar: left panel with centered `Coming soon`, middle column with group context and popular topics, and right `Descubrí Mathesis` cards. Mobile remains middle-column-only.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/page.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next:
+  - Validate spacing and typography parity against the provided screenshot in light and dark themes.
+
+### 2026-08-16 03:40 - Ateneo group column content extracted to standalone components
+- Agent: GitHub Copilot
+- Summary: Moved the left placeholder content, middle group feed content, and right discovery content for `/ateneo/groups/:groupId` into standalone components named `AteneoExploreGroups`, `AteneoGroupFeed`, and `DiscoverMathesis`, while preserving the shared three-column shell and column wrappers.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoExploreGroups.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/DiscoverMathesis.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/page.tsx
+  - docs/agent-live-context.md
+- Next:
+  - Reuse these extracted content components in future Ateneo column rotations and alternate group layouts.
+  - Replace the page-local mock topics with shared or backend-backed data when the group feed is connected.
+
+### 2026-08-17 18:20 - Ateneo middle-column back row alignment
+- Agent: GitHub Copilot
+- Summary: Fixed duplicated `Volver a explorar grupos` behavior by moving the back action into a dedicated first row of the middle column and removing the in-form duplicate, matching the two-row middle layout from the screenshot.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupMiddleColumn.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate final visual parity for middle-column borders/dividers in browser at desktop widths.
+  - Continue with any remaining topic-form spacing or typography nits from user review.
+
+### 2026-08-17 19:05 - Ateneo split pages for feed and new topic
+- Agent: GitHub Copilot
+- Summary: Recovered the feed as its own middle component and moved topic creation into a dedicated new-topic page, with both pages reusing the same 3-column structure and shared left/right column content.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_lib/group-topics.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/new-topic/page.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate browser parity for both routes (`/ateneo/groups/:groupId` and `/ateneo/groups/:groupId/new-topic`) in light and dark themes.
+  - Decide whether submit behavior on new-topic should stay mock-only or connect to backend creation flow.
+
+### 2026-08-17 19:20 - New-topic group target selector
+- Agent: GitHub Copilot
+- Summary: Added a group dropdown to the new-topic middle form so users can change which member group they are posting to while staying on the same creation screen.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/new-topic/page.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Confirm selected target group is included in payload once backend topic-create endpoint is connected.
+  - Keep dropdown options scoped to groups where the user is a member.
+
+### 2026-08-17 19:35 - New-topic availableGroups runtime guard
+- Agent: GitHub Copilot
+- Summary: Fixed `Cannot read properties of undefined (reading 'map')` in the new-topic form by making `availableGroups` optional and mapping over a safe fallback list that defaults to the current group.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate navigation path transitions to `/new-topic` under HMR/reload to confirm no stale-prop crashes.
+
+### 2026-08-17 20:10 - Ateneo topic detail mock pass
+- Agent: GitHub Copilot
+- Summary: Replaced the form-heavy `/ateneo/groups/:groupId/new-topic` experience with a feed-like single-topic detail card that keeps the left and right columns static while the middle column focuses on the post, reaction list, and bookmark control. The bookmark trigger raises a toast with the exact copy `Coming soon` and the reaction/comment row follows the existing feed visual language without adding unsupported backend behavior.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/new-topic/page.tsx
+  - ../mathesis-backend/docs/ui-spec-live.md
+  - ../mathesis-backend/docs/agent-live-context.md
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+- Next actions:
+  - Validate the final view in the browser at `/ateneo/groups/:groupId/new-topic` in light and dark themes.
+  - If product direction changes, tighten the reaction/comment row to the exact screenshot after the final copy review.
+
+### 2026-08-19 00:00 - Ateneo topic/create polish pass
+- Agent: GitHub Copilot
+- Summary: Updated the Ateneo create-group form so `Grupo oficial` is visibly disabled with an info icon tooltip that says `Coming soon`; relabeled the first field in the new-topic form to `Grupo`; and added a post-level three-dotted overflow menu with `Denunciar`, using a flag icon and danger styling consistent with comment-level report actions.
+- Files changed:
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/src/app/(platform)/ateneo/create/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+- Next actions:
+  - Do a final light/dark visual check on the updated Ateneo flows if the user wants further polish.
+  - Keep the create-topic and topic-detail interaction split stable while the UI is being wrapped up.
+
+### 2026-08-19 00:10 - Ateneo left-rail test data expansion
+- Agent: GitHub Copilot
+- Summary: Expanded the Ateneo mock group lists so the left rail can exercise the `Ver más` and `Ver todos` states with enough entries in the Administrás, Tus grupos, and Recomendados para vos sections.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_lib/mock-data.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoExploreGroups.tsx
+- Next actions:
+  - Use the added mock groups to visually confirm the section expansion limits and footer shortcuts.
+  - Replace the temporary `Redirección pendiente` placeholder once the target route is decided.
+
+### 2026-08-19 00:20 - Ateneo dedicated feed page
+- Agent: GitHub Copilot
+- Summary: Added a dedicated `/ateneo/feed` 3-column page with the same left and right rails as the group/topic views, plus a middle column that mixes member-group topics and recommended topics. The left-rail `Feed` shortcut now navigates to the new page and is highlighted there.
+- Files changed:
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoExploreGroups.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/feed/page.tsx
+  - ../mathesis-backend/docs/ui-spec-live.md
+- Next actions:
+  - Review the feed page visually in the browser and tune card density if needed.
+  - Decide the final destination for the `+ Nuevo tema` action on the feed page.
+
+### 2026-08-19 00:30 - Ateneo route swap to canonical feed/groups paths
+- Agent: GitHub Copilot
+- Summary: Moved the feed screen to `/ateneo`, moved the explore-groups screen to `/ateneo/groups`, and kept `/ateneo/feed` as a redirect for compatibility. Updated the left-rail Feed shortcut to point at the canonical feed route and refreshed the live docs to match the new route map.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/feed/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoExploreGroups.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-backend/docs/ui-spec-live.md
+- Next actions:
+  - Run a final production build to confirm the new canonical routes compile and prerender cleanly.
+  - Update any future navigation copy to reference `/ateneo` for feed and `/ateneo/groups` for group browsing.
+
+### 2026-08-19 00:40 - Ateneo groups tab query selection fix
+- Agent: GitHub Copilot
+- Summary: Fixed `/ateneo/groups?tab=...` tab resolution so the requested tab is correctly selected when navigating from left-rail `Ver todos`. Updated the route-level parser to support Next 16 `searchParams` handling and normalize both `string` and `string[]` values.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/page.tsx
+  - ../mathesis-backend/docs/agent-live-context.md
+- Next actions:
+  - Manually verify in-browser that `/ateneo/groups?tab=discover`, `/ateneo/groups?tab=mine`, and `/ateneo/groups?tab=admin` each preselect the matching tab.
+  - Keep query-driven tab parsing aligned with Next 16 page prop conventions for future route updates.
+
+### 2026-08-19 00:55 - Ateneo groups static rendering + client tab URL source
+- Agent: GitHub Copilot
+- Summary: Removed server-side `searchParams` usage from `/ateneo/groups` to resolve the `dynamic = "error"` static rendering failure. The groups explorer now reads and controls the tab directly from the client URL query (`?tab=...`) using `useSearchParams`, and tab clicks update the URL via router navigation.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupsExplorer.tsx
+  - ../mathesis-backend/docs/agent-live-context.md
+- Next actions:
+  - Manually verify tab deep links and tab switching preserve the expected selected state.
+  - Keep `/ateneo/groups` free of server-side query parsing while `dynamic = "error"` static behavior is required.
+
+### 2026-08-19 01:05 - Ateneo reply mention prefill
+- Agent: GitHub Copilot
+- Summary: Updated topic comment replies so clicking `Responder` preloads the reply composer with `@<autor> ` and focuses the input, enabling direct addressed replies for future notification handling.
+- Files changed:
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - ../mathesis-backend/docs/agent-live-context.md
+- Next actions:
+  - Manually verify on `/ateneo/groups/[groupId]/topics/[topicId]` that each `Responder` click replaces the draft prefix with the selected comment author mention.
+  - Wire real mention parsing/notification backend behavior when comment persistence is implemented.
+
+### 2026-08-19 02:10 - Ateneo backend implementation and mock runtime removal
+- Agent: GitHub Copilot
+- Summary: Implemented a new backend Ateneo module with Prisma models, migration, and authenticated endpoints for groups, feed topics, topic detail, comments/replies, and reaction toggles. Migrated Ateneo UI runtime data access from mock arrays to real API clients across feed, groups explorer, left rail, group page, topic page, comment posting, and new-topic publishing. Updated Next.js config to allow dynamic routes required by backend-driven Ateneo pages.
+- Files changed:
+  - prisma/schema.prisma
+  - prisma/migrations/20260819110000_add_ateneo_core/migration.sql
+  - src/modules/ateneo/ateneo.schemas.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - src/modules/ateneo/ateneo.controller.ts
+  - src/modules/ateneo/ateneo.routes.ts
+  - src/routes/index.ts
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupsExplorer.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoExploreGroups.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/topics/[topicId]/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/new-topic/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/create/page.tsx
+  - ../mathesis-ui/next.config.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Apply the new Prisma migration in target environments and seed Ateneo groups/topics for non-empty first-run experiences.
+  - Add backend endpoints for join/leave, report actions, and notifications so remaining `Coming soon` interactions become fully functional.
+
+### 2026-08-19 02:25 - Ateneo CTA navigation bug fixes
+- Agent: GitHub Copilot
+- Summary: Fixed two Ateneo UI navigation bugs: left-rail `+ Grupo` now routes to `/ateneo/create`, and feed-page `+ Nuevo tema` now routes to the real topic composer UI (first available owned group `/ateneo/groups/:groupId/new-topic`, fallback `/ateneo/groups?tab=mine`).
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoExploreGroups.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manually verify the CTA redirects in-browser for authenticated users with and without owned groups.
+  - Replace the fallback flow with a dedicated multi-group composer route if product requires choosing a target group before opening compose.
+
+### 2026-08-19 02:35 - Ateneo two-level comment threading UI
+- Agent: GitHub Copilot
+- Summary: Updated topic comment rendering to keep exactly two visual levels: direct topic comments at base level, and all replies indented one level to the right. Replies to replies are anchored to the same top-level parent and stay at the same indented level.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manually verify reply ordering/indentation in `/ateneo/groups/[groupId]/topics/[topicId]` with a mix of direct replies and replies-to-replies.
+  - If required, add explicit visual connectors (thread line) for reply grouping without introducing a third nesting level.
 
