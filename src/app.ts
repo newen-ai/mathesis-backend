@@ -11,14 +11,14 @@ import { notFound } from "./common/middlewares/not-found";
 
 const corsOptions = {
   origin(origin: string | undefined, callback: (error: Error | null, success?: boolean) => void) {
-    if (!origin || origin === env.FRONTEND_ORIGIN) {
+    if (!origin || env.FRONTEND_ALLOWED_ORIGINS.includes(origin)) {
       callback(null, true);
       return;
     }
 
     logger.warn("cors_origin_rejected", {
       origin,
-      allowedOrigin: env.FRONTEND_ORIGIN
+      allowedOrigins: env.FRONTEND_ALLOWED_ORIGINS
     });
     callback(new Error(`CORS origin not allowed: ${origin}`));
   },

@@ -311,6 +311,20 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next:
   - Optionally add admin-only hint copy to the info/members pages if the UX needs to explain the edit affordance.
 
+### 2026-08-19 18:10 - Pages export route fix for Ateneo
+- Agent: GitHub Copilot
+- Summary: Resolved export-mode build failures by adding generateStaticParams to Ateneo dynamic routes and centralizing static param generation from local Ateneo seed data.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_lib/static-params.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/edit/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/info/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/members/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/new-topic/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/topics/[topicId]/page.tsx
+- Next:
+  - Keep the static params list in sync with any new Ateneo mock/seed routes used in export builds.
+
 ### 2026-08-06 01:35 - Header eye-button for readonly self preview
 - Agent: GitHub Copilot
 - Summary: Added a new header button styled like the edit CTA but with an eye icon, wired to redirect to /perfil?userId=<current user id> so users can preview their own profile as others see it.
@@ -1422,4 +1436,33 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next actions:
   - Manually verify reply ordering/indentation in `/ateneo/groups/[groupId]/topics/[topicId]` with a mix of direct replies and replies-to-replies.
   - If required, add explicit visual connectors (thread line) for reply grouping without introducing a third nesting level.
+
+### 2026-08-19 18:30 - Revert export static params for Vercel migration
+- Agent: GitHub Copilot
+- Summary: Reverted the GitHub Pages export-only static param implementation for Ateneo dynamic routes and switched Next config back to runtime-friendly mode in preparation for Vercel hosting.
+- Files changed:
+  - ../mathesis-ui/next.config.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/edit/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/info/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/members/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/new-topic/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/groups/[groupId]/topics/[topicId]/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_lib/static-params.ts (deleted)
+  - docs/agent-live-context.md
+- Next actions:
+  - Configure Vercel project environment variables for frontend runtime API access.
+  - Replace GitHub Pages deployment with Vercel deployment so new dynamic group URLs work without rebuild-time path seeding.
+
+### 2026-08-19 19:05 - Backend CORS multi-origin allowlist
+- Agent: GitHub Copilot
+- Summary: Fixed backend CORS rigidity by adding support for multiple allowed frontend origins via `FRONTEND_ORIGINS` (comma-separated), while keeping `FRONTEND_ORIGIN` backward compatible.
+- Files changed:
+  - src/config/env.ts
+  - src/app.ts
+  - .env.example
+  - docs/agent-live-context.md
+- Next actions:
+  - Set `FRONTEND_ORIGIN`/`FRONTEND_ORIGINS` in the running backend environment to include the active frontend hostnames.
+  - Restart backend process and re-check login/API calls from `https://test.mathesis.social`.
 

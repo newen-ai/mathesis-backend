@@ -56,6 +56,20 @@ const envSchema = z.object({
     .url()
     .transform((value) => new URL(value).origin)
     .default("http://localhost:3000"),
+  FRONTEND_ORIGINS: z
+    .string()
+    .optional()
+    .transform((value) => {
+      if (!value) {
+        return [] as string[];
+      }
+
+      return value
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter((origin) => origin.length > 0)
+        .map((origin) => new URL(origin).origin);
+    }),
   AUTH_COOKIE_NAME: z.string().min(1).default("ml_access_token"),
   AUTH_COOKIE_SAME_SITE: z.enum(["lax", "strict", "none"]).default("lax"),
   AUTH_COOKIE_SECURE: envBoolean.default(false),
@@ -103,6 +117,7 @@ logger.info("env_loaded", {
   nodeEnv: parsedEnv.data.NODE_ENV,
   port: parsedEnv.data.PORT,
   frontendOrigin: parsedEnv.data.FRONTEND_ORIGIN,
+  frontendOrigins: parsedEnv.data.FRONTEND_ORIGINS,
   authCookieSameSite: parsedEnv.data.AUTH_COOKIE_SAME_SITE,
   authCookieSecure: parsedEnv.data.AUTH_COOKIE_SECURE,
   whitelistEnabled: parsedEnv.data.WHITELIST_ENABLED,
@@ -110,4 +125,11 @@ logger.info("env_loaded", {
   telegramReportingEnabled: parsedEnv.data.TELEGRAM_REPORTING_ENABLED
 });
 
-export const env = parsedEnv.data;
+const frontendAllowedOrigins = Array.from(
+  new Set([parsedEnv.data.FRONTEND_ORIGIN, ...parsedEnv.data.FRONTEND_ORIGINS])
+);
+
+export const env = {
+  ...parsedEnv.data,
+  FRONTEND_ALLOWED_ORIGINS: frontendAllowedOrigins,
+};
