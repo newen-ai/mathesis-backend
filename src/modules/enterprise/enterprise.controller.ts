@@ -16,7 +16,7 @@ export async function listMyEnterprises(req: Request, res: Response): Promise<vo
   });
 }
 
-export async function listVerifiedDirectory(req: Request, res: Response): Promise<void> {
+export async function listVerifiedDirectory(_req: Request, res: Response): Promise<void> {
   const enterprises = await enterpriseService.listVerifiedDirectory();
 
   res.status(StatusCodes.OK).json({
