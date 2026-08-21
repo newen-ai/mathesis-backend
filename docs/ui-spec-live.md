@@ -17,6 +17,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Interests section: editable tag list in /perfil (`Intereses`) with individual remove actions, drag-and-drop reordering, backend-persisted save, and backend suggestions from 3 typed characters.
 - Interests section: editable tag list in /perfil (`Intereses`) with individual remove actions, drag-and-drop reordering, backend-persisted save, backend suggestions from 3 typed characters, and lowercase normalization on save.
 - Authentication: forgot-password flow (Page 1 request view implemented; Page 2 sent view implemented; Page 3 reset-password view implemented; dark/light parity required per page) and authenticated change-password flow implemented end-to-end.
+- Application shell: a global footer with copy `Powered by Newen.Solutions` is rendered from the root layout, fixed to the viewport bottom, visible on all screens (platform + auth/public), and inherited automatically by new pages.
 - Platform navigation: desktop topbar profile menu (avatar-triggered panel), with profile header bound to user profile data and first-pass interaction limits (logout functional, route-backed entries functional, placeholder entries visible without route behavior).
 - Platform navigation: add an Ateneo entry that routes directly to `/ateneo` (explore groups), available in desktop topbar and mobile drawer personal menu.
 - Configuration: main settings page only, reached from the topbar menu at /account/configuration, with the first pass covering both desktop and mobile. Mobile entry must match the provided screenshot; desktop should follow the HTML v0.2 settings reference. Dark-mode control moves from the topbar into this page.
@@ -60,6 +61,10 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-08-21 - Global fixed footer across all screens
+- Added a single root-level footer (`Powered by Newen.Solutions`) that stays fixed at the viewport bottom and is visible across all app routes.
+- Removed duplicate local footer markup from platform/auth pages so new pages inherit the footer automatically without extra page-level code.
+
 ### 2026-08-21 - Directorio Mensa Empresarios backend integration
 - Added the public directory listing endpoint `GET /api/v1/enterprises/directory` that returns only enterprises whose owner has an active `mensa_empresarios` badge and excludes deleted records.
 - The directory payload includes each enterprise’s name, role, website, description, founder, location, and badge metadata so the UI can render live data without mock content.

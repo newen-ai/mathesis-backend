@@ -1597,3 +1597,20 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next actions:
   - Keep mock/topic seed objects aligned with `AteneoGroupTopic` when fields are added to prevent CI/CD type failures.
 
+### 2026-08-21 03:55 - Global fixed footer in root app shell
+- Agent: GitHub Copilot
+- Summary: Implemented a single root-level `Powered by Newen.Solutions` footer fixed to the viewport bottom so it appears on all current routes and future pages by default. Removed duplicated footer blocks from platform and auth pages and reserved root bottom space to prevent content overlap.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/src/components/ui/PoweredByFooter.tsx
+  - ../mathesis-ui/src/app/layout.tsx
+  - ../mathesis-ui/src/app/(platform)/layout.tsx
+  - ../mathesis-ui/src/app/login/page.tsx
+  - ../mathesis-ui/src/app/registro/page.tsx
+  - ../mathesis-ui/src/app/reset-password/page.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate the footer in both light and dark themes on auth and platform pages.
+  - Validate mobile and desktop scroll/form interactions to confirm no controls are obscured by the fixed footer.
+
