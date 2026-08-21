@@ -12,6 +12,7 @@ export type ProfileWithWorkExperiences = Pick<
   | "locationCountry"
   | "locationCity"
   | "locationPostalCode"
+  | "interests"
   | "profileImageUrl"
   | "profileBannerImageUrl"
 > & {
@@ -120,11 +121,16 @@ export type ProfileOutput = {
   locationCountry: string | null;
   locationCity: string | null;
   locationPostalCode: string | null;
+  interests: string[];
   profileImageUrl: string | null;
   profileBannerImageUrl: string | null;
   badges: BadgeOutput[];
   employmentHistory: EmploymentHistoryOutput[];
   educationHistory: EducationHistoryOutput[];
+};
+
+export type InterestSuggestionOutput = {
+  value: string;
 };
 
 export type MyProfileOutput = {

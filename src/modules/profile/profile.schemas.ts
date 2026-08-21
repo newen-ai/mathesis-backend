@@ -2,6 +2,12 @@ import { z } from "zod";
 
 const yearMonthRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
 const iso8601DateRegex = /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2}))?$/;
+const interestSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(80)
+  .transform((value) => value.replace(/\s+/g, " ").toLocaleLowerCase());
 const imageUrlOrDataUrlSchema = z
   .string()
   .max(10_000_000)
@@ -186,6 +192,7 @@ export const updateMyProfileSchema = z.object({
       locationCountry: z.string().min(1).max(80).optional(),
       locationCity: z.string().min(1).max(80).optional(),
       locationPostalCode: z.string().min(1).max(30).optional(),
+      interests: z.array(interestSchema).max(50).optional(),
       profileImageUrl: imageUrlOrDataUrlSchema.optional(),
       profileBannerImageUrl: imageUrlOrDataUrlSchema.optional(),
       employmentHistory: z.array(employmentHistoryItemSchema).optional(),
@@ -232,9 +239,22 @@ export const getProfileByUserIdSchema = z.object({
   })
 });
 
+export const searchInterestSuggestionsSchema = z.object({
+  query: z.object({
+    text: z
+      .string()
+      .min(3)
+      .max(80)
+      .refine((value) => value.trim().length >= 3, {
+        message: "text must have at least 3 non-space characters"
+      })
+  })
+});
+
 export type UpdateMyProfileBody = z.infer<typeof updateMyProfileSchema>["body"];
 export type UpdateMyWorkExperiencesBody = z.infer<typeof updateMyWorkExperiencesSchema>["body"];
 export type UpdateMyEducationHistoryBody = z.infer<typeof updateMyEducationHistorySchema>["body"];
 export type UpdateMyPreferencesBody = z.infer<typeof updateMyPreferencesSchema>["body"];
 export type SearchUsersQuery = z.infer<typeof searchUsersSchema>["query"];
 export type GetProfileByUserIdParams = z.infer<typeof getProfileByUserIdSchema>["params"];
+export type SearchInterestSuggestionsQuery = z.infer<typeof searchInterestSuggestionsSchema>["query"];

@@ -20,7 +20,35 @@ import type {
 
 type TransactionClient = Prisma.TransactionClient;
 
+function normalizeInterests(values: string[] | undefined) {
+  if (!values) {
+    return undefined;
+  }
+
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  values.forEach((value) => {
+    const normalized = value.trim().replace(/\s+/g, " ");
+    if (!normalized) {
+      return;
+    }
+
+    const dedupeKey = normalized.toLocaleLowerCase();
+    if (seen.has(dedupeKey)) {
+      return;
+    }
+
+    seen.add(dedupeKey);
+    result.push(dedupeKey);
+  });
+
+  return result;
+}
+
 function buildProfileWriteData(input: UpdateMyProfileBody) {
+  const normalizedInterests = normalizeInterests(input.interests);
+
   return {
     firstName: input.firstName,
     lastName: input.lastName,
@@ -32,6 +60,7 @@ function buildProfileWriteData(input: UpdateMyProfileBody) {
     locationCountry: input.locationCountry,
     locationCity: input.locationCity,
     locationPostalCode: input.locationPostalCode,
+    ...(normalizedInterests ? { interests: normalizedInterests } : {}),
     profileImageUrl: input.profileImageUrl,
     profileBannerImageUrl: input.profileBannerImageUrl
   };
@@ -56,6 +85,7 @@ function mapProfile(
     locationCountry: profile.locationCountry,
     locationCity: profile.locationCity,
     locationPostalCode: profile.locationPostalCode,
+    interests: profile.interests,
     profileImageUrl: profile.profileImageUrl,
     profileBannerImageUrl: profile.profileBannerImageUrl,
     badges: badges.map((badge) => ({ slug: badge.badgeSlug })),
@@ -337,6 +367,27 @@ export const profileService = {
     };
   },
 
+  async searchInterestSuggestions(text: string): Promise<Array<{ value: string }>> {
+    const normalizedText = text.trim();
+    const query = `%${normalizedText}%`;
+
+    const rows = await prisma.$queryRaw<Array<{ value: string; count: bigint }>>`
+      SELECT LOWER(TRIM(interest_value)) AS value, COUNT(*)::bigint AS count
+      FROM profiles p
+      JOIN users u ON u.id = p.user_id
+      CROSS JOIN LATERAL UNNEST(p.interests) AS interest_value
+      WHERE p.deleted_at IS NULL
+        AND u.deleted_at IS NULL
+        AND TRIM(interest_value) <> ''
+        AND LOWER(interest_value) LIKE LOWER(${query})
+      GROUP BY LOWER(TRIM(interest_value))
+      ORDER BY count DESC, value ASC
+      LIMIT 10
+    `;
+
+    return rows.map((row) => ({ value: row.value }));
+  },
+
   async getProfileByUserId(userId: string): Promise<MyProfileOutput> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -405,6 +456,7 @@ export const profileService = {
           locationCountry: input.locationCountry,
           locationCity: input.locationCity,
           locationPostalCode: input.locationPostalCode,
+          interests: normalizeInterests(input.interests) ?? [],
           profileImageUrl: input.profileImageUrl,
           profileBannerImageUrl: input.profileBannerImageUrl
         },

@@ -1466,3 +1466,74 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - Set `FRONTEND_ORIGIN`/`FRONTEND_ORIGINS` in the running backend environment to include the active frontend hostnames.
   - Restart backend process and re-check login/API calls from `https://test.mathesis.social`.
 
+### 2026-08-21 01:52 - Perfil Intereses UI-only
+- Agent: GitHub Copilot
+- Summary: Added the new `Intereses` section in perfil as an editable tag/chip list with individual delete actions, case-insensitive dedupe, and localStorage-backed save/discard behavior. Kept backend profile DTO/API payload unchanged in this phase.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/app/(platform)/_components/home/InteresesCard.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Wire `Intereses` to backend profile read/save once backend contract and persistence are implemented.
+  - Validate UX in both themes on desktop/mobile with add, dedupe, remove, save, discard, and refresh restore flows.
+
+### 2026-08-21 01:57 - Perfil Intereses autocomplete suggestions
+- Agent: GitHub Copilot
+- Summary: Added frontend autocomplete suggestions to `Intereses` with a 3-character trigger, keyboard navigation (up/down + enter + escape), click-to-select behavior, and filtering to hide already-added tags. Kept this phase UI-only with no backend/DB contract changes.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/app/(platform)/_lib/constants.ts
+  - ../mathesis-ui/src/app/(platform)/_components/home/InteresesCard.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - If desired, replace static suggestion source with backend endpoint for dynamic/popularity-ranked suggestions.
+  - Validate suggestion UX on mobile virtual keyboard flow and dark/light themes.
+
+### 2026-08-21 02:02 - Perfil Intereses backend + no mocks
+- Agent: GitHub Copilot
+- Summary: Implemented full backend support for `Intereses`, including DB persistence, profile payload integration, and backend suggestion endpoint. Removed mocked/local suggestion source and localStorage persistence from the Intereses UI.
+- Files changed:
+  - prisma/schema.prisma
+  - prisma/migrations/20260821021000_add_profile_interests/migration.sql
+  - src/modules/profile/profile.types.ts
+  - src/modules/profile/profile.schemas.ts
+  - src/modules/profile/profile.service.ts
+  - src/modules/profile/profile.controller.ts
+  - src/modules/profile/profile.routes.ts
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/lib/api/profile.ts
+  - ../mathesis-ui/src/app/(platform)/_lib/types.ts
+  - ../mathesis-ui/src/app/(platform)/_lib/constants.ts
+  - ../mathesis-ui/src/app/(platform)/_lib/hooks/useProfessionalProfile.ts
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileFormCard.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileInitializationView.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/InteresesCard.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Run the new Prisma migration in each target environment before deploying backend.
+  - Optionally add ranking refinements and normalization display rules for suggestion labels based on product preference.
+
+### 2026-08-21 02:08 - Intereses drag-and-drop ordering
+- Agent: GitHub Copilot
+- Summary: Added drag-and-drop reordering for `Intereses` chips in profile edit mode, including visual drag/target states and persistence of the reordered list through the existing save flow.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/app/(platform)/_components/home/InteresesCard.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate drag-and-drop behavior in desktop browsers and decide whether to add explicit mobile touch-reorder controls.
+
+### 2026-08-21 02:09 - Intereses lowercase normalization
+- Agent: GitHub Copilot
+- Summary: Enforced lowercase normalization for `Intereses` during save so persisted values are always lowercase across clients.
+- Files changed:
+  - src/modules/profile/profile.schemas.ts
+  - src/modules/profile/profile.service.ts
+  - ../mathesis-ui/src/app/(platform)/_components/home/InteresesCard.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Optionally add accent/diacritic normalization rules if product copy guidelines require canonicalized storage beyond lowercase.
+

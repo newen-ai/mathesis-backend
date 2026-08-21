@@ -456,6 +456,7 @@ model Profile {
   locationCountry  String?   @map("location_country")
   locationCity     String?   @map("location_city")
   locationPostalCode String? @map("location_postal_code")
+  interests        String[]  @default([])
   profileImageUrl  String?   @map("profile_image_url")
   profileBannerImageUrl String? @map("profile_banner_image_url")
   createdAt        DateTime  @default(now()) @map("created_at")
