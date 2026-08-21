@@ -1623,3 +1623,15 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next actions:
   - Validate the home phrase banner in both light and dark themes to confirm contrast and copy.
 
+### 2026-08-21 12:10 - Ateneo new-topic character limit guard
+- Agent: GitHub Copilot
+- Summary: Added matching frontend/backend guards for Ateneo topic creation limits so title cannot be published above 100 characters and description cannot be published above 1000 characters; over-limit fields now render a red border and red counter.
+- Files changed:
+  - docs/ui-spec-live.md
+  - src/modules/ateneo/ateneo.schemas.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate the new-topic form in light and dark themes to confirm red invalid states for both title and description counters/inputs.
+  - Optionally add an integration test for create-topic payloads above 100/1000 to lock the backend guard.
+

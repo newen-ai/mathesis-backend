@@ -61,6 +61,10 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-08-21 - Ateneo topic input length guards
+- Aligned Ateneo new-topic length limits end-to-end so topic title is capped at 100 characters and description at 1000 characters.
+- Added frontend invalid-state feedback for over-limit topic fields (red input border and red character counter when the current length exceeds the allowed maximum).
+
 ### 2026-08-21 - Global fixed footer across all screens
 - Added a single root-level footer (`Powered by Newen.Solutions`) that stays fixed at the viewport bottom and is visible across all app routes.
 - Removed duplicate local footer markup from platform/auth pages so new pages inherit the footer automatically without extra page-level code.
