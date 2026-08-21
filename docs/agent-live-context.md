@@ -14,6 +14,23 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-08-21 14:25 - Ateneo reaction count indicators removed
+- Agent: GitHub Copilot
+- Summary: Removed topic reaction-count indicators from Ateneo feed/group cards so the UI no longer displays how many users reacted.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+- Next:
+  - Confirm mobile and desktop metadata rows still align after removing the reaction badge.
+
+### 2026-08-21 14:10 - Ateneo topic comments label cleanup
+- Agent: GitHub Copilot
+- Summary: Removed the redundant `X comentarios` text label from the topic metadata row while keeping the comment icon/count indicator in the action row.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+- Next:
+  - Validate the topic detail header spacing in both light and dark themes.
+
 ### 2026-08-21 13:00 - Ateneo topic action reposition
 - Agent: GitHub Copilot
 - Summary: Moved the topic-level "Comentar" action next to the topic valuation toggle in the post action row and removed the duplicate button from the comments header.
