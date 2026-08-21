@@ -1537,3 +1537,37 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next actions:
   - Optionally add accent/diacritic normalization rules if product copy guidelines require canonicalized storage beyond lowercase.
 
+### 2026-08-21 02:25 - Topbar search results avatar rendering
+- Agent: GitHub Copilot
+- Summary: Updated topbar profile search results to display each user profile image on the left of the name with fixed avatar sizing and initials fallback for missing images.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate topbar search dropdown spacing and truncation behavior in both light and dark themes on desktop and mobile.
+
+### 2026-08-21 02:40 - Profile search image payload fix
+- Agent: GitHub Copilot
+- Summary: Fixed backend profile search payload to include profileImageUrl, enabling topbar search results to render actual profile images instead of initials fallback when an image exists.
+- Files changed:
+  - src/modules/profile/profile.types.ts
+  - src/modules/profile/profile.service.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Verify end-to-end in UI by searching a user known to have profileImageUrl and confirming avatar render in the dropdown.
+
+### 2026-08-21 03:05 - Ateneo generalized avatar rendering
+- Agent: GitHub Copilot
+- Summary: Generalized avatar rendering in Ateneo by adding `profileImageUrl` to backend author/member payloads and updating Ateneo UI cards/panels to use shared `UserAvatar` with initials fallback.
+- Files changed:
+  - src/modules/ateneo/ateneo.types.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupMembersPanel.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Restart backend and validate in `/ateneo` that users with profile images render photos (and users without image still show initials) across feed, group topics, topic discussion, and members list.
+

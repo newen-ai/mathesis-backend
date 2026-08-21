@@ -144,4 +144,5 @@ export type UserSearchResult = {
   userId: string;
   firstName: string;
   lastName: string;
+  profileImageUrl: string | null;
 };
