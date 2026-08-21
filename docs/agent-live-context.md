@@ -1635,3 +1635,13 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - Validate the new-topic form in light and dark themes to confirm red invalid states for both title and description counters/inputs.
   - Optionally add an integration test for create-topic payloads above 100/1000 to lock the backend guard.
 
+### 2026-08-21 21:50 - Ateneo new-topic group selector runtime fix
+- Agent: GitHub Copilot
+- Summary: Fixed the new-topic composer so `Grupo` is a real selectable dropdown sourced from member groups instead of a read-only field; publishing now targets the selected group and redirects to the created topic in that group.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate in browser from `/ateneo` feed that selecting a different group before publishing creates the topic in the selected destination.
+  - Optionally add a dedicated multi-group composer route if product wants this flow without a preselected group in the URL.
+
