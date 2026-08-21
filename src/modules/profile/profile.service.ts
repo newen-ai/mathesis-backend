@@ -321,7 +321,8 @@ export const profileService = {
       select: {
         userId: true,
         firstName: true,
-        lastName: true
+        lastName: true,
+        profileImageUrl: true
       },
       orderBy: [{ firstName: "asc" }, { lastName: "asc" }],
       take: 20

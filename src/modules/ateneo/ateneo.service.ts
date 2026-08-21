@@ -84,15 +84,18 @@ function mapUserSummary(user: {
   profile: {
     firstName: string;
     lastName: string;
+    profileImageUrl: string | null;
   } | null;
 }) {
   const firstName = user.profile?.firstName ?? null;
   const lastName = user.profile?.lastName ?? null;
+  const profileImageUrl = user.profile?.profileImageUrl ?? null;
 
   return {
     userId: user.id,
     firstName,
     lastName,
+    profileImageUrl,
     initials: initialsFromName(firstName, lastName, user.email)
   };
 }
@@ -180,16 +183,19 @@ function mapGroupMemberSummary(member: {
     profile: {
       firstName: string;
       lastName: string;
+      profileImageUrl: string | null;
     } | null;
   };
 }): AteneoGroupMemberSummary {
   const firstName = member.user.profile?.firstName ?? null;
   const lastName = member.user.profile?.lastName ?? null;
+  const profileImageUrl = member.user.profile?.profileImageUrl ?? null;
 
   return {
     userId: member.userId,
     firstName,
     lastName,
+    profileImageUrl,
     initials: initialsFromName(firstName, lastName, member.user.email),
     isAdmin: member.isAdmin,
     isPinned: member.isPinned,
@@ -272,7 +278,8 @@ async function loadTopicById(topicId: string) {
             where: { deletedAt: null },
             select: {
               firstName: true,
-              lastName: true
+              lastName: true,
+              profileImageUrl: true
             }
           }
         }
@@ -308,7 +315,8 @@ async function loadCommentById(commentId: string) {
             where: { deletedAt: null },
             select: {
               firstName: true,
-              lastName: true
+              lastName: true,
+              profileImageUrl: true
             }
           }
         }
@@ -477,7 +485,8 @@ export const ateneoService = {
               where: { deletedAt: null },
               select: {
                 firstName: true,
-                lastName: true
+                lastName: true,
+                profileImageUrl: true
               }
             }
           }
@@ -565,7 +574,8 @@ export const ateneoService = {
               where: { deletedAt: null },
               select: {
                 firstName: true,
-                lastName: true
+                lastName: true,
+                profileImageUrl: true
               }
             }
           }
@@ -778,7 +788,8 @@ export const ateneoService = {
               where: { deletedAt: null },
               select: {
                 firstName: true,
-                lastName: true
+                lastName: true,
+                profileImageUrl: true
               }
             }
           }
@@ -868,7 +879,8 @@ export const ateneoService = {
               where: { deletedAt: null },
               select: {
                 firstName: true,
-                lastName: true
+                lastName: true,
+                profileImageUrl: true
               }
             }
           }
