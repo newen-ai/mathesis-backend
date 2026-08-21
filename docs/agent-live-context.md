@@ -1203,6 +1203,23 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 ### 2026-08-16 03:07 - Ateneo member-group card redirect
 - Agent: GitHub Copilot
 - Summary: Implemented click-to-open behavior for groups where the user is already a member and routed them to `/ateneo/groups/:groupId`; added a first-pass group destination screen with group context and visible rules.
+
+### 2026-08-21 20:15 - Mensa Empresarios directory backend integration
+- Agent: GitHub Copilot
+- Summary: Added the public verified-directory API for enterprises whose owners hold an active Mensa Empresarios badge and replaced the static mock directory page with live fetch logic, loading state, and empty-state handling. Verified the backend integration contract with the targeted enterprise-directory test and confirmed the UI builds successfully.
+- Files changed:
+  - src/modules/enterprise/enterprise.service.ts
+  - src/modules/enterprise/enterprise.controller.ts
+  - src/modules/enterprise/enterprise.routes.ts
+  - src/modules/enterprise/enterprise.types.ts
+  - test/integration/enterprise-directory.integration.test.ts
+  - ../mathesis-ui/src/lib/api/enterprise.ts
+  - ../mathesis-ui/src/app/(platform)/directorio/page.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next:
+  - Keep the disabled “Solicitar membresía Empresarios” CTA in place until the badge request flow is ready.
+  - Revisit live data pagination or richer founder metadata once the directory UX expands beyond the initial verified-list scope.
 - Files changed:
   - ../mathesis-ui/src/app/(platform)/ateneo/page.tsx
   - ../mathesis-ui/src/app/(platform)/ateneo/_lib/mock-data.ts

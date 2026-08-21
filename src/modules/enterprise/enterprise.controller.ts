@@ -16,6 +16,18 @@ export async function listMyEnterprises(req: Request, res: Response): Promise<vo
   });
 }
 
+export async function listVerifiedDirectory(req: Request, res: Response): Promise<void> {
+  const enterprises = await enterpriseService.listVerifiedDirectory();
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "ENTERPRISE_DIRECTORY_LISTED",
+    data: {
+      enterprises
+    }
+  });
+}
+
 export async function createEnterprise(req: Request, res: Response): Promise<void> {
   const userId = req.user?.sub as string;
   const enterprise = await enterpriseService.createEnterprise(userId, req.body as CreateEnterpriseBody);

@@ -1,8 +1,9 @@
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
 import { prisma } from "../../common/prisma";
+import { BADGE_SLUGS } from "../badge/badge.service";
 import type { CreateEnterpriseBody, UpdateEnterpriseBody } from "./enterprise.schemas";
-import type { EnterpriseOutput } from "./enterprise.types";
+import type { EnterpriseDirectoryOutput, EnterpriseOutput } from "./enterprise.types";
 
 function normalizeOptional(value: string | undefined): string | null {
   if (value === undefined) {
@@ -12,6 +13,23 @@ function normalizeOptional(value: string | undefined): string | null {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
 }
+
+type DirectoryEnterpriseRecord = {
+  id: string;
+  name: string;
+  role: string;
+  website: string | null;
+  description: string | null;
+  owner: {
+    profile: {
+      firstName: string | null;
+      lastName: string | null;
+      locationCity: string | null;
+    } | null;
+  } | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 function mapEnterprise(enterprise: {
   id: string;
@@ -28,6 +46,28 @@ function mapEnterprise(enterprise: {
     role: enterprise.role,
     website: enterprise.website,
     description: enterprise.description,
+    createdAt: enterprise.createdAt.toISOString(),
+    updatedAt: enterprise.updatedAt.toISOString()
+  };
+}
+
+function mapDirectoryEnterprise(enterprise: DirectoryEnterpriseRecord): EnterpriseDirectoryOutput {
+  const founder = enterprise.owner?.profile
+    ? [enterprise.owner.profile.firstName, enterprise.owner.profile.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim() || null
+    : null;
+
+  return {
+    id: enterprise.id,
+    name: enterprise.name,
+    role: enterprise.role,
+    website: enterprise.website,
+    description: enterprise.description,
+    founder,
+    location: enterprise.owner?.profile?.locationCity ?? null,
+    badgeSlug: BADGE_SLUGS.MENSA_EMPRESARIOS,
     createdAt: enterprise.createdAt.toISOString(),
     updatedAt: enterprise.updatedAt.toISOString()
   };
@@ -57,6 +97,48 @@ export const enterpriseService = {
     });
 
     return enterprises.map(mapEnterprise);
+  },
+
+  async listVerifiedDirectory(): Promise<EnterpriseDirectoryOutput[]> {
+    const enterprises = await prisma.enterprise.findMany({
+      where: {
+        deletedAt: null,
+        owner: {
+          deletedAt: null,
+          badges: {
+            some: {
+              badgeSlug: BADGE_SLUGS.MENSA_EMPRESARIOS,
+              revokedAt: null
+            }
+          }
+        }
+      },
+      orderBy: {
+        createdAt: "desc"
+      },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        website: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true,
+        owner: {
+          select: {
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+                locationCity: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    return enterprises.map(mapDirectoryEnterprise);
   },
 
   async createEnterprise(userId: string, body: CreateEnterpriseBody): Promise<EnterpriseOutput> {

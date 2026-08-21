@@ -60,6 +60,16 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-08-21 - Directorio Mensa Empresarios backend integration
+- Added the public directory listing endpoint `GET /api/v1/enterprises/directory` that returns only enterprises whose owner has an active `mensa_empresarios` badge and excludes deleted records.
+- The directory payload includes each enterprise’s name, role, website, description, founder, location, and badge metadata so the UI can render live data without mock content.
+- The static mockup remains in place visually while the page now reads this backend data source and keeps the disabled “Solicitar membresía Empresarios” CTA intact for the future request flow.
+
+### 2026-08-21 - Directorio Mensa Empresarios UI pass
+- Added a new desktop/mobile topbar entry labeled `Directorio` that routes to a dedicated `/directorio` page for the Mensa Empresarios directory.
+- Implemented a static directory view matching the provided mockup: community header, `Recién lanzado` banner, and enterprise cards for verified Mensa-led businesses.
+- The `Solicitar membresía Empresarios` CTA is intentionally disabled and shows hover text `Próximamente` until the backend flow is ready.
+
 ### 2026-08-21 - Intereses backend integration
 - Added backend persistence for profile interests and wired frontend save flow to the real profile API payload.
 - Replaced mocked/local suggestion source with backend endpoint `GET /api/v1/profile/interests/suggestions?text=...` triggered from 3 typed characters.
