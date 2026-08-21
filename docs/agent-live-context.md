@@ -1614,3 +1614,12 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - Validate the footer in both light and dark themes on auth and platform pages.
   - Validate mobile and desktop scroll/form interactions to confirm no controls are obscured by the fixed footer.
 
+### 2026-08-21 11:45 - Home phrase banner copy + light-mode contrast
+- Agent: GitHub Copilot
+- Summary: Updated the rotating home banner label from `Frases que pegan` to `Frases que inspiran` and switched rotating phrase text color to the semantic token `var(--text-primary)` so it remains readable in light mode while preserving dark-mode parity.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/CatchyPhrasesBanner.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate the home phrase banner in both light and dark themes to confirm contrast and copy.
+
