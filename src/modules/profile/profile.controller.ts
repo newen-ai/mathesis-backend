@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import type {
   GetProfileByUserIdParams,
   SearchUsersQuery,
+  SearchInterestSuggestionsQuery,
   UpdateMyEducationHistoryBody,
   UpdateMyPreferencesBody,
   UpdateMyProfileBody,
@@ -17,6 +18,17 @@ export const searchUsers: RequestHandler = async (req, res) => {
   res.status(StatusCodes.OK).json({
     success: true,
     message: "USERS_FOUND",
+    data: result
+  });
+};
+
+export const searchInterestSuggestions: RequestHandler = async (req, res) => {
+  const text = (req.query as SearchInterestSuggestionsQuery).text.trim();
+  const result = await profileService.searchInterestSuggestions(text);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "INTEREST_SUGGESTIONS_FOUND",
     data: result
   });
 };

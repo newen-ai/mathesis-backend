@@ -6,6 +6,7 @@ import {
 	getMyPreferences,
 	myProfile,
 	profileByUserId,
+	searchInterestSuggestions,
 	searchUsers,
 	updateMyEducationHistory,
 	updateMyPreferences,
@@ -15,6 +16,7 @@ import {
 import {
 	getMyPreferencesSchema,
 	getProfileByUserIdSchema,
+	searchInterestSuggestionsSchema,
 	searchUsersSchema,
 	updateMyEducationHistorySchema,
 	updateMyPreferencesSchema,
@@ -25,6 +27,12 @@ import {
 const profileRouter = Router();
 
 profileRouter.get("/search", requireAuth(), validateRequest(searchUsersSchema), asyncHandler(searchUsers));
+profileRouter.get(
+	"/interests/suggestions",
+	requireAuth(),
+	validateRequest(searchInterestSuggestionsSchema),
+	asyncHandler(searchInterestSuggestions)
+);
 profileRouter.get("/me", requireAuth(), asyncHandler(myProfile));
 profileRouter.get("/me/preferences", requireAuth(), validateRequest(getMyPreferencesSchema), asyncHandler(getMyPreferences));
 profileRouter.get("/:userId", requireAuth(), validateRequest(getProfileByUserIdSchema), asyncHandler(profileByUserId));

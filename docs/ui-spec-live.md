@@ -13,6 +13,9 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Profile badges: render active user badges below profile name in /perfil hero header.
 - Experience section: editable operations and read-only rendering.
 - Academics/Education section: editable operations and read-only rendering.
+- Interests section: editable tag list in /perfil (`Intereses`) with individual remove actions, backend-persisted save, and backend suggestions from 3 typed characters.
+- Interests section: editable tag list in /perfil (`Intereses`) with individual remove actions, drag-and-drop reordering, backend-persisted save, and backend suggestions from 3 typed characters.
+- Interests section: editable tag list in /perfil (`Intereses`) with individual remove actions, drag-and-drop reordering, backend-persisted save, backend suggestions from 3 typed characters, and lowercase normalization on save.
 - Authentication: forgot-password flow (Page 1 request view implemented; Page 2 sent view implemented; Page 3 reset-password view implemented; dark/light parity required per page) and authenticated change-password flow implemented end-to-end.
 - Platform navigation: desktop topbar profile menu (avatar-triggered panel), with profile header bound to user profile data and first-pass interaction limits (logout functional, route-backed entries functional, placeholder entries visible without route behavior).
 - Platform navigation: add an Ateneo entry that routes directly to `/ateneo` (explore groups), available in desktop topbar and mobile drawer personal menu.
@@ -48,6 +51,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 | Experience | employmentHistory | implemented | implemented | refined edit UX |
 | Experience | employmentHistory.description | implemented | implemented | 300 chars in UI |
 | Education | educationHistory | implemented | implemented | dedicated patch endpoint |
+| Interests | interests | implemented | implemented | Persisted in profile payload and suggestion source comes from backend endpoint |
 
 ## Rules For Version Updates
 1. When a new HTML file is added, update Active Spec Source immediately.
@@ -56,6 +60,23 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-08-21 - Intereses backend integration
+- Added backend persistence for profile interests and wired frontend save flow to the real profile API payload.
+- Replaced mocked/local suggestion source with backend endpoint `GET /api/v1/profile/interests/suggestions?text=...` triggered from 3 typed characters.
+
+### 2026-08-21 - Intereses reorder by drag and drop
+- Added drag-and-drop reordering for interests chips in edit mode so users can define a custom order before saving.
+
+### 2026-08-21 - Intereses lowercase normalization on save
+- Enforced lowercase normalization for all interests at save time in both frontend payload shaping and backend persistence validation.
+
+### 2026-08-21 - Intereses autocomplete suggestions (UI-only)
+- Added frontend-only suggestions in the `Intereses` input: visible from 3 typed characters, keyboard navigation support (arrow up/down + enter), click-to-select, and filtering that excludes already-added tags.
+
+### 2026-08-21 - Intereses UI-only first pass
+- Added a new profile section `Intereses` after `Formacion academica` with editable chips/tags, case-insensitive dedupe, and per-tag delete controls.
+- Kept backend payload/contracts unchanged for this phase; section save persists to localStorage as a temporary frontend-only state.
+
 ### 2026-08-05 - Initialized live file for v0.2
 - Created version-aware source of truth linked to html/Mathesis_MVP_Unificado_v0.2.html.
 - Established profile scope for core + experience + education.
