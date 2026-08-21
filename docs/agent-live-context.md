@@ -1571,3 +1571,12 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next actions:
   - Restart backend and validate in `/ateneo` that users with profile images render photos (and users without image still show initials) across feed, group topics, topic discussion, and members list.
 
+### 2026-08-21 03:18 - Vercel build type fix for Ateneo mock topics
+- Agent: GitHub Copilot
+- Summary: Fixed Next.js build error caused by missing `authorImageUrl` in Ateneo mock `popularTopics` seed objects after the shared avatar contract update.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_lib/group-topics.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Keep mock/topic seed objects aligned with `AteneoGroupTopic` when fields are added to prevent CI/CD type failures.
+
