@@ -2,15 +2,12 @@ import request from "supertest";
 import { PrismaClient } from "@prisma/client";
 import { afterAll, describe, expect, it } from "vitest";
 import { app } from "../../src/app";
+import { randomEmail } from "../helpers/random";
 
 const prisma = new PrismaClient();
 const shouldRun = process.env.RUN_INTEGRATION_TESTS === "true";
 const integrationDescribe = shouldRun ? describe : describe.skip;
 const createdEmails: string[] = [];
-
-function randomEmail(prefix: string): string {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
-}
 
 async function registerUser(prefix: string): Promise<{ userId: string; cookie: string }> {
   const email = randomEmail(prefix);

@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { app } from "../../src/app";
 import { toCanonicalEmail } from "../../src/common/utils/email";
+import { randomEmail } from "../helpers/random";
 
 const prisma = new PrismaClient();
 const shouldRun = process.env.RUN_INTEGRATION_TESTS === "true";
@@ -10,10 +11,6 @@ const integrationDescribe = shouldRun ? describe : describe.skip;
 
 const createdEmails: string[] = [];
 const canonicalEmails = new Set<string>();
-
-function randomEmail(prefix: string): string {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
-}
 
 integrationDescribe("email confirmation integration", () => {
   it("marks a user email as verified when the confirmation link is visited", async () => {

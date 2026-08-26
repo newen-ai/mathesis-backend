@@ -1,36 +1,97 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { env } from "../../src/config/env";
-import { sendVerificationEmail } from "../../src/common/services/email.service";
+import { sendPasswordResetEmail, sendVerificationEmail } from "../../src/common/services/email.service";
 
-describe("sendVerificationEmail", () => {
+describe("email.service", () => {
+  const originalApiKey = env.RESEND_API_KEY;
+
   afterEach(() => {
-    // no-op
+    env.RESEND_API_KEY = originalApiKey;
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
-  it("sends two real emails through Resend", async () => {
-    expect(env.RESEND_API_KEY).toBeTruthy();
-    expect(env.EMAIL_FROM).toBe("no-reply@mail.mathesis.social");
+  it("returns sent false without calling Resend when API key is missing", async () => {
+    env.RESEND_API_KEY = undefined;
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
 
-    const recipientEmails = (process.env.RESEND_TEST_RECIPIENTS ?? "kenrouit@gmail.com,kenrouit+01@gmail.com")
-      .split(",")
-      .map((value) => value.trim())
-      .filter((value) => value.length > 0);
-
-    expect(recipientEmails).toHaveLength(2);
-
-    const firstResult = await sendVerificationEmail({
-      email: recipientEmails[0],
-      verificationUrl: "http://localhost:3000/confirm?token=test-token-1"
+    const result = await sendVerificationEmail({
+      email: "alice@example.com",
+      verificationUrl: "http://localhost:3000/confirm?token=test-token"
     });
 
-    const secondResult = await sendVerificationEmail({
-      email: recipientEmails[1],
-      verificationUrl: "http://localhost:3000/confirm?token=test-token-2"
+    expect(result).toEqual({ sent: false });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("returns sent true with resend id on successful verification email", async () => {
+    env.RESEND_API_KEY = "test-resend-key";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ id: "email_123" })
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await sendVerificationEmail({
+      email: "alice@example.com",
+      verificationUrl: "http://localhost:3000/confirm?token=test-token"
     });
 
-    expect(firstResult.sent).toBe(true);
-    expect(secondResult.sent).toBe(true);
-    expect(firstResult.id).toBeTruthy();
-    expect(secondResult.id).toBeTruthy();
+    expect(result).toEqual({ sent: true, id: "email_123" });
+    expect(fetchMock).toHaveBeenCalledOnce();
+
+    const [url, requestInit] = fetchMock.mock.calls[0] as [string, { method?: string; body?: unknown }];
+    expect(url).toBe("https://api.resend.com/emails");
+    expect(requestInit.method).toBe("POST");
+
+    const body = JSON.parse(String(requestInit.body)) as {
+      subject: string;
+      to: string[];
+      from: string;
+      html: string;
+    };
+
+    expect(body.subject).toBe("Confirma tu correo en Mathesis");
+    expect(body.to).toEqual(["alice@example.com"]);
+    expect(body.from).toBe(env.EMAIL_FROM);
+    expect(body.html).toContain("Confirmar correo");
+  });
+
+  it("returns sent false when resend response is not ok", async () => {
+    env.RESEND_API_KEY = "test-resend-key";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        json: vi.fn()
+      })
+    );
+
+    const result = await sendVerificationEmail({
+      email: "alice@example.com",
+      verificationUrl: "http://localhost:3000/confirm?token=test-token"
+    });
+
+    expect(result).toEqual({ sent: false });
+  });
+
+  it("returns sent false when resend response has no id", async () => {
+    env.RESEND_API_KEY = "test-resend-key";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({})
+      })
+    );
+
+    const result = await sendPasswordResetEmail({
+      email: "alice@example.com",
+      resetUrl: "http://localhost:3000/reset-password?token=test-token",
+      expiresInMinutes: 15
+    });
+
+    expect(result).toEqual({ sent: false });
   });
 });
