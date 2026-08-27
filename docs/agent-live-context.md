@@ -14,6 +14,32 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-08-21 14:25 - Ateneo reaction count indicators removed
+- Agent: GitHub Copilot
+- Summary: Removed topic reaction-count indicators from Ateneo feed/group cards so the UI no longer displays how many users reacted.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+- Next:
+  - Confirm mobile and desktop metadata rows still align after removing the reaction badge.
+
+### 2026-08-21 14:10 - Ateneo topic comments label cleanup
+- Agent: GitHub Copilot
+- Summary: Removed the redundant `X comentarios` text label from the topic metadata row while keeping the comment icon/count indicator in the action row.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+- Next:
+  - Validate the topic detail header spacing in both light and dark themes.
+
+### 2026-08-21 13:00 - Ateneo topic action reposition
+- Agent: GitHub Copilot
+- Summary: Moved the topic-level "Comentar" action next to the topic valuation toggle in the post action row and removed the duplicate button from the comments header.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+- Next:
+  - Verify the topic detail layout in both light and dark themes.
+  - Check whether the action row should also include a compact icon-only variant on smaller breakpoints.
+
 ### 2026-08-05 00:00 - Bootstrap
 - Agent: GitHub Copilot
 - Summary: Initialized persistent handoff workflow and versioned spec tracking.
@@ -1597,6 +1623,7 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next actions:
   - Keep mock/topic seed objects aligned with `AteneoGroupTopic` when fields are added to prevent CI/CD type failures.
 
+<<<<<<< HEAD
 ### 2026-08-26 14:30 - Block user implementation kickoff
 - Agent: GitHub Copilot
 - Summary: Started end-to-end block-user implementation with backend block/audit data models and API routes, then integrated enforcement across profile visibility, feed visibility, direct-message sending, Ateneo members/topics/comments visibility, and connection creation; also replaced the blocked-users settings page mock data with API-backed load/unblock behavior and added profile unavailable + Ateneo deleted-comment placeholder UI handling.
@@ -1704,4 +1731,53 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - docs/agent-live-context.md
 - Next actions:
   - Optionally migrate remaining block-related query snippets to the same helper pattern as new modules are touched.
+=======
+### 2026-08-21 03:55 - Global fixed footer in root app shell
+- Agent: GitHub Copilot
+- Summary: Implemented a single root-level `Powered by Newen.Solutions` footer fixed to the viewport bottom so it appears on all current routes and future pages by default. Removed duplicated footer blocks from platform and auth pages and reserved root bottom space to prevent content overlap.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/src/components/ui/PoweredByFooter.tsx
+  - ../mathesis-ui/src/app/layout.tsx
+  - ../mathesis-ui/src/app/(platform)/layout.tsx
+  - ../mathesis-ui/src/app/login/page.tsx
+  - ../mathesis-ui/src/app/registro/page.tsx
+  - ../mathesis-ui/src/app/reset-password/page.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate the footer in both light and dark themes on auth and platform pages.
+  - Validate mobile and desktop scroll/form interactions to confirm no controls are obscured by the fixed footer.
+
+### 2026-08-21 11:45 - Home phrase banner copy + light-mode contrast
+- Agent: GitHub Copilot
+- Summary: Updated the rotating home banner label from `Frases que pegan` to `Frases que inspiran` and switched rotating phrase text color to the semantic token `var(--text-primary)` so it remains readable in light mode while preserving dark-mode parity.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/CatchyPhrasesBanner.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate the home phrase banner in both light and dark themes to confirm contrast and copy.
+
+### 2026-08-21 12:10 - Ateneo new-topic character limit guard
+- Agent: GitHub Copilot
+- Summary: Added matching frontend/backend guards for Ateneo topic creation limits so title cannot be published above 100 characters and description cannot be published above 1000 characters; over-limit fields now render a red border and red counter.
+- Files changed:
+  - docs/ui-spec-live.md
+  - src/modules/ateneo/ateneo.schemas.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate the new-topic form in light and dark themes to confirm red invalid states for both title and description counters/inputs.
+  - Optionally add an integration test for create-topic payloads above 100/1000 to lock the backend guard.
+
+### 2026-08-21 21:50 - Ateneo new-topic group selector runtime fix
+- Agent: GitHub Copilot
+- Summary: Fixed the new-topic composer so `Grupo` is a real selectable dropdown sourced from member groups instead of a read-only field; publishing now targets the selected group and redirects to the created topic in that group.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate in browser from `/ateneo` feed that selecting a different group before publishing creates the topic in the selected destination.
+  - Optionally add a dedicated multi-group composer route if product wants this flow without a preselected group in the URL.
+>>>>>>> 72a13ce05a9a58ba7a106969539d558d658d49cf
 

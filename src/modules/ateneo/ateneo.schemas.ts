@@ -78,8 +78,8 @@ export const createAteneoTopicSchema = z.object({
     groupId: z.string().min(1)
   }),
   body: z.object({
-    title: z.string().trim().min(3).max(140),
-    description: z.string().trim().min(3).max(4000),
+    title: z.string().trim().min(3).max(100),
+    description: z.string().trim().min(3).max(1000),
     tone: ateneoTopicToneSchema.default("LIBRE")
   })
 });
