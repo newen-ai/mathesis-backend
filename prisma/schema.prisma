@@ -62,6 +62,11 @@ enum AteneoReactionValue {
   value
 }
 
+enum UserBlockAuditAction {
+  BLOCK
+  UNBLOCK
+}
+
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
@@ -105,6 +110,10 @@ model User {
   ateneoTopicCommentsMentioned AteneoTopicComment[] @relation("AteneoTopicCommentMentionUser")
   ateneoTopicReactions        AteneoTopicReaction[]
   ateneoTopicCommentReactions AteneoTopicCommentReaction[]
+  blocksInitiated             UserBlock[] @relation("UserBlocksInitiated")
+  blocksReceived              UserBlock[] @relation("UserBlocksReceived")
+  blockAuditsAsActor          UserBlockAudit[] @relation("UserBlockAuditActor")
+  blockAuditsAsTarget         UserBlockAudit[] @relation("UserBlockAuditTarget")
 
   @@index([deletedAt])
   @@index([canonicalEmail])
@@ -441,6 +450,42 @@ model Connection {
   @@index([userBId, deletedAt])
   @@index([userAId, userBId, deletedAt])
   @@map("connections")
+}
+
+model UserBlock {
+  id            String    @id @default(cuid())
+  blockerUserId String    @map("blocker_user_id")
+  blockedUserId String    @map("blocked_user_id")
+  reasonNote    String?   @map("reason_note")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  liftedAt      DateTime? @map("lifted_at")
+
+  blocker       User      @relation("UserBlocksInitiated", fields: [blockerUserId], references: [id], onDelete: Cascade)
+  blocked       User      @relation("UserBlocksReceived", fields: [blockedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerUserId, blockedUserId])
+  @@index([blockerUserId, liftedAt])
+  @@index([blockedUserId, liftedAt])
+  @@index([blockerUserId, blockedUserId, liftedAt])
+  @@map("user_blocks")
+}
+
+model UserBlockAudit {
+  id            String               @id @default(cuid())
+  action        UserBlockAuditAction
+  actorUserId   String?              @map("actor_user_id")
+  targetUserId  String?              @map("target_user_id")
+  reasonNote    String?              @map("reason_note")
+  occurredAt    DateTime             @default(now()) @map("occurred_at")
+
+  actor         User?                @relation("UserBlockAuditActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+  target        User?                @relation("UserBlockAuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+
+  @@index([action, occurredAt(sort: Desc)])
+  @@index([actorUserId, occurredAt(sort: Desc)])
+  @@index([targetUserId, occurredAt(sort: Desc)])
+  @@map("user_block_audit")
 }
 
 model Profile {

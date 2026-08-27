@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
 import { prisma } from "../../common/prisma";
+import { blockService } from "../block/block.service";
 import type { CreateFeedPostBody, FeedPostReactionValue, FeedSortBy } from "./feed.schemas";
 import type {
   CreateFeedPostOutput,
@@ -160,11 +161,24 @@ async function assertActiveUser(userId: string): Promise<void> {
   }
 }
 
-async function canViewFeedPost(_currentUserId: string, postId: string): Promise<boolean> {
+function blockedAuthorFilter(blockedUserIds: Set<string>) {
+  const blockedUserIdNotInFilter = blockService.buildBlockedUserIdNotInFilter(blockedUserIds);
+
+  if (!blockedUserIdNotInFilter) {
+    return {};
+  }
+
+  return {
+    authorUserId: blockedUserIdNotInFilter
+  };
+}
+
+async function canViewFeedPost(postId: string, blockedUserIds: Set<string>): Promise<boolean> {
   const post = await prisma.feedPost.findFirst({
     where: {
       id: postId,
       deletedAt: null,
+      ...blockedAuthorFilter(blockedUserIds),
       author: {
         deletedAt: null
       }
@@ -207,12 +221,18 @@ function assertPdfFiles(files: UploadedPdfFile[]): void {
   }
 }
 
-async function loadFeedPosts(limit: number, sortBy: FeedDbSortBy, currentUserId: string): Promise<FeedPostSummary[]> {
+async function loadFeedPosts(
+  limit: number,
+  sortBy: FeedDbSortBy,
+  currentUserId: string,
+  blockedUserIds: Set<string>
+): Promise<FeedPostSummary[]> {
   const sortConfig = FEED_SORT_CONFIG[sortBy];
 
   const posts = await prisma.feedPost.findMany({
     where: {
       deletedAt: null,
+      ...blockedAuthorFilter(blockedUserIds),
       author: {
         is: {
           deletedAt: null
@@ -227,7 +247,11 @@ async function loadFeedPosts(limit: number, sortBy: FeedDbSortBy, currentUserId:
   return posts.map((post) => mapFeedPost(post, currentUserId));
 }
 
-async function loadFeedPostsByIdsInOrder(postIds: string[], currentUserId: string): Promise<FeedPostSummary[]> {
+async function loadFeedPostsByIdsInOrder(
+  postIds: string[],
+  currentUserId: string,
+  blockedUserIds: Set<string>
+): Promise<FeedPostSummary[]> {
   if (postIds.length === 0) {
     return [];
   }
@@ -238,6 +262,7 @@ async function loadFeedPostsByIdsInOrder(postIds: string[], currentUserId: strin
         in: postIds
       },
       deletedAt: null,
+      ...blockedAuthorFilter(blockedUserIds),
       author: {
         is: {
           deletedAt: null
@@ -255,7 +280,12 @@ async function loadFeedPostsByIdsInOrder(postIds: string[], currentUserId: strin
     .map((post) => mapFeedPost(post, currentUserId));
 }
 
-async function loadHotFeedPosts(limit: number, gravity: number, currentUserId: string): Promise<FeedPostSummary[]> {
+async function loadHotFeedPosts(
+  limit: number,
+  gravity: number,
+  currentUserId: string,
+  blockedUserIds: Set<string>
+): Promise<FeedPostSummary[]> {
   const scoredRows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
     SELECT fp.id
     FROM feed_posts fp
@@ -268,18 +298,20 @@ async function loadHotFeedPosts(limit: number, gravity: number, currentUserId: s
       POWER(((EXTRACT(EPOCH FROM (NOW() - fp.created_at)) / 3600.0) + 2.0), ${gravity})
     ) DESC,
     fp.created_at DESC
-    LIMIT ${limit}
+    LIMIT ${limit * 4}
   `);
 
   const postIds = scoredRows.map((row) => row.id);
-  return loadFeedPostsByIdsInOrder(postIds, currentUserId);
+  const visiblePosts = await loadFeedPostsByIdsInOrder(postIds, currentUserId, blockedUserIds);
+  return visiblePosts.slice(0, limit);
 }
 
-async function loadFeedPostById(postId: string, currentUserId: string): Promise<FeedPostSummary> {
+async function loadFeedPostById(postId: string, currentUserId: string, blockedUserIds: Set<string>): Promise<FeedPostSummary> {
   const post = await prisma.feedPost.findFirst({
     where: {
       id: postId,
       deletedAt: null,
+      ...blockedAuthorFilter(blockedUserIds),
       author: {
         deletedAt: null
       }
@@ -332,16 +364,17 @@ export const feedService = {
     sortBy: FeedSortBy = DEFAULT_FEED_SORT_BY,
     gravity = DEFAULT_FEED_HOT_GRAVITY
   ): Promise<ListFeedPostsOutput> {
+    const blockedUserIds = await blockService.getBlockedUserIdsFor(currentUserId);
     const safeLimit = Math.min(Math.max(limit ?? DEFAULT_FEED_LIMIT, 1), MAX_FEED_LIMIT);
 
     if (sortBy === "HOT") {
       return {
-        posts: await loadHotFeedPosts(safeLimit, gravity, currentUserId)
+        posts: await loadHotFeedPosts(safeLimit, gravity, currentUserId, blockedUserIds)
       };
     }
 
     return {
-      posts: await loadFeedPosts(safeLimit, sortBy, currentUserId)
+      posts: await loadFeedPosts(safeLimit, sortBy, currentUserId, blockedUserIds)
     };
   },
 
@@ -351,8 +384,9 @@ export const feedService = {
     reactionValue: FeedPostReactionValue
   ): Promise<ToggleFeedPostReactionOutput> {
     await assertActiveUser(currentUserId);
+    const blockedUserIds = await blockService.getBlockedUserIdsFor(currentUserId);
 
-    const hasPostAccess = await canViewFeedPost(currentUserId, postId);
+    const hasPostAccess = await canViewFeedPost(postId, blockedUserIds);
 
     if (!hasPostAccess) {
       throw new AppError("Feed post not found", StatusCodes.NOT_FOUND);
@@ -424,7 +458,7 @@ export const feedService = {
     }
 
     return {
-      post: await loadFeedPostById(postId, currentUserId)
+      post: await loadFeedPostById(postId, currentUserId, blockedUserIds)
     };
   },
 
@@ -458,8 +492,9 @@ export const feedService = {
     attachmentId: string
   ): Promise<DownloadFeedAttachmentOutput> {
     await assertActiveUser(currentUserId);
+    const blockedUserIds = await blockService.getBlockedUserIdsFor(currentUserId);
 
-    const hasPostAccess = await canViewFeedPost(currentUserId, postId);
+    const hasPostAccess = await canViewFeedPost(postId, blockedUserIds);
 
     if (!hasPostAccess) {
       throw new AppError("Feed attachment not found", StatusCodes.NOT_FOUND);

@@ -31,6 +31,8 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Ateneo (backend-integrated): group settings can restrict topic creation and commenting to admins only; the frontend hides the corresponding CTAs and the backend rejects bypass attempts for those actions.
 - Ateneo (backend-integrated): group middle-column header actions include an info page (`/ateneo/groups/:groupId/info`), a members page (`/ateneo/groups/:groupId/members`), and an admin-only edit page (`/ateneo/groups/:groupId/edit`) that reuses the new-group form prefilled with the current group data.
 - Ateneo (compatibility): `/ateneo/feed` redirects to `/ateneo`.
+- Blocked users (backend + frontend in progress): one-sided block action with mutual enforcement while active. DMs keep history but block new direct sends both directions; group chats still deliver messages but suppress blocked-pair mention notifications; profile URL + global search + feed author surfaces + Ateneo members hide blocked users; Ateneo topics/comments from blocked pairs are hidden both directions with deleted-placeholder behavior for hidden parent comments that still have visible replies; blocked pairs cannot connect while active and existing connections are removed on block; unblock restores normal access; direct-chat composer in `/mensajes` is disabled when the pair is blocked and shows directional hover guidance.
+- Profile UI action menu: when viewing another user's profile (`/perfil?userId=...`), show a three-dot actions trigger with `Bloquear` and `Denunciar`; `Bloquear` calls backend block endpoint and `Denunciar` remains a placeholder.
 
 ## Profile Field Matrix
 | Section | Field | Backend status | Frontend status | Notes |
@@ -60,6 +62,10 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-08-26 - Mensajes blocked composer state
+- Added directional blocked state (`blocked by other` / `blocked by me`) in chat-detail responses for direct chats.
+- Updated `/mensajes` composer to disable input/send on blocked direct chats with hover guidance copy (including `Has sido bloqueado por este usuario`).
+
 ### 2026-08-21 - Directorio Mensa Empresarios backend integration
 - Added the public directory listing endpoint `GET /api/v1/enterprises/directory` that returns only enterprises whose owner has an active `mensa_empresarios` badge and excludes deleted records.
 - The directory payload includes each enterprise’s name, role, website, description, founder, location, and badge metadata so the UI can render live data without mock content.
@@ -76,6 +82,14 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 
 ### 2026-08-21 - Intereses reorder by drag and drop
 - Added drag-and-drop reordering for interests chips in edit mode so users can define a custom order before saving.
+
+### 2026-08-26 - Profile header block action
+- Added a three-dot actions menu on read-only profile views with `Bloquear` + `Denunciar` entries.
+- Wired `Bloquear` to backend endpoint `POST /api/v1/blocks/:targetUserId` from the profile UI.
+
+### 2026-08-26 - Profile block note popup
+- Updated the read-only profile `Bloquear` action to open a popup with explanatory copy and an optional private note field.
+- On confirmation, the optional note is sent to backend block endpoint `POST /api/v1/blocks/:targetUserId` as `reasonNote`.
 
 ### 2026-08-21 - Intereses lowercase normalization on save
 - Enforced lowercase normalization for all interests at save time in both frontend payload shaping and backend persistence validation.
@@ -248,3 +262,8 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Added the group info, members, and admin-only edit actions to the middle-column header area.
 - Added backend group members and group update endpoints to support the members list page and the prefilled group-edit page.
 - Reused the new-group form for the edit screen so the configuration page keeps the same UI while loading the current values.
+
+### 2026-08-26 - Blocked users full-scope kickoff
+- Approved first-pass block policy for implementation: one-sided block action with mutual enforcement while active and optional reason note.
+- Confirmed scope split: direct/group chat keeps message delivery in shared groups, while Ateneo content visibility is filtered mutually for blocked pairs.
+- Confirmed unblock behavior and audit expectations: unblock restores normal behavior immediately and backend retains block audit trail.

@@ -1597,3 +1597,111 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next actions:
   - Keep mock/topic seed objects aligned with `AteneoGroupTopic` when fields are added to prevent CI/CD type failures.
 
+### 2026-08-26 14:30 - Block user implementation kickoff
+- Agent: GitHub Copilot
+- Summary: Started end-to-end block-user implementation with backend block/audit data models and API routes, then integrated enforcement across profile visibility, feed visibility, direct-message sending, Ateneo members/topics/comments visibility, and connection creation; also replaced the blocked-users settings page mock data with API-backed load/unblock behavior and added profile unavailable + Ateneo deleted-comment placeholder UI handling.
+- Files changed:
+  - docs/ui-spec-live.md
+  - prisma/schema.prisma
+  - prisma/migrations/20260826120000_add_user_blocks/migration.sql
+  - src/modules/block/block.schemas.ts
+  - src/modules/block/block.types.ts
+  - src/modules/block/block.controller.ts
+  - src/modules/block/block.routes.ts
+  - src/modules/block/block.service.ts
+  - src/routes/index.ts
+  - src/modules/chat/chat.service.ts
+  - src/modules/feed/feed.service.ts
+  - src/modules/profile/profile.controller.ts
+  - src/modules/profile/profile.service.ts
+  - src/modules/connection/connection.service.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - ../mathesis-ui/src/lib/api/block.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/account/configuration/blocked/page.tsx
+  - ../mathesis-ui/src/app/(platform)/account/configuration/page.tsx
+  - ../mathesis-ui/src/app/(platform)/_lib/hooks/useProfessionalProfile.ts
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Implement frontend block actions from user surfaces (for example profile/search/chat actions) so users can create blocks outside the settings unblock list.
+  - Add integration tests for block/unblock + cross-module enforcement scenarios (DM block, profile/search hide, feed/Ateneo filtering, connection auto-removal).
+  - Decide and implement notification-layer suppression behavior for blocked-pair mentions in group chats once notification hooks are available.
+
+### 2026-08-26 15:05 - Profile UI block action menu
+- Agent: GitHub Copilot
+- Summary: Added a three-dot actions menu on read-only profile views with `Bloquear` and `Denunciar` options; `Bloquear` now calls the backend block endpoint from the profile header and shows loading/success/error feedback.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Add equivalent block-entry actions in other user surfaces (search results, feed cards, and messages thread headers) for complete UX parity.
+  - Replace `Denunciar` placeholder with real reporting flow once backend/report endpoints are defined.
+
+### 2026-08-26 15:20 - Profile actions menu visibility and close behavior
+- Agent: GitHub Copilot
+- Summary: Fixed read-only profile actions menu visibility by removing clipping from the profile card container and raising menu layering; added close-on-outside-click and close-on-Escape interactions for the three-dot actions menu.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manually validate menu behavior on desktop and mobile overlays to confirm no remaining stacking conflicts with adjacent floating UI elements.
+
+### 2026-08-26 15:28 - Denunciar action color tweak
+- Agent: GitHub Copilot
+- Summary: Updated read-only profile menu `Denunciar` action text color to explicit red token for clearer visual emphasis.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Confirm final color contrast in both light and dark themes on the profile action menu.
+
+### 2026-08-26 15:40 - Profile block note popup
+- Agent: GitHub Copilot
+- Summary: Changed profile `Bloquear` action to open a modal popup with explanatory copy and optional private note field; confirm action now submits `reasonNote` to backend block endpoint.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate modal UX in light/dark themes and ensure note text appears later in the blocked-users list as expected.
+
+### 2026-08-26 15:52 - Immediate profile refetch after blocking
+- Agent: GitHub Copilot
+- Summary: Added a safe `refetchProfile` helper in the profile hook and invoked it after successful block confirmation so blocked profile visibility updates immediately without manual reload.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_lib/hooks/useProfessionalProfile.ts
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileView.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Verify cross-surface refresh behavior (search, feed, messages) for instant block visibility updates beyond profile page.
+
+### 2026-08-26 16:20 - Mensajes composer blocked-state UX
+- Agent: GitHub Copilot
+- Summary: Added directional blocked-state flags to chat detail responses for direct chats and wired `/mensajes` composer to disable input/send with hover guidance. When blocked by the other user, the hover copy is `Has sido bloqueado por este usuario`; when blocked by current user, copy indicates self-block state.
+- Files changed:
+  - docs/ui-spec-live.md
+  - src/modules/chat/chat.types.ts
+  - src/modules/chat/chat.service.ts
+  - ../mathesis-ui/src/lib/api/chat.ts
+  - ../mathesis-ui/src/app/(platform)/mensajes/page.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Optionally propagate blocked-state flags to chat list payload if list-level badges/indicators are later required.
+  - Validate live behavior by opening a direct chat where the other user has already blocked the current user and confirming composer hover text in both light/dark themes.
+
+### 2026-08-26 16:45 - Blocked-user filter helper refactor
+- Agent: GitHub Copilot
+- Summary: Reduced repeated blocked-user `notIn` query snippets by adding a shared helper in block service and reusing it in profile search, Ateneo feed/members/topics, and feed author-filter paths.
+- Files changed:
+  - src/modules/block/block.service.ts
+  - src/modules/profile/profile.service.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - src/modules/feed/feed.service.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Optionally migrate remaining block-related query snippets to the same helper pattern as new modules are touched.
+

@@ -1,6 +1,7 @@
 import { AppError } from "../../common/errors/app-error";
 import { prisma } from "../../common/prisma";
 import { StatusCodes } from "http-status-codes";
+import { blockService } from "../block/block.service";
 import type {
   AteneoCommentParams,
   AteneoGroupParams,
@@ -163,12 +164,40 @@ function mapCommentSummary(comment: NonNullable<CommentWithRelations>, currentUs
     topicId: comment.topicId,
     author,
     content: comment.content,
+    isDeletedPlaceholder: false,
     timeLabel: toTimeLabel(comment.createdAt),
     createdAt: comment.createdAt.toISOString(),
     parentCommentId: comment.parentCommentId,
     mentionUserId: comment.mentionUserId,
     reactions: comment.reactionCount,
     currentUserReactionValue: currentUserReaction?.reactionValue ?? null
+  };
+}
+
+function mapDeletedCommentPlaceholder(comment: {
+  id: string;
+  topicId: string;
+  createdAt: Date;
+  parentCommentId: string | null;
+}): AteneoTopicCommentSummary {
+  return {
+    id: comment.id,
+    topicId: comment.topicId,
+    author: {
+      userId: "",
+      firstName: null,
+      lastName: null,
+      profileImageUrl: null,
+      initials: "?"
+    },
+    content: "Comentario eliminado",
+    isDeletedPlaceholder: true,
+    timeLabel: toTimeLabel(comment.createdAt),
+    createdAt: comment.createdAt.toISOString(),
+    parentCommentId: comment.parentCommentId,
+    mentionUserId: null,
+    reactions: 0,
+    currentUserReactionValue: null
   };
 }
 
@@ -455,10 +484,17 @@ export const ateneoService = {
 
   async listFeed(currentUserId: string, limit?: number): Promise<ListAteneoFeedOutput> {
     const take = clampLimit(limit);
+    const blockedUserIds = await blockService.getBlockedUserIdsFor(currentUserId);
+    const blockedUserIdNotInFilter = blockService.buildBlockedUserIdNotInFilter(blockedUserIds);
 
     const topics = await prisma.ateneoTopic.findMany({
       where: {
         deletedAt: null,
+        ...(blockedUserIdNotInFilter
+          ? {
+              authorUserId: blockedUserIdNotInFilter
+            }
+          : {}),
         group: {
           deletedAt: null,
           memberships: {
@@ -555,10 +591,17 @@ export const ateneoService = {
 
   async listGroupMembers(currentUserId: string, params: ListAteneoGroupMembersParams): Promise<ListAteneoGroupMembersOutput> {
     await ensureGroupAccess(params.groupId, currentUserId);
+    const blockedUserIds = await blockService.getBlockedUserIdsFor(currentUserId);
+    const blockedUserIdNotInFilter = blockService.buildBlockedUserIdNotInFilter(blockedUserIds);
 
     const members = await prisma.ateneoGroupMember.findMany({
       where: {
         groupId: params.groupId,
+        ...(blockedUserIdNotInFilter
+          ? {
+              userId: blockedUserIdNotInFilter
+            }
+          : {}),
         deletedAt: null,
         leftAt: null,
         group: {
@@ -764,10 +807,17 @@ export const ateneoService = {
   async listGroupTopics(currentUserId: string, params: AteneoGroupParams, limit?: number): Promise<ListAteneoTopicsOutput> {
     await ensureGroupAccess(params.groupId, currentUserId);
     const take = clampLimit(limit);
+    const blockedUserIds = await blockService.getBlockedUserIdsFor(currentUserId);
+    const blockedUserIdNotInFilter = blockService.buildBlockedUserIdNotInFilter(blockedUserIds);
 
     const topics = await prisma.ateneoTopic.findMany({
       where: {
         groupId: params.groupId,
+        ...(blockedUserIdNotInFilter
+          ? {
+              authorUserId: blockedUserIdNotInFilter
+            }
+          : {}),
         deletedAt: null,
         group: {
           deletedAt: null
@@ -847,9 +897,14 @@ export const ateneoService = {
 
   async getTopic(currentUserId: string, params: AteneoTopicParams): Promise<GetAteneoTopicOutput> {
     await ensureGroupAccess(params.groupId, currentUserId);
+    const blockedUserIds = await blockService.getBlockedUserIdsFor(currentUserId);
 
     const topic = await loadTopicById(params.topicId);
     if (!topic || topic.groupId !== params.groupId) {
+      throw new AppError("Ateneo topic not found", StatusCodes.NOT_FOUND);
+    }
+
+    if (blockedUserIds.has(topic.authorUserId)) {
       throw new AppError("Ateneo topic not found", StatusCodes.NOT_FOUND);
     }
 
@@ -860,6 +915,7 @@ export const ateneoService = {
 
   async listTopicComments(currentUserId: string, params: AteneoTopicParams): Promise<ListAteneoTopicCommentsOutput> {
     await ensureGroupAccess(params.groupId, currentUserId);
+    const blockedUserIds = await blockService.getBlockedUserIdsFor(currentUserId);
 
     const comments = await prisma.ateneoTopicComment.findMany({
       where: {
@@ -898,8 +954,43 @@ export const ateneoService = {
       orderBy: [{ createdAt: "asc" }]
     });
 
+    const hiddenCommentIds = new Set(
+      comments
+        .filter((comment) => blockedUserIds.has(comment.authorUserId))
+        .map((comment) => comment.id)
+    );
+
+    const commentsByParentId = new Map<string, Array<(typeof comments)[number]>>();
+
+    for (const comment of comments) {
+      if (!comment.parentCommentId) {
+        continue;
+      }
+
+      const existing = commentsByParentId.get(comment.parentCommentId) ?? [];
+      existing.push(comment);
+      commentsByParentId.set(comment.parentCommentId, existing);
+    }
+
+    const commentsToReturn: AteneoTopicCommentSummary[] = [];
+
+    for (const comment of comments) {
+      if (!hiddenCommentIds.has(comment.id)) {
+        commentsToReturn.push(mapCommentSummary(comment, currentUserId));
+        continue;
+      }
+
+      const hasVisibleReply = (commentsByParentId.get(comment.id) ?? []).some(
+        (reply) => !hiddenCommentIds.has(reply.id)
+      );
+
+      if (hasVisibleReply) {
+        commentsToReturn.push(mapDeletedCommentPlaceholder(comment));
+      }
+    }
+
     return {
-      comments: comments.map((comment) => mapCommentSummary(comment, currentUserId))
+      comments: commentsToReturn
     };
   },
 
@@ -925,10 +1016,18 @@ export const ateneoService = {
         groupId: params.groupId,
         deletedAt: null
       },
-      select: { id: true }
+      select: {
+        id: true,
+        authorUserId: true
+      }
     });
 
     if (!topic) {
+      throw new AppError("Ateneo topic not found", StatusCodes.NOT_FOUND);
+    }
+
+    const isTopicBlocked = await blockService.isEitherDirectionBlocked(currentUserId, topic.authorUserId);
+    if (isTopicBlocked) {
       throw new AppError("Ateneo topic not found", StatusCodes.NOT_FOUND);
     }
 
@@ -939,11 +1038,26 @@ export const ateneoService = {
           topicId: params.topicId,
           deletedAt: null
         },
-        select: { id: true }
+        select: {
+          id: true,
+          authorUserId: true
+        }
       });
 
       if (!parent) {
         throw new AppError("Parent comment not found", StatusCodes.NOT_FOUND);
+      }
+
+      const parentIsBlocked = await blockService.isEitherDirectionBlocked(currentUserId, parent.authorUserId);
+      if (parentIsBlocked) {
+        throw new AppError("Parent comment not found", StatusCodes.NOT_FOUND);
+      }
+    }
+
+    if (body.mentionUserId) {
+      const mentionIsBlocked = await blockService.isEitherDirectionBlocked(currentUserId, body.mentionUserId);
+      if (mentionIsBlocked) {
+        throw new AppError("Mention user is not available", StatusCodes.BAD_REQUEST);
       }
     }
 
@@ -993,10 +1107,18 @@ export const ateneoService = {
         groupId: params.groupId,
         deletedAt: null
       },
-      select: { id: true }
+      select: {
+        id: true,
+        authorUserId: true
+      }
     });
 
     if (!topic) {
+      throw new AppError("Ateneo topic not found", StatusCodes.NOT_FOUND);
+    }
+
+    const isTopicBlocked = await blockService.isEitherDirectionBlocked(currentUserId, topic.authorUserId);
+    if (isTopicBlocked) {
       throw new AppError("Ateneo topic not found", StatusCodes.NOT_FOUND);
     }
 
@@ -1067,10 +1189,18 @@ export const ateneoService = {
           deletedAt: null
         }
       },
-      select: { id: true }
+      select: {
+        id: true,
+        authorUserId: true
+      }
     });
 
     if (!comment) {
+      throw new AppError("Ateneo comment not found", StatusCodes.NOT_FOUND);
+    }
+
+    const isCommentBlocked = await blockService.isEitherDirectionBlocked(currentUserId, comment.authorUserId);
+    if (isCommentBlocked) {
       throw new AppError("Ateneo comment not found", StatusCodes.NOT_FOUND);
     }
 
