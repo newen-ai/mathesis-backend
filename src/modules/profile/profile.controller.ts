@@ -12,8 +12,9 @@ import type {
 import { profileService } from "./profile.service";
 
 export const searchUsers: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
   const text = (req.query as SearchUsersQuery).text.trim();
-  const result = await profileService.searchUsersByName(text);
+  const result = await profileService.searchUsersByName(currentUserId, text);
 
   res.status(StatusCodes.OK).json({
     success: true,
@@ -45,8 +46,9 @@ export const myProfile: RequestHandler = async (req, res) => {
 };
 
 export const profileByUserId: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
   const userId = (req.params as GetProfileByUserIdParams).userId;
-  const result = await profileService.getProfileByUserId(userId);
+  const result = await profileService.getProfileByUserId(currentUserId, userId);
 
   res.status(StatusCodes.OK).json({
     success: true,

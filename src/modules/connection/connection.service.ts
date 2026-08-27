@@ -1,6 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
 import { prisma } from "../../common/prisma";
+import { blockService } from "../block/block.service";
 import type {
   ConnectUserOutput,
   ConnectionUserSummary,
@@ -70,6 +71,7 @@ export const connectionService = {
 
     await assertActiveUser(currentUserId);
     await assertActiveUser(targetUserId);
+    await blockService.assertPairNotBlocked(currentUserId, targetUserId, "Blocked users cannot connect");
 
     const [userAId, userBId] = normalizePair(currentUserId, targetUserId);
 

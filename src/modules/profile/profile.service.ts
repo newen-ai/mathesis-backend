@@ -2,6 +2,7 @@ import { type Prisma } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
 import { prisma } from "../../common/prisma";
+import { blockService } from "../block/block.service";
 import type {
   UpdateMyEducationHistoryBody,
   UpdateMyProfileBody,
@@ -232,7 +233,7 @@ async function applyEducationOperation(
 }
 
 export const profileService = {
-  async searchUsersByName(text: string): Promise<UserSearchResult[]> {
+  async searchUsersByName(currentUserId: string, text: string): Promise<UserSearchResult[]> {
     const normalizedText = text.trim();
     const tokens = normalizedText.split(/\s+/).filter((token) => token.length > 0);
     const firstToken = tokens[0] ?? "";
@@ -308,12 +309,20 @@ export const profileService = {
       );
     }
 
+    const blockedUserIds = await blockService.getBlockedUserIdsFor(currentUserId);
+    const blockedUserIdNotInFilter = blockService.buildBlockedUserIdNotInFilter(blockedUserIds);
+
     const profiles = await prisma.profile.findMany({
       where: {
         deletedAt: null,
         user: {
           is: {
-            deletedAt: null
+            deletedAt: null,
+            ...(blockedUserIdNotInFilter
+              ? {
+                  id: blockedUserIdNotInFilter
+                }
+              : {})
           }
         },
         OR: orConditions
@@ -389,7 +398,9 @@ export const profileService = {
     return rows.map((row) => ({ value: row.value }));
   },
 
-  async getProfileByUserId(userId: string): Promise<MyProfileOutput> {
+  async getProfileByUserId(currentUserId: string, userId: string): Promise<MyProfileOutput> {
+    await blockService.assertPairNotBlocked(currentUserId, userId, "Profile is not available");
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {

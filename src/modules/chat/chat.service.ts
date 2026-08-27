@@ -2,6 +2,7 @@ import { ChatMemberRole, ChatType } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
 import { prisma } from "../../common/prisma";
+import { blockService } from "../block/block.service";
 import type {
   AddGroupMembersOutput,
   ChatDetail,
@@ -144,6 +145,16 @@ function mapMessage(message: {
   };
 }
 
+type DirectChatBlockState = {
+  isBlockedByCurrentUser: boolean;
+  isBlockedByOtherUser: boolean;
+};
+
+const DIRECT_CHAT_NOT_BLOCKED: DirectChatBlockState = {
+  isBlockedByCurrentUser: false,
+  isBlockedByOtherUser: false
+};
+
 function mapChatDetail(chat: {
   id: string;
   type: ChatType;
@@ -166,8 +177,9 @@ function mapChatDetail(chat: {
       } | null;
     };
   }>;
-}, currentUserId: string): ChatDetail {
+}, currentUserId: string, directBlockState: DirectChatBlockState = DIRECT_CHAT_NOT_BLOCKED): ChatDetail {
   const isAdmin = chat.members.some((member) => member.user.id === currentUserId && member.role === ChatMemberRole.ADMIN);
+  const isDirectChat = chat.type === ChatType.DIRECT;
 
   return {
     id: chat.id,
@@ -177,7 +189,57 @@ function mapChatDetail(chat: {
     createdAt: chat.createdAt.toISOString(),
     updatedAt: chat.updatedAt.toISOString(),
     isAdmin,
+    isBlockedByCurrentUser: isDirectChat ? directBlockState.isBlockedByCurrentUser : false,
+    isBlockedByOtherUser: isDirectChat ? directBlockState.isBlockedByOtherUser : false,
     members: mapMembers(chat.members)
+  };
+}
+
+async function getDirectChatBlockState(currentUserId: string, chat: {
+  type: ChatType;
+  members: Array<{
+    user: {
+      id: string;
+    };
+  }>;
+}): Promise<DirectChatBlockState> {
+  if (chat.type !== ChatType.DIRECT) {
+    return DIRECT_CHAT_NOT_BLOCKED;
+  }
+
+  const otherMember = chat.members.find((member) => member.user.id !== currentUserId);
+
+  if (!otherMember) {
+    return DIRECT_CHAT_NOT_BLOCKED;
+  }
+
+  const activeBlocks = await prisma.userBlock.findMany({
+    where: {
+      liftedAt: null,
+      OR: [
+        {
+          blockerUserId: currentUserId,
+          blockedUserId: otherMember.user.id
+        },
+        {
+          blockerUserId: otherMember.user.id,
+          blockedUserId: currentUserId
+        }
+      ]
+    },
+    select: {
+      blockerUserId: true,
+      blockedUserId: true
+    }
+  });
+
+  return {
+    isBlockedByCurrentUser: activeBlocks.some(
+      (block) => block.blockerUserId === currentUserId && block.blockedUserId === otherMember.user.id
+    ),
+    isBlockedByOtherUser: activeBlocks.some(
+      (block) => block.blockerUserId === otherMember.user.id && block.blockedUserId === currentUserId
+    )
   };
 }
 
@@ -254,6 +316,8 @@ async function getActiveMembership(currentUserId: string, chatId: string) {
         select: {
           id: true,
           type: true,
+          directUserLowId: true,
+          directUserHighId: true,
           title: true,
           createdByUserId: true,
           createdAt: true,
@@ -412,7 +476,8 @@ export const chatService = {
   async getChatById(currentUserId: string, chatId: string): Promise<ChatDetail> {
     await assertActiveUser(currentUserId);
     const chat = await getAccessibleChat(currentUserId, chatId);
-    return mapChatDetail(chat, currentUserId);
+    const directBlockState = await getDirectChatBlockState(currentUserId, chat);
+    return mapChatDetail(chat, currentUserId, directBlockState);
   },
 
   async createDirectChat(currentUserId: string, targetUserId: string): Promise<CreateDirectChatOutput> {
@@ -422,6 +487,7 @@ export const chatService = {
 
     await assertActiveUser(currentUserId);
     await assertActiveUser(targetUserId);
+    await blockService.assertPairNotBlocked(currentUserId, targetUserId, "Direct messages are blocked for this user pair");
 
     const [lowUserId, highUserId] = normalizePair(currentUserId, targetUserId);
 
@@ -755,7 +821,19 @@ export const chatService = {
 
   async sendMessage(currentUserId: string, chatId: string, content: string): Promise<SendMessageOutput> {
     await assertActiveUser(currentUserId);
-    await getActiveMembership(currentUserId, chatId);
+    const membership = await getActiveMembership(currentUserId, chatId);
+
+    if (membership.chat.type === ChatType.DIRECT) {
+      const directUserLowId = membership.chat.directUserLowId;
+      const directUserHighId = membership.chat.directUserHighId;
+
+      if (!directUserLowId || !directUserHighId) {
+        throw new AppError("Direct chat configuration is invalid", StatusCodes.INTERNAL_SERVER_ERROR);
+      }
+
+      const targetUserId = directUserLowId === currentUserId ? directUserHighId : directUserLowId;
+      await blockService.assertPairNotBlocked(currentUserId, targetUserId, "Direct messages are blocked for this user pair");
+    }
 
     const message = await prisma.chatMessage.create({
       data: {
