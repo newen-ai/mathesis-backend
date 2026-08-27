@@ -1,5 +1,8 @@
+import { randomBytes } from "node:crypto";
 import { type Prisma } from "@prisma/client";
+import jwt from "jsonwebtoken";
 import { StatusCodes } from "http-status-codes";
+import { env } from "../../config/env";
 import { AppError } from "../../common/errors/app-error";
 import { prisma } from "../../common/prisma";
 import { blockService } from "../block/block.service";
@@ -232,7 +235,85 @@ async function applyEducationOperation(
   }
 }
 
+async function buildCredentialVerificationToken(userId: string): Promise<string> {
+  const nonce = randomBytes(12).toString("hex");
+
+  return jwt.sign(
+    {
+      sub: userId,
+      type: "credential_verification",
+      nonce
+    },
+    env.JWT_ACCESS_SECRET,
+    {
+      algorithm: "HS256",
+      issuer: env.JWT_ISSUER,
+      audience: env.JWT_AUDIENCE,
+      expiresIn: 5 * 60
+    }
+  );
+}
+
 export const profileService = {
+  async issueCredentialVerificationToken(userId: string): Promise<string> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId, deletedAt: null }
+    });
+
+    if (!user) {
+      throw new AppError("User not found", StatusCodes.NOT_FOUND);
+    }
+
+    return buildCredentialVerificationToken(user.id);
+  },
+
+  async verifyCredentialToken(token: string): Promise<{ valid: true; user: { id: string; firstName: string; lastName: string } } | { valid: false }> {
+    try {
+      const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET, {
+        algorithms: ["HS256"]
+      }) as {
+        sub?: string;
+        type?: string;
+      };
+
+      if (!decoded.sub || decoded.type !== "credential_verification") {
+        return { valid: false };
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.sub, deletedAt: null },
+        include: {
+          profile: {
+            where: { deletedAt: null },
+            select: {
+              firstName: true,
+              lastName: true
+            }
+          }
+        }
+      });
+
+      if (!user) {
+        return { valid: false };
+      }
+
+      const profile = user.profile;
+      const firstName = profile?.firstName?.trim() || "Usuario";
+      const lastName = profile?.lastName?.trim() || "";
+
+      return {
+        valid: true,
+        user: {
+          id: user.id,
+          firstName,
+          lastName
+        }
+      };
+    } catch {
+      return { valid: false };
+    }
+  },
+
   async searchUsersByName(currentUserId: string, text: string): Promise<UserSearchResult[]> {
     const normalizedText = text.trim();
     const tokens = normalizedText.split(/\s+/).filter((token) => token.length > 0);

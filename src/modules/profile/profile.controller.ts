@@ -1,5 +1,6 @@
 import type { RequestHandler } from "express";
 import { StatusCodes } from "http-status-codes";
+import { AppError } from "../../common/errors/app-error";
 import type {
   GetProfileByUserIdParams,
   SearchUsersQuery,
@@ -118,5 +119,47 @@ export const updateMyPreferences: RequestHandler = async (req, res) => {
     success: true,
     message: "PREFERENCES_UPDATED",
     data: result
+  });
+};
+
+export const issueMyCredentialVerificationToken: RequestHandler = async (req, res) => {
+  const userId = req.user?.sub;
+
+  if (!userId) {
+    throw new AppError("Authentication required", StatusCodes.UNAUTHORIZED);
+  }
+
+  const token = await profileService.issueCredentialVerificationToken(userId);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "CREDENTIAL_VERIFICATION_TOKEN_CREATED",
+    data: {
+      token,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString()
+    }
+  });
+};
+
+export const verifyCredentialToken: RequestHandler = async (req, res) => {
+  const token = typeof req.query.token === "string" ? req.query.token : undefined;
+
+  if (!token) {
+    throw new AppError("Verification token is required", StatusCodes.BAD_REQUEST);
+  }
+
+  const verification = await profileService.verifyCredentialToken(token);
+
+  if (!verification.valid) {
+    throw new AppError("Invalid or expired credential verification token", StatusCodes.UNAUTHORIZED);
+  }
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "CREDENTIAL_VERIFICATION_VALID",
+    data: {
+      valid: true,
+      user: verification.user
+    }
   });
 };

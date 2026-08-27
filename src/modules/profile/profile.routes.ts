@@ -4,6 +4,7 @@ import { requireAuth } from "../../common/middlewares/require-auth";
 import { validateRequest } from "../../common/middlewares/validate-request";
 import {
 	getMyPreferences,
+	issueMyCredentialVerificationToken,
 	myProfile,
 	profileByUserId,
 	searchInterestSuggestions,
@@ -11,7 +12,8 @@ import {
 	updateMyEducationHistory,
 	updateMyPreferences,
 	updateMyWorkExperiences,
-	upsertMyProfile
+	upsertMyProfile,
+	verifyCredentialToken
 } from "./profile.controller";
 import {
 	getMyPreferencesSchema,
@@ -33,8 +35,14 @@ profileRouter.get(
 	validateRequest(searchInterestSuggestionsSchema),
 	asyncHandler(searchInterestSuggestions)
 );
+profileRouter.get("/credential/verify", asyncHandler(verifyCredentialToken));
 profileRouter.get("/me", requireAuth(), asyncHandler(myProfile));
 profileRouter.get("/me/preferences", requireAuth(), validateRequest(getMyPreferencesSchema), asyncHandler(getMyPreferences));
+profileRouter.post(
+  "/me/credential/verification-token",
+  requireAuth(),
+  asyncHandler(issueMyCredentialVerificationToken)
+);
 profileRouter.get("/:userId", requireAuth(), validateRequest(getProfileByUserIdSchema), asyncHandler(profileByUserId));
 profileRouter.post("/me", requireAuth(), validateRequest(updateMyProfileSchema), asyncHandler(upsertMyProfile));
 profileRouter.patch(

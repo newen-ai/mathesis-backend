@@ -14,6 +14,68 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-08-27 15:40 - Signed QR verification flow
+- Agent: GitHub Copilot
+- Summary: Replaced the static name-based QR payload with a signed, expiring credential token issued from the backend and validated by `/api/v1/profile/credential/verify`. The public `/verificar` page now rejects tampered URLs and only shows success when the token matches an active user record.
+- Files changed:
+  - ../mathesis-backend/src/modules/profile/profile.service.ts
+  - ../mathesis-backend/src/modules/profile/profile.controller.ts
+  - ../mathesis-backend/src/modules/profile/profile.routes.ts
+  - ../mathesis-ui/src/app/(platform)/_components/home/DigitalCredentialCard.tsx
+  - ../mathesis-ui/src/app/verificar/page.tsx
+  - ../mathesis-backend/test/integration/credential-verification.integration.test.ts
+  - ../mathesis-backend/docs/ui-spec-live.md
+- Next:
+  - Optionally add a short-lived “refresh token” rotation or server-side revocation list if the credential should be invalidated on demand.
+
+### 2026-08-27 01:35 - Theme bootstrap without inline script
+- Agent: GitHub Copilot
+- Summary: Replaced the inline `dangerouslySetInnerHTML` theme bootstrap with a dedicated client component using a mount-safe `useLayoutEffect`, preserving the saved dark-mode preference without triggering the hydration mismatch pattern.
+- Files changed:
+  - ../mathesis-ui/src/app/layout.tsx
+  - ../mathesis-ui/src/components/theme/ThemeInitializer.tsx
+  - ../mathesis-ui/src/lib/theme/useUiTheme.ts
+- Next:
+  - Reload the app and confirm the saved/default dark mode is still restored without theme warnings or inline script usage.
+
+### 2026-08-27 01:20 - Theme hydration mismatch fix
+- Agent: GitHub Copilot
+- Summary: Removed render-time access to localStorage from the theme hook so the initial client render matches the server HTML during hydration. The saved theme is applied in a mount effect instead, while the root layout bootstrap script keeps the document theme aligned before paint.
+- Files changed:
+  - ../mathesis-ui/src/lib/theme/useUiTheme.ts
+  - ../mathesis-ui/src/app/layout.tsx
+- Next:
+  - Reload the app and confirm the page no longer emits hydration warnings after the saved dark theme is restored.
+
+### 2026-08-27 01:05 - Digital credential readability pass
+- Agent: GitHub Copilot
+- Summary: Raised the contrast on the credential front-panel labels so the secondary membership text reads clearly against the dark navy background without sacrificing the white emphasis hierarchy.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/DigitalCredentialCard.tsx
+- Next:
+  - Re-check the credential card in both light and dark themes to confirm the hierarchy stays readable and consistent.
+
+### 2026-08-27 00:45 - Digital credential QR env fix
+- Agent: GitHub Copilot
+- Summary: Replaced the hardcoded production verification URL inside the credential QR with browser-origin based resolution, with environment variables as overrides. This keeps local testing on the current host while still pointing the QR to the verification route in all environments.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/DigitalCredentialCard.tsx
+- Next:
+  - Verify the QR resolves to the current local origin when the page is loaded in development.
+  - Re-check the credential card in both light and dark themes once the final environment URL is validated.
+
+### 2026-08-27 00:00 - Digital credential UI first pass
+- Agent: GitHub Copilot
+- Summary: Added the credential route and entry action to the profile menu, created an initial front/back credential card UI, removed the share/download controls and ID from the design, and set the card to a square-ish proportion with a QR-style placeholder on the front and badge tiles on the back.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/DigitalCredentialCard.tsx
+  - ../mathesis-ui/src/app/(platform)/perfil/credencial/page.tsx
+  - ../mathesis-backend/docs/ui-spec-live.md
+- Next:
+  - Verify the credential screen visually in the browser and tune spacing/typography against the provided mockups.
+  - Confirm the exact QR payload/back-end contract before adapting the backend API.
+
 ### 2026-08-21 14:25 - Ateneo reaction count indicators removed
 - Agent: GitHub Copilot
 - Summary: Removed topic reaction-count indicators from Ateneo feed/group cards so the UI no longer displays how many users reacted.
@@ -1623,7 +1685,6 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next actions:
   - Keep mock/topic seed objects aligned with `AteneoGroupTopic` when fields are added to prevent CI/CD type failures.
 
-<<<<<<< HEAD
 ### 2026-08-26 14:30 - Block user implementation kickoff
 - Agent: GitHub Copilot
 - Summary: Started end-to-end block-user implementation with backend block/audit data models and API routes, then integrated enforcement across profile visibility, feed visibility, direct-message sending, Ateneo members/topics/comments visibility, and connection creation; also replaced the blocked-users settings page mock data with API-backed load/unblock behavior and added profile unavailable + Ateneo deleted-comment placeholder UI handling.
@@ -1731,7 +1792,6 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - docs/agent-live-context.md
 - Next actions:
   - Optionally migrate remaining block-related query snippets to the same helper pattern as new modules are touched.
-=======
 ### 2026-08-21 03:55 - Global fixed footer in root app shell
 - Agent: GitHub Copilot
 - Summary: Implemented a single root-level `Powered by Newen.Solutions` footer fixed to the viewport bottom so it appears on all current routes and future pages by default. Removed duplicated footer blocks from platform and auth pages and reserved root bottom space to prevent content overlap.
@@ -1779,5 +1839,4 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next actions:
   - Validate in browser from `/ateneo` feed that selecting a different group before publishing creates the topic in the selected destination.
   - Optionally add a dedicated multi-group composer route if product wants this flow without a preselected group in the URL.
->>>>>>> 72a13ce05a9a58ba7a106969539d558d658d49cf
 

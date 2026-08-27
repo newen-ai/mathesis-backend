@@ -11,6 +11,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 ## Implementation Scope (Current)
 - Profile core: name, surname, date of birth, nationality, headline, current company, about, location.
 - Profile badges: render active user badges below profile name in /perfil hero header.
+- Digital credential flow (backend signed verification): front/back flip credential screen with square-ish proportion, no ID, no share/download actions, QR-style panel, and badge grid for the back side; QR now resolves to a signed, expiring verification token at `/verificar` so the verification page validates against backend data instead of accepting arbitrary query-string names.
 - Experience section: editable operations and read-only rendering.
 - Academics/Education section: editable operations and read-only rendering.
 - Interests section: editable tag list in /perfil (`Intereses`) with individual remove actions, backend-persisted save, and backend suggestions from 3 typed characters.
