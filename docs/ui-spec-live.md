@@ -9,6 +9,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Scope owner: backend + frontend
 
 ## Implementation Scope (Current)
+- Authentication onboarding: registration moves required `firstName` + `lastName` and optional `middleName` into `/registro`, the old inline post-login profile-initialization screen is no longer part of the primary new-user flow, email confirmation routes into a one-time two-page welcome sequence, and completion redirects to `/ateneo`.
 - Profile core: name, surname, date of birth, nationality, headline, current company, about, location.
 - Profile badges: render active user badges below profile name in /perfil hero header.
 - Digital credential flow (backend signed verification): front/back flip credential screen with square-ish proportion, no ID, no share/download actions, QR-style panel, and badge grid for the back side; QR now resolves to a signed, expiring verification token at `/verificar` so the verification page validates against backend data instead of accepting arbitrary query-string names.
@@ -41,6 +42,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 |---|---|---|---|---|
 | Core | firstName | implemented | implemented | |
 | Core | lastName | implemented | implemented | |
+| Core | middleName | implemented | implemented | Collected during registration; optional in profile payload/output |
 | Core | dateOfBirth | implemented | implemented | |
 | Core | nationality | implemented | implemented | |
 | Core | currentJobTitle (headline) | implemented | implemented | 80 chars in UI |
@@ -64,6 +66,16 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-08-27 - Registration names + welcome onboarding implemented
+- Moved required first/last name capture into `/registro`, added optional `middleName` support end to end, and create the initial profile record during backend registration.
+- Added a one-time authenticated welcome flow after email confirmation: `/bienvenida` and `/bienvenida/futuro`, with final completion redirecting to `/ateneo`.
+- Added a dedicated user onboarding-completion flag to the auth session payload so platform routes can enforce the welcome flow once without relying on missing-profile detection.
+- Kept the old inline profile initialization component only as a legacy fallback for pre-existing accounts that still lack a profile record.
+
+### 2026-08-27 - Registration names + welcome onboarding scope
+- Added implementation scope for moving required first/last name capture into `/registro`, adding optional `middleName`, and retiring the old inline profile initialization from the primary new-user path.
+- Added implementation scope for a one-time post-confirmation welcome sequence that uses two static pages and finishes in `/ateneo`.
+
 ### 2026-08-26 - Mensajes blocked composer state
 - Added directional blocked state (`blocked by other` / `blocked by me`) in chat-detail responses for direct chats.
 - Updated `/mensajes` composer to disable input/send on blocked direct chats with hover guidance copy (including `Has sido bloqueado por este usuario`).

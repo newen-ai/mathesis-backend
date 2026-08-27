@@ -55,6 +55,7 @@ function buildProfileWriteData(input: UpdateMyProfileBody) {
 
   return {
     firstName: input.firstName,
+    middleName: input.middleName,
     lastName: input.lastName,
     dateOfBirth: input.dateOfBirth,
     nationality: input.nationality,
@@ -80,6 +81,7 @@ function mapProfile(
 
   return {
     firstName: profile.firstName,
+    middleName: profile.middleName,
     lastName: profile.lastName,
     dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.toISOString() : null,
     nationality: profile.nationality,
@@ -540,6 +542,7 @@ export const profileService = {
         create: {
           userId,
           firstName: input.firstName ?? "",
+          middleName: input.middleName,
           lastName: input.lastName ?? "",
           dateOfBirth: input.dateOfBirth,
           nationality: input.nationality,

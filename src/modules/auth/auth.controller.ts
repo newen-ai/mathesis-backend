@@ -118,6 +118,17 @@ export const session: RequestHandler = async (req, res) => {
   });
 };
 
+export const completeWelcomeOnboarding: RequestHandler = async (req, res) => {
+  const userId = req.user?.sub as string;
+  const result = await authService.completeWelcomeOnboarding(userId);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "WELCOME_ONBOARDING_COMPLETED",
+    data: result
+  });
+};
+
 export const requestWhitelistAccess: RequestHandler = async (req, res) => {
   const userId = req.user?.sub as string;
   const body = req.body as CreateWhitelistRequestBody;
