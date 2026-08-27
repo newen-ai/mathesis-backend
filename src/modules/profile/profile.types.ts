@@ -3,6 +3,7 @@ import type { EducationExperience, Profile, User, WorkExperience } from "@prisma
 export type ProfileWithWorkExperiences = Pick<
   Profile,
   | "firstName"
+  | "middleName"
   | "lastName"
   | "dateOfBirth"
   | "nationality"
@@ -112,6 +113,7 @@ export type EducationExperienceOperationInput =
 
 export type ProfileOutput = {
   firstName: string;
+  middleName: string | null;
   lastName: string;
   dateOfBirth: string | null;
   nationality: string | null;

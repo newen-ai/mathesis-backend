@@ -22,6 +22,8 @@ export type SessionUser = {
   email: string;
   role: Role;
   isWhitelisted: boolean;
+  hasVerifiedEmail: boolean;
+  hasCompletedWelcomeOnboarding: boolean;
 };
 
 export type SessionOutput = {

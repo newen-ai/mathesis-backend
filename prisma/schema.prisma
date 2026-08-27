@@ -79,6 +79,7 @@ model User {
   passwordResetTokenExpiresAt DateTime? @map("password_reset_token_expires_at")
   authSessionVersion Int @default(1) @map("auth_session_version")
   themePreference String? @default("light") @map("theme_preference")
+  welcomeOnboardingCompletedAt DateTime? @map("welcome_onboarding_completed_at")
   mensaEmpresariosAdminAt DateTime? @map("mensa_empresarios_admin_at")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
@@ -492,6 +493,7 @@ model Profile {
   id               String    @id @default(cuid())
   userId           String    @unique @map("user_id")
   firstName        String    @map("first_name")
+  middleName       String?   @map("middle_name")
   lastName         String    @map("last_name")
   dateOfBirth      DateTime? @map("date_of_birth")
   nationality      String?

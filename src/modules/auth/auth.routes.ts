@@ -6,6 +6,7 @@ import { createWhitelistRequestSchema } from "../whitelist/whitelist.schemas";
 import {
 	changePassword,
 	confirmEmail,
+	completeWelcomeOnboarding,
 	confirmPasswordReset,
 	login,
 	logout,
@@ -31,6 +32,7 @@ authRouter.post("/confirm-reset", validateRequest(confirmPasswordResetSchema), a
 authRouter.post("/change-password", requireAuth({ skipWhitelist: true }), validateRequest(changePasswordSchema), asyncHandler(changePassword));
 authRouter.post("/login", validateRequest(loginSchema), asyncHandler(login));
 authRouter.get("/session", requireAuth({ skipWhitelist: true }), asyncHandler(session));
+authRouter.post("/onboarding/complete", requireAuth({ skipWhitelist: true }), asyncHandler(completeWelcomeOnboarding));
 authRouter.post(
 	"/whitelist-request",
 	requireAuth({ skipWhitelist: true }),

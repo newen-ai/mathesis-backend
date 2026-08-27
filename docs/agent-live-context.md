@@ -14,6 +14,33 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-08-27 17:35 - Welcome futuro columns centered
+- Agent: GitHub Copilot
+- Summary: Centered both desktop columns in `/bienvenida/futuro` by aligning content blocks to the middle of each section while preserving current responsive and theme behavior.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/bienvenida/futuro/page.tsx
+- Next:
+  - Visually verify desktop landscape composition for both columns and confirm no spacing regressions in portrait/mobile.
+
+### 2026-08-27 17:22 - Welcome vertical scrollbar removed (CSS-only)
+- Agent: GitHub Copilot
+- Summary: Disabled document-level vertical scrollbar visibility during welcome onboarding by adding a route-scoped CSS lock (`:has([data-welcome-scroll-lock])`) and marking both welcome pages with that attribute. This keeps the no-JS-component approach and preserves existing layout/size behavior.
+- Files changed:
+  - ../mathesis-ui/src/app/globals.css
+  - ../mathesis-ui/src/app/(platform)/bienvenida/page.tsx
+  - ../mathesis-ui/src/app/(platform)/bienvenida/futuro/page.tsx
+- Next:
+  - Confirm on desktop/macOS with trackpad gesture that no right scrollbar appears on `/bienvenida` and `/bienvenida/futuro` while preserving internal content visibility.
+
+### 2026-08-27 17:10 - Welcome horizontal scroll lock (CSS-only)
+- Agent: GitHub Copilot
+- Summary: Removed residual horizontal panning on the welcome flow by enforcing `overflow-x-hidden` at root and platform shell level, keeping the no-JS/no-component approach while preserving the fixed footer layout.
+- Files changed:
+  - ../mathesis-ui/src/app/layout.tsx
+  - ../mathesis-ui/src/app/(platform)/layout.tsx
+- Next:
+  - Validate `/bienvenida` and `/bienvenida/futuro` in light/dark themes on desktop and mobile to confirm there is no lateral scroll and no clipping regressions.
+
 ### 2026-08-27 15:40 - Signed QR verification flow
 - Agent: GitHub Copilot
 - Summary: Replaced the static name-based QR payload with a signed, expiring credential token issued from the backend and validated by `/api/v1/profile/credential/verify`. The public `/verificar` page now rejects tampered URLs and only shows success when the token matches an active user record.
@@ -27,6 +54,35 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - ../mathesis-backend/docs/ui-spec-live.md
 - Next:
   - Optionally add a short-lived “refresh token” rotation or server-side revocation list if the credential should be invalidated on demand.
+
+### 2026-08-27 16:35 - Registration names and welcome onboarding
+- Agent: GitHub Copilot
+- Summary: Moved required first/last name collection into registration, added optional middle-name support in backend/frontend profile contracts, created the initial profile record during registration, and added a one-time post-confirmation welcome flow that ends in `/ateneo`.
+- Files changed:
+  - prisma/schema.prisma
+  - prisma/migrations/20260827183000_add_profile_middle_name_and_welcome_onboarding/migration.sql
+  - src/modules/auth/auth.schemas.ts
+  - src/modules/auth/auth.types.ts
+  - src/modules/auth/auth.service.ts
+  - src/modules/auth/auth.controller.ts
+  - src/modules/auth/auth.routes.ts
+  - src/modules/profile/profile.schemas.ts
+  - src/modules/profile/profile.types.ts
+  - src/modules/profile/profile.service.ts
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/src/lib/api/auth.ts
+  - ../mathesis-ui/src/lib/api/profile.ts
+  - ../mathesis-ui/src/app/registro/page.tsx
+  - ../mathesis-ui/src/app/confirm/ConfirmClient.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/auth/SessionGate.tsx
+  - ../mathesis-ui/src/app/(platform)/bienvenida/page.tsx
+  - ../mathesis-ui/src/app/(platform)/bienvenida/futuro/page.tsx
+  - ../mathesis-ui/src/app/(platform)/bienvenida/futuro/WelcomeFinishButton.tsx
+- Next:
+  - Apply the new Prisma migration in the target environment before testing registration against the live database.
+  - Run a browser smoke test for `registro -> confirm -> bienvenida -> bienvenida/futuro -> /ateneo` in both light and dark themes.
 
 ### 2026-08-27 01:35 - Theme bootstrap without inline script
 - Agent: GitHub Copilot

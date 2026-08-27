@@ -88,7 +88,7 @@ export const authService = {
   async register(input: RegisterBody): Promise<{ accessToken: string; user: object }> {
     const email = normalizeEmailAddress(input.email);
     const canonicalEmail = toCanonicalEmail(email);
-    const { password } = input;
+    const { firstName, middleName, lastName, password } = input;
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });
@@ -105,7 +105,14 @@ export const authService = {
         canonicalEmail,
         passwordHash,
         role: resolveInitialRole(email),
-        emailVerificationToken
+        emailVerificationToken,
+        profile: {
+          create: {
+            firstName,
+            middleName,
+            lastName
+          }
+        }
       }
     });
 
@@ -340,6 +347,8 @@ export const authService = {
         email: true,
         role: true,
         canonicalEmail: true,
+        emailVerifiedAt: true,
+        welcomeOnboardingCompletedAt: true,
         deletedAt: true
       }
     });
@@ -357,9 +366,34 @@ export const authService = {
         id: user.id,
         email: user.email,
         role: user.role as Role,
-        isWhitelisted: effectiveWhitelistState
+        isWhitelisted: effectiveWhitelistState,
+        hasVerifiedEmail: Boolean(user.emailVerifiedAt),
+        hasCompletedWelcomeOnboarding: Boolean(user.welcomeOnboardingCompletedAt)
       }
     };
+  },
+
+  async completeWelcomeOnboarding(userId: string): Promise<{ completed: true }> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        deletedAt: true
+      }
+    });
+
+    if (!user || user.deletedAt) {
+      throw new AppError("User not found", StatusCodes.NOT_FOUND);
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        welcomeOnboardingCompletedAt: new Date()
+      }
+    });
+
+    return { completed: true };
   },
 
   async createWhitelistRequest(userId: string, message?: string): Promise<{ requestId: string; status: string }> {
