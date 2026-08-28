@@ -31,7 +31,7 @@ authRouter.post("/request-reset", validateRequest(requestPasswordResetSchema), a
 authRouter.post("/confirm-reset", validateRequest(confirmPasswordResetSchema), asyncHandler(confirmPasswordReset));
 authRouter.post("/change-password", requireAuth({ skipWhitelist: true }), validateRequest(changePasswordSchema), asyncHandler(changePassword));
 authRouter.post("/login", validateRequest(loginSchema), asyncHandler(login));
-authRouter.get("/session", requireAuth({ skipWhitelist: true }), asyncHandler(session));
+authRouter.get("/session", requireAuth({ skipWhitelist: true, skipEmailVerification: true }), asyncHandler(session));
 authRouter.post("/onboarding/complete", requireAuth({ skipWhitelist: true }), asyncHandler(completeWelcomeOnboarding));
 authRouter.post(
 	"/whitelist-request",

@@ -24,9 +24,22 @@ async function registerUser(prefix: string): Promise<{ email: string; cookie: st
 
   const response = await request(app)
     .post("/api/v1/auth/register")
-    .send({ email, password: "password123" });
+    .send({
+      firstName: "Test",
+      lastName: "User",
+      email,
+      password: "Password123!"
+    });
 
   expect(response.status).toBe(201);
+
+  const user = await prisma.user.findUnique({
+    where: { email }
+  });
+
+  expect(user?.emailVerificationToken).toBeTruthy();
+  await request(app).get(`/api/v1/auth/confirm?token=${encodeURIComponent(user!.emailVerificationToken!)}`);
+
   const setCookie = response.headers["set-cookie"] as string[] | undefined;
   const cookie = setCookie?.[0];
 

@@ -14,6 +14,20 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-08-28 00:33 - Login guards for email verification and whitelist
+- Agent: GitHub Copilot
+- Summary: Added login-time enforcement for email verification and whitelist gating so unconfirmed or non-whitelisted users cannot authenticate, while keeping session checks and protected routes consistent with the same rules.
+- Files changed:
+  - src/modules/auth/auth.service.ts
+  - src/common/middlewares/require-auth.ts
+  - src/modules/auth/auth.routes.ts
+  - test/integration/auth.integration.test.ts
+  - test/integration/whitelist.integration.test.ts
+  - docs/ui-spec-live.md
+- Next actions:
+  - Keep the auth integration tests in the standard CI path for future login regressions.
+  - Confirm the frontend surfaces the returned `EMAIL_NOT_VERIFIED` / `USER_NOT_WHITELISTED` states in its login UX.
+
 ### 2026-08-27 17:35 - Welcome futuro columns centered
 - Agent: GitHub Copilot
 - Summary: Centered both desktop columns in `/bienvenida/futuro` by aligning content blocks to the middle of each section while preserving current responsive and theme behavior.

@@ -8,6 +8,7 @@ import { prisma } from "../prisma";
 
 type RequireAuthOptions = {
   skipWhitelist?: boolean;
+  skipEmailVerification?: boolean;
 };
 
 function getTokenFromCookieHeader(cookieHeader: string | undefined, cookieName: string): string | undefined {
@@ -50,6 +51,7 @@ export const requireAuth = (...args: Array<Role | RequireAuthOptions>): RequestH
           role: true,
           authSessionVersion: true,
           canonicalEmail: true,
+          emailVerifiedAt: true,
           deletedAt: true
         }
       });
@@ -67,6 +69,16 @@ export const requireAuth = (...args: Array<Role | RequireAuthOptions>): RequestH
 
       if (allowedRoles.length && !allowedRoles.includes(user.role as Role)) {
         next(new AppError("Insufficient permissions", StatusCodes.FORBIDDEN));
+        return;
+      }
+
+      if (!optionsArg?.skipEmailVerification && !user.emailVerifiedAt) {
+        next(
+          new AppError("Email address is not verified", StatusCodes.FORBIDDEN, true, {
+            code: "EMAIL_NOT_VERIFIED",
+            reason: "email_not_verified"
+          })
+        );
         return;
       }
 
