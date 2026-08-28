@@ -14,6 +14,168 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-08-28 02:01 - Bug report attachment verification page
+- Agent: GitHub Copilot
+- Summary: Added authenticated support read endpoints for listing the current user’s bug reports and downloading their attachments, plus a temporary UI verification page that previews and downloads those attachments end to end.
+- Files changed:
+  - docs/ui-spec-live.md
+  - src/modules/support/support.types.ts
+  - src/modules/support/support.schemas.ts
+  - src/modules/support/support.service.ts
+  - src/modules/support/support.controller.ts
+  - src/modules/support/support.routes.ts
+  - test/integration/support.integration.test.ts
+  - ../mathesis-ui/src/lib/api/profile.ts
+  - ../mathesis-ui/src/app/(platform)/account/bug-report-attachments/page.tsx
+- Next actions:
+  - Remove the temporary verification page once attachment retrieval is manually verified in the browser.
+
+### 2026-08-28 01:39 - Bug report i18n helper and contact page restore
+- Agent: GitHub Copilot
+- Summary: Moved bug-report service error translation out of `BugReportWidget` into the shared i18n layer and restored the previous `Contactar a Mathesis` page behavior after the broader contact-page rewrite was flagged as unintended.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/lib/i18n/bug-report-errors.ts
+  - ../mathesis-ui/src/lib/i18n/locales/es/common.json
+  - ../mathesis-ui/src/lib/i18n/locales/en/common.json
+  - ../mathesis-ui/src/app/(platform)/_components/BugReportWidget.tsx
+  - ../mathesis-ui/src/app/(platform)/account/contact/page.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+- Next actions:
+  - If more bug-report strings become dynamic later, keep extending the i18n helper/locales instead of adding message maps inside the component.
+
+### 2026-08-28 01:27 - Local migration history recovered
+- Agent: GitHub Copilot
+- Summary: Recovered the local Prisma migration state after the renamed bug-report migration had already created its tables. Marked `20260828004000_add_bug_reports_tables` as applied with `prisma migrate resolve`, and Prisma now reports the local schema as up to date.
+- Files changed:
+  - docs/agent-live-context.md
+- Next actions:
+  - None for local recovery. Future migrations can proceed normally from this state.
+
+### 2026-08-28 01:18 - Bug report migration folder renamed
+- Agent: GitHub Copilot
+- Summary: Renamed the consolidated bug-report migration folder so the directory name matches the final schema intent more clearly.
+- Files changed:
+  - prisma/migrations/20260828004000_add_bug_reports_tables/
+- Next actions:
+  - None.
+
+### 2026-08-28 01:14 - Bug report migrations consolidated
+- Agent: GitHub Copilot
+- Summary: Collapsed the bug-report database setup into a single migration by rewriting the first migration to the final dedicated-table shape and removing the redundant follow-up migration directory.
+- Files changed:
+  - prisma/migrations/20260828004000_add_bug_report_attachments/migration.sql
+  - prisma/migrations/20260828011000_split_bug_reports_from_contact_messages/
+- Next actions:
+  - If you want the migration folder name to match the final intent more closely, rename `20260828004000_add_bug_report_attachments` before anyone else pulls or runs it.
+
+### 2026-08-28 01:05 - Bug report split migration simplified
+- Agent: GitHub Copilot
+- Summary: Removed the unnecessary data-copy/delete steps from the bug-report split migration so it only performs the schema separation, matching the fact that no bug-report rows existed yet in `contact_messages`.
+- Files changed:
+  - prisma/migrations/20260828011000_split_bug_reports_from_contact_messages/migration.sql
+- Next actions:
+  - If you want migration history to stay perfectly aligned with the already-applied local database, create a fresh database or mark that this adjustment is for future environments rather than replaying the existing local state.
+
+### 2026-08-28 00:59 - Bug reports moved to dedicated tables
+- Agent: GitHub Copilot
+- Summary: Corrected the persistence model so bug reports no longer overload `contact_messages`; they now live in dedicated `bug_reports` and `bug_report_attachments` tables, with a data migration that moves any existing bug-report rows out of generic contact storage.
+- Files changed:
+  - docs/ui-spec-live.md
+  - prisma/schema.prisma
+  - prisma/migrations/20260828011000_split_bug_reports_from_contact_messages/migration.sql
+  - src/modules/support/support.service.ts
+  - src/modules/support/support.controller.ts
+  - test/integration/support.integration.test.ts
+- Next actions:
+  - If you want stricter API separation too, remove `BUG_REPORT` from the generic contact-message validation enum so external callers cannot post bugs through `/support/contact`.
+  - Add admin/read endpoints against `bug_reports` once triage UI work starts.
+
+### 2026-08-28 00:52 - Contact and bug-report separation
+- Agent: GitHub Copilot
+- Summary: Simplified `Contactar a Mathesis` into a generic support channel for doubts, feature requests, feedback, and general messages, while keeping bug reporting exclusive to the dedicated floating `Reportar bug` flow.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/src/app/(platform)/account/contact/page.tsx
+- Next actions:
+  - Consider whether the settings entry label should become more explicit, for example `Contacto general`, if users still confuse it with bug reporting.
+  - If needed later, add a second dedicated UI entry for feature requests while keeping the backend support endpoint generic.
+
+### 2026-08-28 00:42 - Bug report backend integration
+- Agent: GitHub Copilot
+- Summary: Extended the existing support module with an authenticated multipart bug-report endpoint backed by Prisma persistence for title, description, page URL, and screenshot attachments, then replaced the widget’s local placeholder submit flow with the real frontend integration while keeping local draft autosave.
+- Files changed:
+  - docs/ui-spec-live.md
+  - prisma/schema.prisma
+  - prisma/migrations/20260828004000_add_bug_report_attachments/migration.sql
+  - src/modules/support/support.routes.ts
+  - src/modules/support/support.controller.ts
+  - src/modules/support/support.service.ts
+  - src/modules/support/support.schemas.ts
+  - test/integration/support.integration.test.ts
+  - ../mathesis-ui/src/app/(platform)/_components/BugReportWidget.tsx
+  - ../mathesis-ui/src/lib/api/profile.ts
+  - ../mathesis-ui/src/lib/utils/bug-report.ts
+- Next actions:
+  - Decide whether bug reports should also fan out to Telegram or an internal admin review surface now that persistence exists.
+  - Add an admin/read path for reviewing submitted bug reports if operational triage needs to move beyond direct database access.
+
+### 2026-08-28 00:31 - Bug report animated corner snap
+- Agent: GitHub Copilot
+- Summary: Updated the bug report trigger so, after drop, it animates smoothly toward the nearest allowed corner instead of snapping there instantly.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/BugReportWidget.tsx
+- Next actions:
+  - Browser-check whether the current snap timing feels right on desktop and touch devices; shorten or lengthen only if it feels noticeably sluggish or abrupt.
+
+### 2026-08-28 00:24 - Bug report smooth drag snap
+- Agent: GitHub Copilot
+- Summary: Refined the bug report trigger drag behavior so the button follows the pointer smoothly during drag and only snaps to the nearest allowed corner when released.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/BugReportWidget.tsx
+- Next actions:
+  - Browser-check the drag feel on desktop and touch devices to confirm the live movement and release snap feel natural.
+  - Tune corner offsets only if the topbar or footer overlap in real viewport testing.
+
+### 2026-08-28 00:18 - Bug report draggable corner trigger
+- Agent: GitHub Copilot
+- Summary: Made the floating bug report button draggable with snap-to-corner behavior limited to the four screen corners, and persisted the selected corner in localStorage so it stays in place across reloads.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/BugReportWidget.tsx
+  - ../mathesis-ui/src/lib/utils/bug-report.ts
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+- Next actions:
+  - Browser-check drag feel on desktop and mobile/touch to confirm the snap threshold and top offsets feel correct around the topbar/footer.
+  - Keep the persisted corner preference when the backend submission flow is added later.
+
+### 2026-08-28 00:10 - Bug report modal refinements
+- Agent: GitHub Copilot
+- Summary: Refined the UI-first bug report flow so the report URL stays internal, the form opens as a centered modal with a dimmed outside-click backdrop, and screenshots can be attached by pasting from the clipboard in addition to file selection.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/BugReportWidget.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+- Next actions:
+  - Browser-check the paste flow on macOS for both `Cmd+V` clipboard screenshots and regular file selection.
+  - Keep the hidden URL in the eventual backend payload once the submission contract is implemented.
+
+### 2026-08-27 23:55 - Bug report widget UI-first pass
+- Agent: GitHub Copilot
+- Summary: Added an env-gated floating bug report widget on authenticated platform routes with a local draft flow, automatic URL capture, screenshot attachments stored in localStorage, close-without-clear behavior, and a local-only placeholder submit path until backend integration exists.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - ../mathesis-ui/src/app/(platform)/layout.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/BugReportWidget.tsx
+  - ../mathesis-ui/src/lib/utils/bug-report.ts
+  - ../mathesis-ui/.env.local
+  - ../mathesis-ui/.env.dev
+  - ../mathesis-ui/.env.stage
+  - ../mathesis-ui/.env.prod
+- Next actions:
+  - Define the backend bug-report contract and replace the local-only submit queue with an authenticated upload flow.
+  - Decide whether screenshot storage should remain in localStorage for drafts or move to temporary object storage once the backend path exists.
+
 ### 2026-08-28 00:33 - Login guards for email verification and whitelist
 - Agent: GitHub Copilot
 - Summary: Added login-time enforcement for email verification and whitelist gating so unconfirmed or non-whitelisted users cannot authenticate, while keeping session checks and protected routes consistent with the same rules.

@@ -20,6 +20,8 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Interests section: editable tag list in /perfil (`Intereses`) with individual remove actions, drag-and-drop reordering, backend-persisted save, backend suggestions from 3 typed characters, and lowercase normalization on save.
 - Authentication: forgot-password flow (Page 1 request view implemented; Page 2 sent view implemented; Page 3 reset-password view implemented; dark/light parity required per page) and authenticated change-password flow implemented end-to-end.
 - Application shell: a global footer with copy `Powered by Newen.Solutions` is rendered from the root layout, fixed to the viewport bottom, visible on all screens (platform + auth/public), and inherited automatically by new pages.
+- Bug reports (backend-integrated): authenticated platform routes can expose an env-gated floating `Reportar bug` action that opens a draft-preserving form with current URL capture, screenshot attachments, local autosave, close-without-clear behavior, and backend submission through the support module.
+- Bug reports (verification utility): add a temporary authenticated verification route in the UI that lists the current user’s bug reports and exercises attachment retrieval against the support download endpoint.
 - Platform navigation: desktop topbar profile menu (avatar-triggered panel), with profile header bound to user profile data and first-pass interaction limits (logout functional, route-backed entries functional, placeholder entries visible without route behavior).
 - Platform navigation: add an Ateneo entry that routes directly to `/ateneo` (explore groups), available in desktop topbar and mobile drawer personal menu.
 - Configuration: main settings page only, reached from the topbar menu at /account/configuration, with the first pass covering both desktop and mobile. Mobile entry must match the provided screenshot; desktop should follow the HTML v0.2 settings reference. Dark-mode control moves from the topbar into this page.
@@ -66,6 +68,18 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-08-28 - Bug report attachment verification utility
+- Added authenticated support read endpoints for listing the current user’s bug reports and downloading their attachments.
+- Added a temporary UI verification page to preview and download bug report attachments end to end.
+
+### 2026-08-28 - Bug report backend integration
+- Extended the support module with an authenticated multipart bug-report endpoint that persists title, description, page URL, and screenshot attachments in dedicated bug-report tables instead of the generic contact-message table.
+- Replaced the UI-only placeholder submit flow with the real backend integration while keeping local draft persistence for close/reload recovery.
+
+### 2026-08-27 - Bug report widget UI-first scope
+- Added an env-gated floating bug report widget scope for authenticated platform pages.
+- First pass is frontend-only: title + description form, current URL capture, screenshot attachments, local draft persistence across close/reload, and local placeholder submission until the backend contract exists.
+
 ### 2026-08-28 - Auth login gates for unverified email and whitelist
 - Enforced email-verification blocking during login so unconfirmed users cannot authenticate or receive an app session.
 - Enforced whitelist gating during login when `WHITELIST_ENABLED=true`, matching the same policy already applied to protected routes.
