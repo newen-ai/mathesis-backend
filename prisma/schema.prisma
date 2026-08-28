@@ -100,6 +100,7 @@ model User {
   whitelistAuditsAsTarget WhitelistAudit[] @relation("WhitelistAuditTarget")
   whitelistedEmailsCreated WhitelistedEmail[] @relation("WhitelistedEmailCreator")
   contactMessages      ContactMessage[] @relation("ContactMessageUser")
+  bugReports           BugReport[]      @relation("BugReportUser")
   badges               UserBadge[]
   enterprises          Enterprise[]
   mensaBadgeRequests          MensaBadgeRequest[] @relation("MensaBadgeRequestUser")
@@ -569,6 +570,37 @@ model ContactMessage {
   @@index([userId, createdAt(sort: Desc)])
   @@index([category, createdAt(sort: Desc)])
   @@map("contact_messages")
+}
+
+model BugReport {
+  id        String                @id @default(cuid())
+  userId    String                @map("user_id")
+  title     String
+  details   String
+  pageUrl   String                @map("page_url")
+  createdAt DateTime              @default(now()) @map("created_at")
+
+  user      User                  @relation("BugReportUser", fields: [userId], references: [id], onDelete: Cascade)
+  attachments BugReportAttachment[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("bug_reports")
+}
+
+model BugReportAttachment {
+  id          String    @id @default(cuid())
+  bugReportId String    @map("bug_report_id")
+  fileName         String         @map("file_name")
+  mimeType         String         @map("mime_type")
+  sizeBytes        Int            @map("size_bytes")
+  fileData         Bytes          @map("file_data")
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  bugReport       BugReport @relation(fields: [bugReportId], references: [id], onDelete: Cascade)
+
+  @@index([bugReportId, createdAt(sort: Asc)])
+  @@map("bug_report_attachments")
 }
 
 model UserBadge {
