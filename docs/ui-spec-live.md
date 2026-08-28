@@ -66,6 +66,11 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-08-28 - Auth login gates for unverified email and whitelist
+- Enforced email-verification blocking during login so unconfirmed users cannot authenticate or receive an app session.
+- Enforced whitelist gating during login when `WHITELIST_ENABLED=true`, matching the same policy already applied to protected routes.
+- Added regression coverage for both cases and for the existing password-change flow to keep the login/auth contract stable.
+
 ### 2026-08-27 - Registration names + welcome onboarding implemented
 - Moved required first/last name capture into `/registro`, added optional `middleName` support end to end, and create the initial profile record during backend registration.
 - Added a one-time authenticated welcome flow after email confirmation: `/bienvenida` and `/bienvenida/futuro`, with final completion redirecting to `/ateneo`.

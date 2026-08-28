@@ -320,15 +320,28 @@ export const authService = {
       throw new AppError("Invalid email or password", StatusCodes.UNAUTHORIZED);
     }
 
+    if (!user.emailVerifiedAt) {
+      throw new AppError("Email address is not verified", StatusCodes.FORBIDDEN, true, {
+        code: "EMAIL_NOT_VERIFIED",
+        reason: "email_not_verified"
+      });
+    }
+
+    const isWhitelisted = await whitelistService.isCanonicalEmailWhitelisted(user.canonicalEmail);
+    const effectiveWhitelistState = resolveEffectiveWhitelistState(isWhitelisted);
+    if (env.WHITELIST_ENABLED && user.role !== "admin" && !effectiveWhitelistState) {
+      throw new AppError("Account pending whitelist approval", StatusCodes.FORBIDDEN, true, {
+        code: "USER_NOT_WHITELISTED",
+        reason: "pending_whitelist_approval"
+      });
+    }
+
     const payload = buildAuthPayload({
       id: user.id,
       email: user.email,
       role: user.role,
       authSessionVersion: user.authSessionVersion
     });
-
-    const isWhitelisted = await whitelistService.isCanonicalEmailWhitelisted(user.canonicalEmail);
-    const effectiveWhitelistState = resolveEffectiveWhitelistState(isWhitelisted);
 
     return {
       accessToken: buildAccessToken(payload),

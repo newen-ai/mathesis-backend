@@ -2,6 +2,7 @@ import request from "supertest";
 import { PrismaClient } from "@prisma/client";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 import { app } from "../../src/app";
+import { env } from "../../src/config/env";
 import { toCanonicalEmail } from "../../src/common/utils/email";
 
 const prisma = new PrismaClient();
@@ -10,6 +11,7 @@ const integrationDescribe = shouldRun ? describe : describe.skip;
 
 const createdEmails: string[] = [];
 const canonicalEmails = new Set<string>();
+const originalWhitelistEnabled = env.WHITELIST_ENABLED;
 
 function randomEmail(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
@@ -23,10 +25,10 @@ integrationDescribe("email confirmation integration", () => {
 
     const registerResponse = await request(app)
       .post("/api/v1/auth/register")
-      .send({ email, password: "Password123!" });
+      .send({ firstName: "Test", lastName: "User", email, password: "Password123!" });
 
     expect(registerResponse.status).toBe(201);
-    expect(registerResponse.body?.data?.verificationUrl).toContain("/confirm?token=");
+    expect(registerResponse.body?.data?.user?.email).toBe(email);
 
     const storedUser = await prisma.user.findUnique({
       where: { email }
@@ -49,6 +51,53 @@ integrationDescribe("email confirmation integration", () => {
     expect(updatedUser?.emailVerificationToken).toBeNull();
   });
 
+  it("blocks login when the user's email is not yet verified", async () => {
+    const email = randomEmail("login-unverified");
+    createdEmails.push(email);
+    canonicalEmails.add(toCanonicalEmail(email));
+
+    const registerResponse = await request(app)
+      .post("/api/v1/auth/register")
+      .send({ firstName: "Unverified", lastName: "User", email, password: "Password123!" });
+
+    expect(registerResponse.status).toBe(201);
+
+    const loginResponse = await request(app).post("/api/v1/auth/login").send({
+      email,
+      password: "Password123!"
+    });
+
+    expect(loginResponse.status).toBe(403);
+    expect(loginResponse.body?.details?.code).toBe("EMAIL_NOT_VERIFIED");
+  });
+
+  it("blocks login when whitelist is enabled and the user is not whitelisted", async () => {
+    env.WHITELIST_ENABLED = true;
+    const email = randomEmail("login-whitelist");
+    createdEmails.push(email);
+    canonicalEmails.add(toCanonicalEmail(email));
+
+    const registerResponse = await request(app)
+      .post("/api/v1/auth/register")
+      .send({ firstName: "Whitelist", lastName: "User", email, password: "Password123!" });
+
+    expect(registerResponse.status).toBe(201);
+
+    const storedUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    await request(app).get(`/api/v1/auth/confirm?token=${encodeURIComponent(storedUser!.emailVerificationToken!)}`);
+
+    const loginResponse = await request(app).post("/api/v1/auth/login").send({
+      email,
+      password: "Password123!"
+    });
+
+    expect(loginResponse.status).toBe(403);
+    expect(loginResponse.body?.details?.code).toBe("USER_NOT_WHITELISTED");
+  });
+
   it("changes the password, keeps current session active, and invalidates other sessions", async () => {
     const email = randomEmail("change-password");
     createdEmails.push(email);
@@ -56,9 +105,15 @@ integrationDescribe("email confirmation integration", () => {
 
     const registerResponse = await request(app)
       .post("/api/v1/auth/register")
-      .send({ email, password: "Password123!" });
+      .send({ firstName: "Password", lastName: "User", email, password: "Password123!" });
 
     expect(registerResponse.status).toBe(201);
+
+    const storedUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    await request(app).get(`/api/v1/auth/confirm?token=${encodeURIComponent(storedUser!.emailVerificationToken!)}`);
 
     const currentSessionAgent = request.agent(app);
     const otherSessionAgent = request.agent(app);
@@ -108,7 +163,7 @@ integrationDescribe("email confirmation integration", () => {
 });
 
 afterEach(() => {
-  // no-op placeholder to keep the test lifecycle explicit
+  env.WHITELIST_ENABLED = originalWhitelistEnabled;
 });
 
 afterAll(async () => {
