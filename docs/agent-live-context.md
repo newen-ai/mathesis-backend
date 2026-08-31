@@ -14,6 +14,19 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-08-31 17:51 - Theme cookie bootstrap and backend reconciliation
+- Agent: GitHub Copilot
+- Summary: Eliminated light-to-dark first-paint flicker by setting initial theme from cookie at server render, adding a pre-hydration bootstrap script that syncs cookie/localStorage/system preference, and keeping post-mount backend preference reconciliation so database preference remains authoritative.
+- Files changed:
+  - ../mathesis-ui/src/app/layout.tsx
+  - ../mathesis-ui/src/lib/theme/theme-preference.ts
+  - ../mathesis-ui/src/lib/theme/useUiTheme.ts
+  - ../mathesis-ui/src/components/theme/ThemeInitializer.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manually verify first paint in both light and dark modes on a hard refresh to confirm no theme flash.
+  - If desired, reduce duplicate preference fetches by centralizing backend theme reconciliation in a single client-side location.
+
 ### 2026-08-28 02:01 - Bug report attachment verification page
 - Agent: GitHub Copilot
 - Summary: Added authenticated support read endpoints for listing the current user’s bug reports and downloading their attachments, plus a temporary UI verification page that previews and downloads those attachments end to end.
