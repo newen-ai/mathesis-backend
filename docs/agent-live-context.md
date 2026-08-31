@@ -14,6 +14,44 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-08-31 18:33 - Group message sender labels in Mensajes
+- Agent: GitHub Copilot
+- Summary: Added sender name labels at the top of each message balloon in group chats so attribution remains clear when one participant sends multiple consecutive messages.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/mensajes/page.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Verify in a real group chat thread with 3+ members that sender labels remain readable for both incoming and own messages.
+
+### 2026-08-31 18:25 - Carousel phrase text to white
+- Agent: GitHub Copilot
+- Summary: Updated the rotating phrase text color in the shared `Frases que inspiran` carousel to white for improved contrast against the surrounding banner area.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/CatchyPhrasesBanner.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Quick visual check in `/mensajes` to confirm phrase contrast remains readable in both light and dark themes.
+
+### 2026-08-31 18:21 - Mensajes phrase badge scope + white subtitle
+- Agent: GitHub Copilot
+- Summary: Refined the phrase banner so only the immediate `Frases que inspiran` label container uses platform gold, and updated the `/mensajes` subtitle text color to white as requested.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/CatchyPhrasesBanner.tsx
+  - ../mathesis-ui/src/app/(platform)/mensajes/page.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Visual-check `/mensajes` in both light and dark themes to confirm subtitle contrast is acceptable in each mode.
+
+### 2026-08-31 18:12 - Mensajes phrase banner gold + Spanish accents
+- Agent: GitHub Copilot
+- Summary: Updated the shared `Frases que inspiran` banner background to the platform gold token and corrected Spanish orthography (tildes/ñ) in rotating phrase copy used across platform module pages, including `/mensajes`.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/CatchyPhrasesBanner.tsx
+  - ../mathesis-ui/src/app/(platform)/_lib/constants.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate in browser that the gold banner remains readable in both light and dark themes.
+
 ### 2026-08-31 17:51 - Theme cookie bootstrap and backend reconciliation
 - Agent: GitHub Copilot
 - Summary: Eliminated light-to-dark first-paint flicker by setting initial theme from cookie at server render, adding a pre-hydration bootstrap script that syncs cookie/localStorage/system preference, and keeping post-mount backend preference reconciliation so database preference remains authoritative.
