@@ -35,6 +35,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Ateneo (backend-integrated): non-member users can open a group detail preview (`/ateneo/groups/:groupId`) to read basic metadata (name, description, rules) and join in place via `POST /api/v1/ateneo/groups/:groupId/join`; topics remain member-only until join succeeds.
 - Ateneo (backend-integrated): group settings can restrict topic creation and commenting to admins only; the frontend hides the corresponding CTAs and the backend rejects bypass attempts for those actions.
 - Ateneo (backend-integrated): group middle-column header actions include an info page (`/ateneo/groups/:groupId/info`), a members page (`/ateneo/groups/:groupId/members`), and an admin-only edit page (`/ateneo/groups/:groupId/edit`) that reuses the new-group form prefilled with the current group data.
+- Ateneo (frontend UX): topic descriptions and comments auto-detect URLs, render them as clickable links, and show link-preview cards (including default preview image when available) for both topic creation and reading views.
 - Ateneo (compatibility): `/ateneo/feed` redirects to `/ateneo`.
 - Blocked users (backend + frontend in progress): one-sided block action with mutual enforcement while active. DMs keep history but block new direct sends both directions; group chats still deliver messages but suppress blocked-pair mention notifications; profile URL + global search + feed author surfaces + Ateneo members hide blocked users; Ateneo topics/comments from blocked pairs are hidden both directions with deleted-placeholder behavior for hidden parent comments that still have visible replies; blocked pairs cannot connect while active and existing connections are removed on block; unblock restores normal access; direct-chat composer in `/mensajes` is disabled when the pair is blocked and shows directional hover guidance.
 - Profile UI action menu: when viewing another user's profile (`/perfil?userId=...`), show a three-dot actions trigger with `Bloquear` and `Denunciar`; `Bloquear` calls backend block endpoint and `Denunciar` remains a placeholder.
@@ -68,6 +69,14 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-08-31 - Ateneo provider-aware link previews
+- Improved link-preview reliability for social/video URLs by adding provider-specific metadata enrichers for YouTube, Vimeo, TikTok, and X/Twitter.
+- Reduced stale-preview behavior by refreshing preview fetches and shortening API cache lifetime.
+
+### 2026-08-31 - Ateneo linkify + preview cards
+- Added frontend URL auto-detection for Ateneo topic descriptions and comments so links render as clickable anchors.
+- Added link-preview cards in the Ateneo new-topic composer and reading surfaces (feed/group/topic detail), including metadata image rendering when available.
+
 ### 2026-08-28 - Bug report attachment verification utility
 - Added authenticated support read endpoints for listing the current user’s bug reports and downloading their attachments.
 - Added a temporary UI verification page to preview and download bug report attachments end to end.

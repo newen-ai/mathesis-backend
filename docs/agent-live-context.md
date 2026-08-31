@@ -14,6 +14,48 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-08-31 19:31 - Link preview thumbnail correctness + multi-provider enrichers
+- Agent: GitHub Copilot
+- Summary: Fixed stale/incorrect preview thumbnail behavior by forcing fresh preview fetches and avoiding indefinite failed-cache entries, then extended preview enrichment for Vimeo, TikTok, and X/Twitter alongside YouTube.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/app/api/link-preview/route.ts
+  - ../mathesis-ui/src/lib/utils/link-preview.ts
+  - ../mathesis-ui/src/components/ui/LinkPreviewList.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual-check previews in Ateneo for one URL per provider (YouTube, Vimeo, TikTok, X) to confirm representative images/titles.
+  - If a provider blocks anonymous metadata fetch in certain regions, add provider-specific fallback copy/image rules.
+
+### 2026-08-31 19:18 - YouTube preview image resolver + Next Image card media
+- Agent: GitHub Copilot
+- Summary: Improved link preview behavior for YouTube URLs by resolving oEmbed/video-id metadata so preview cards use representative video thumbnails and titles; also migrated preview card media rendering to `next/image`.
+- Files changed:
+  - ../mathesis-ui/src/app/api/link-preview/route.ts
+  - ../mathesis-ui/src/components/ui/LinkPreviewList.tsx
+  - ../mathesis-ui/next.config.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate multiple YouTube URL formats (`watch`, `youtu.be`, `shorts`) in Ateneo composer and reader cards.
+  - If needed later, add provider-specific enrichers for Vimeo/X/TikTok to reduce generic fallback cards.
+
+### 2026-08-31 19:07 - Ateneo links clickable + link preview cards
+- Agent: GitHub Copilot
+- Summary: Implemented frontend URL auto-detection for Ateneo topic/comment text so links render clickable, and added metadata-driven link-preview cards (including preview image when available) in both writer and reader views.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/lib/utils/link-preview.ts
+  - ../mathesis-ui/src/components/ui/LinkifiedText.tsx
+  - ../mathesis-ui/src/components/ui/LinkPreviewList.tsx
+  - ../mathesis-ui/src/app/api/link-preview/route.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+- Next actions:
+  - Browser-check a few real-world links (news/site/blog/video) to confirm image metadata availability and card density on mobile.
+  - If needed, move preview fetching to backend APIs for centralized caching and reduced duplicate fetches across clients.
+
 ### 2026-08-31 18:33 - Group message sender labels in Mensajes
 - Agent: GitHub Copilot
 - Summary: Added sender name labels at the top of each message balloon in group chats so attribution remains clear when one participant sends multiple consecutive messages.
