@@ -14,6 +14,157 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-08-31 22:29 - Ateneo image MIME helper centralization
+- Agent: GitHub Copilot
+- Summary: Generalized repeated `isImageMimeType` logic into a shared Ateneo API helper and updated all Ateneo readers to import it instead of duplicating local functions.
+- Files changed:
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Optional: move attachment icon/label rendering into a shared Ateneo attachment-presentational component to reduce repeated JSX.
+
+### 2026-08-31 22:18 - Ateneo attachment type deduplication
+- Agent: GitHub Copilot
+- Summary: Replaced duplicated inline `attachments` object types in Ateneo feed/group components with the shared `AteneoTopicAttachment` type from the API layer, and consolidated related imports.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Optional: apply the same shared-type pattern to other repeated Ateneo DTO fragments if they appear during future refactors.
+
+### 2026-08-31 22:03 - Ateneo attachment link opening fix
+- Agent: GitHub Copilot
+- Summary: Fixed Ateneo attachment link handling so the UI resolves attachment URLs against the API base and image attachments are served inline instead of forced downloads, which allows the uploaded image/file links to open correctly.
+- Files changed:
+  - src/modules/ateneo/ateneo.controller.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Smoke-test one image and one PDF attachment in the browser to confirm the image renders in a tab and the PDF opens or downloads from the API origin.
+
+### 2026-08-31 21:40 - Ateneo topic attachments implementation
+- Agent: GitHub Copilot
+- Summary: Implemented real image and PDF attachments for Ateneo new-topic creation, including backend persistence/download routing, multipart topic creation from the UI, and attachment rendering in feed/detail topic views.
+- Files changed:
+  - docs/ui-spec-live.md
+  - prisma/schema.prisma
+  - prisma/migrations/20260831000000_add_ateneo_topic_attachments/migration.sql
+  - src/modules/ateneo/ateneo.controller.ts
+  - src/modules/ateneo/ateneo.routes.ts
+  - src/modules/ateneo/ateneo.schemas.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_lib/group-topics.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Browser-smoke test Ateneo topic creation with one image and one PDF to confirm upload, publish, and download/open behavior end to end.
+  - If you want the attachment cards to use inline image previews instead of file chips in a later pass, the backend metadata is now in place to support that.
+
+### 2026-08-31 19:31 - Link preview thumbnail correctness + multi-provider enrichers
+- Agent: GitHub Copilot
+- Summary: Fixed stale/incorrect preview thumbnail behavior by forcing fresh preview fetches and avoiding indefinite failed-cache entries, then extended preview enrichment for Vimeo, TikTok, and X/Twitter alongside YouTube.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/app/api/link-preview/route.ts
+  - ../mathesis-ui/src/lib/utils/link-preview.ts
+  - ../mathesis-ui/src/components/ui/LinkPreviewList.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual-check previews in Ateneo for one URL per provider (YouTube, Vimeo, TikTok, X) to confirm representative images/titles.
+  - If a provider blocks anonymous metadata fetch in certain regions, add provider-specific fallback copy/image rules.
+
+### 2026-08-31 19:18 - YouTube preview image resolver + Next Image card media
+- Agent: GitHub Copilot
+- Summary: Improved link preview behavior for YouTube URLs by resolving oEmbed/video-id metadata so preview cards use representative video thumbnails and titles; also migrated preview card media rendering to `next/image`.
+- Files changed:
+  - ../mathesis-ui/src/app/api/link-preview/route.ts
+  - ../mathesis-ui/src/components/ui/LinkPreviewList.tsx
+  - ../mathesis-ui/next.config.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate multiple YouTube URL formats (`watch`, `youtu.be`, `shorts`) in Ateneo composer and reader cards.
+  - If needed later, add provider-specific enrichers for Vimeo/X/TikTok to reduce generic fallback cards.
+
+### 2026-08-31 19:07 - Ateneo links clickable + link preview cards
+- Agent: GitHub Copilot
+- Summary: Implemented frontend URL auto-detection for Ateneo topic/comment text so links render clickable, and added metadata-driven link-preview cards (including preview image when available) in both writer and reader views.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/lib/utils/link-preview.ts
+  - ../mathesis-ui/src/components/ui/LinkifiedText.tsx
+  - ../mathesis-ui/src/components/ui/LinkPreviewList.tsx
+  - ../mathesis-ui/src/app/api/link-preview/route.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+- Next actions:
+  - Browser-check a few real-world links (news/site/blog/video) to confirm image metadata availability and card density on mobile.
+  - If needed, move preview fetching to backend APIs for centralized caching and reduced duplicate fetches across clients.
+
+### 2026-08-31 18:33 - Group message sender labels in Mensajes
+- Agent: GitHub Copilot
+- Summary: Added sender name labels at the top of each message balloon in group chats so attribution remains clear when one participant sends multiple consecutive messages.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/mensajes/page.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Verify in a real group chat thread with 3+ members that sender labels remain readable for both incoming and own messages.
+
+### 2026-08-31 18:25 - Carousel phrase text to white
+- Agent: GitHub Copilot
+- Summary: Updated the rotating phrase text color in the shared `Frases que inspiran` carousel to white for improved contrast against the surrounding banner area.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/CatchyPhrasesBanner.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Quick visual check in `/mensajes` to confirm phrase contrast remains readable in both light and dark themes.
+
+### 2026-08-31 18:21 - Mensajes phrase badge scope + white subtitle
+- Agent: GitHub Copilot
+- Summary: Refined the phrase banner so only the immediate `Frases que inspiran` label container uses platform gold, and updated the `/mensajes` subtitle text color to white as requested.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/CatchyPhrasesBanner.tsx
+  - ../mathesis-ui/src/app/(platform)/mensajes/page.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Visual-check `/mensajes` in both light and dark themes to confirm subtitle contrast is acceptable in each mode.
+
+### 2026-08-31 18:12 - Mensajes phrase banner gold + Spanish accents
+- Agent: GitHub Copilot
+- Summary: Updated the shared `Frases que inspiran` banner background to the platform gold token and corrected Spanish orthography (tildes/ñ) in rotating phrase copy used across platform module pages, including `/mensajes`.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/CatchyPhrasesBanner.tsx
+  - ../mathesis-ui/src/app/(platform)/_lib/constants.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Validate in browser that the gold banner remains readable in both light and dark themes.
+
+### 2026-08-31 17:51 - Theme cookie bootstrap and backend reconciliation
+- Agent: GitHub Copilot
+- Summary: Eliminated light-to-dark first-paint flicker by setting initial theme from cookie at server render, adding a pre-hydration bootstrap script that syncs cookie/localStorage/system preference, and keeping post-mount backend preference reconciliation so database preference remains authoritative.
+- Files changed:
+  - ../mathesis-ui/src/app/layout.tsx
+  - ../mathesis-ui/src/lib/theme/theme-preference.ts
+  - ../mathesis-ui/src/lib/theme/useUiTheme.ts
+  - ../mathesis-ui/src/components/theme/ThemeInitializer.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manually verify first paint in both light and dark modes on a hard refresh to confirm no theme flash.
+  - If desired, reduce duplicate preference fetches by centralizing backend theme reconciliation in a single client-side location.
+
 ### 2026-08-28 02:01 - Bug report attachment verification page
 - Agent: GitHub Copilot
 - Summary: Added authenticated support read endpoints for listing the current user’s bug reports and downloading their attachments, plus a temporary UI verification page that previews and downloads those attachments end to end.

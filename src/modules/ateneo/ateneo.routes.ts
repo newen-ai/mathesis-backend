@@ -1,4 +1,5 @@
 import { Router } from "express";
+import multer from "multer";
 import { asyncHandler } from "../../common/errors/async-handler";
 import { requireAuth } from "../../common/middlewares/require-auth";
 import { validateRequest } from "../../common/middlewares/validate-request";
@@ -6,6 +7,7 @@ import {
   createAteneoGroup,
   createAteneoTopic,
   createAteneoTopicComment,
+  downloadAteneoTopicAttachment,
   getAteneoGroup,
   getAteneoTopic,
   joinAteneoGroup,
@@ -30,10 +32,19 @@ import {
   listAteneoGroupsSchema,
   listAteneoTopicCommentsSchema,
   listAteneoTopicsSchema,
+  downloadAteneoTopicAttachmentSchema,
   updateAteneoGroupSchema,
   toggleAteneoTopicCommentReactionSchema,
   toggleAteneoTopicReactionSchema
 } from "./ateneo.schemas";
+
+const ateneoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+    files: 5
+  }
+});
 
 const ateneoRouter = Router();
 
@@ -55,8 +66,20 @@ ateneoRouter.patch(
   asyncHandler(updateAteneoGroup)
 );
 ateneoRouter.get("/groups/:groupId/topics", requireAuth(), validateRequest(listAteneoTopicsSchema), asyncHandler(listAteneoTopics));
-ateneoRouter.post("/groups/:groupId/topics", requireAuth(), validateRequest(createAteneoTopicSchema), asyncHandler(createAteneoTopic));
+ateneoRouter.post(
+  "/groups/:groupId/topics",
+  requireAuth(),
+  ateneoUpload.array("attachments", 5),
+  validateRequest(createAteneoTopicSchema),
+  asyncHandler(createAteneoTopic)
+);
 ateneoRouter.get("/groups/:groupId/topics/:topicId", requireAuth(), validateRequest(getAteneoTopicSchema), asyncHandler(getAteneoTopic));
+ateneoRouter.get(
+  "/groups/:groupId/topics/:topicId/attachments/:attachmentId",
+  requireAuth(),
+  validateRequest(downloadAteneoTopicAttachmentSchema),
+  asyncHandler(downloadAteneoTopicAttachment)
+);
 ateneoRouter.get(
   "/groups/:groupId/topics/:topicId/comments",
   requireAuth(),
