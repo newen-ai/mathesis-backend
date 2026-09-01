@@ -32,6 +32,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Ateneo (backend-integrated): `/ateneo` is the dedicated 3-column feed page with middle-column topics loaded from backend endpoint `GET /api/v1/ateneo/feed`.
 - Ateneo (backend-integrated): `/ateneo/groups` uses backend endpoint `GET /api/v1/ateneo/groups?tab=...` for tabbed group browsing (`Tus grupos`, `Descubrir`, `Grupos que administrás`).
 - Ateneo (backend-integrated): group/topic/detail flows (`/ateneo/groups/:groupId`, `/ateneo/groups/:groupId/new-topic`, `/ateneo/groups/:groupId/topics/:topicId`) are runtime-backed by `GET/POST /api/v1/ateneo/groups/:groupId/topics*` and topic-comment endpoints.
+- Ateneo (backend-integrated): the new-topic composer now supports real image and PDF attachments for topics, with backend persistence, download routing, and rendered attachment metadata in feed/detail views.
 - Ateneo (backend-integrated): non-member users can open a group detail preview (`/ateneo/groups/:groupId`) to read basic metadata (name, description, rules) and join in place via `POST /api/v1/ateneo/groups/:groupId/join`; topics remain member-only until join succeeds.
 - Ateneo (backend-integrated): group settings can restrict topic creation and commenting to admins only; the frontend hides the corresponding CTAs and the backend rejects bypass attempts for those actions.
 - Ateneo (backend-integrated): group middle-column header actions include an info page (`/ateneo/groups/:groupId/info`), a members page (`/ateneo/groups/:groupId/members`), and an admin-only edit page (`/ateneo/groups/:groupId/edit`) that reuses the new-group form prefilled with the current group data.
@@ -72,6 +73,10 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 ### 2026-08-31 - Ateneo provider-aware link previews
 - Improved link-preview reliability for social/video URLs by adding provider-specific metadata enrichers for YouTube, Vimeo, TikTok, and X/Twitter.
 - Reduced stale-preview behavior by refreshing preview fetches and shortening API cache lifetime.
+
+### 2026-08-31 - Ateneo topic attachments kickoff
+- Started the real Ateneo topic attachment implementation so the existing `Foto` and `Archivo` buttons in the composer become functional.
+- Scope is new-topic composer only for this pass, with backend persistence and render support required so uploaded files are visible again after publish.
 
 ### 2026-08-31 - Ateneo linkify + preview cards
 - Added frontend URL auto-detection for Ateneo topic descriptions and comments so links render as clickable anchors.

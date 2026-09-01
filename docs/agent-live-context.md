@@ -14,6 +14,64 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-08-31 22:29 - Ateneo image MIME helper centralization
+- Agent: GitHub Copilot
+- Summary: Generalized repeated `isImageMimeType` logic into a shared Ateneo API helper and updated all Ateneo readers to import it instead of duplicating local functions.
+- Files changed:
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Optional: move attachment icon/label rendering into a shared Ateneo attachment-presentational component to reduce repeated JSX.
+
+### 2026-08-31 22:18 - Ateneo attachment type deduplication
+- Agent: GitHub Copilot
+- Summary: Replaced duplicated inline `attachments` object types in Ateneo feed/group components with the shared `AteneoTopicAttachment` type from the API layer, and consolidated related imports.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Optional: apply the same shared-type pattern to other repeated Ateneo DTO fragments if they appear during future refactors.
+
+### 2026-08-31 22:03 - Ateneo attachment link opening fix
+- Agent: GitHub Copilot
+- Summary: Fixed Ateneo attachment link handling so the UI resolves attachment URLs against the API base and image attachments are served inline instead of forced downloads, which allows the uploaded image/file links to open correctly.
+- Files changed:
+  - src/modules/ateneo/ateneo.controller.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Smoke-test one image and one PDF attachment in the browser to confirm the image renders in a tab and the PDF opens or downloads from the API origin.
+
+### 2026-08-31 21:40 - Ateneo topic attachments implementation
+- Agent: GitHub Copilot
+- Summary: Implemented real image and PDF attachments for Ateneo new-topic creation, including backend persistence/download routing, multipart topic creation from the UI, and attachment rendering in feed/detail topic views.
+- Files changed:
+  - docs/ui-spec-live.md
+  - prisma/schema.prisma
+  - prisma/migrations/20260831000000_add_ateneo_topic_attachments/migration.sql
+  - src/modules/ateneo/ateneo.controller.ts
+  - src/modules/ateneo/ateneo.routes.ts
+  - src/modules/ateneo/ateneo.schemas.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_lib/group-topics.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Browser-smoke test Ateneo topic creation with one image and one PDF to confirm upload, publish, and download/open behavior end to end.
+  - If you want the attachment cards to use inline image previews instead of file chips in a later pass, the backend metadata is now in place to support that.
+
 ### 2026-08-31 19:31 - Link preview thumbnail correctness + multi-provider enrichers
 - Agent: GitHub Copilot
 - Summary: Fixed stale/incorrect preview thumbnail behavior by forcing fresh preview fetches and avoiding indefinite failed-cache entries, then extended preview enrichment for Vimeo, TikTok, and X/Twitter alongside YouTube.

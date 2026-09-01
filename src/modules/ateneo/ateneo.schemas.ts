@@ -91,6 +91,14 @@ export const getAteneoTopicSchema = z.object({
   })
 });
 
+export const downloadAteneoTopicAttachmentSchema = z.object({
+  params: z.object({
+    groupId: z.string().min(1),
+    topicId: z.string().min(1),
+    attachmentId: z.string().min(1)
+  })
+});
+
 export const listAteneoTopicCommentsSchema = z.object({
   params: z.object({
     groupId: z.string().min(1),
@@ -146,6 +154,7 @@ export type AteneoPermissionMode = z.infer<typeof ateneoPermissionModeSchema>;
 export type ListAteneoTopicsQuery = z.infer<typeof listAteneoTopicsSchema>["query"];
 export type CreateAteneoTopicBody = z.infer<typeof createAteneoTopicSchema>["body"];
 export type AteneoTopicParams = z.infer<typeof getAteneoTopicSchema>["params"];
+export type AteneoTopicAttachmentParams = z.infer<typeof downloadAteneoTopicAttachmentSchema>["params"];
 export type CreateAteneoTopicCommentBody = z.infer<typeof createAteneoTopicCommentSchema>["body"];
 export type ToggleAteneoTopicReactionBody = z.infer<typeof toggleAteneoTopicReactionSchema>["body"];
 export type ToggleAteneoTopicCommentReactionBody = z.infer<typeof toggleAteneoTopicCommentReactionSchema>["body"];

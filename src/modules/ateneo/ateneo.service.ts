@@ -6,6 +6,7 @@ import type {
   AteneoCommentParams,
   AteneoGroupParams,
   AteneoTab,
+  AteneoTopicAttachmentParams,
   AteneoTopicParams,
   AteneoPermissionMode,
   CreateAteneoTopicBody,
@@ -20,6 +21,7 @@ import type {
   AteneoGroupDetail,
   AteneoGroupMemberSummary,
   AteneoGroupSummary,
+  AteneoTopicAttachmentSummary,
   CreateAteneoGroupOutput,
   JoinAteneoGroupOutput,
   AteneoTopicCommentSummary,
@@ -27,6 +29,7 @@ import type {
   CreateAteneoTopicCommentOutput,
   CreateAteneoTopicOutput,
   GetAteneoTopicOutput,
+  DownloadAteneoTopicAttachmentOutput,
   ListAteneoFeedOutput,
   ListAteneoGroupsOutput,
   ListAteneoGroupMembersOutput,
@@ -39,9 +42,24 @@ import type {
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
+const MAX_TOPIC_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_TOPIC_ATTACHMENTS = 5;
+const ALLOWED_TOPIC_ATTACHMENT_MIME_TYPES = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/heic",
+  "image/heif"
+]);
 
 type TopicWithRelations = Awaited<ReturnType<typeof loadTopicById>>;
 type CommentWithRelations = Awaited<ReturnType<typeof loadCommentById>>;
+type UploadedTopicFile = {
+  originalname: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+};
 
 function clampLimit(limit: number | undefined): number {
   return Math.min(Math.max(limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
@@ -101,6 +119,24 @@ function mapUserSummary(user: {
   };
 }
 
+function buildTopicAttachmentDownloadUrl(groupId: string, topicId: string, attachmentId: string): string {
+  return `/api/v1/ateneo/groups/${encodeURIComponent(groupId)}/topics/${encodeURIComponent(topicId)}/attachments/${encodeURIComponent(attachmentId)}`;
+}
+
+function mapAttachmentSummary(
+  groupId: string,
+  topicId: string,
+  attachment: { id: string; fileName: string; mimeType: string; sizeBytes: number }
+): AteneoTopicAttachmentSummary {
+  return {
+    id: attachment.id,
+    fileName: attachment.fileName,
+    mimeType: attachment.mimeType,
+    sizeBytes: attachment.sizeBytes,
+    downloadUrl: buildTopicAttachmentDownloadUrl(groupId, topicId, attachment.id)
+  };
+}
+
 function mapGroupSummary(group: {
   id: string;
   slug: string;
@@ -151,7 +187,8 @@ function mapTopicSummary(topic: NonNullable<TopicWithRelations>, currentUserId: 
     isRecommended: topic.isRecommended,
     createdAt: topic.createdAt.toISOString(),
     updatedAt: topic.updatedAt.toISOString(),
-    currentUserReactionValue: currentUserReaction?.reactionValue ?? null
+    currentUserReactionValue: currentUserReaction?.reactionValue ?? null,
+    attachments: topic.attachments.map((attachment) => mapAttachmentSummary(topic.groupId, topic.id, attachment))
   };
 }
 
@@ -283,6 +320,22 @@ function canAdminOnlyAction(group: { createTopicsMode: AteneoPermissionMode; com
   return group.memberships.some((membership) => membership.isAdmin);
 }
 
+function assertTopicAttachments(files: UploadedTopicFile[]): void {
+  if (files.length > MAX_TOPIC_ATTACHMENTS) {
+    throw new AppError("Too many attachments", StatusCodes.BAD_REQUEST);
+  }
+
+  for (const file of files) {
+    if (!ALLOWED_TOPIC_ATTACHMENT_MIME_TYPES.has(file.mimetype)) {
+      throw new AppError("Unsupported attachment type", StatusCodes.BAD_REQUEST);
+    }
+
+    if (file.size > MAX_TOPIC_ATTACHMENT_SIZE_BYTES) {
+      throw new AppError("Attachment is too large", StatusCodes.BAD_REQUEST);
+    }
+  }
+}
+
 async function loadTopicById(topicId: string) {
   return prisma.ateneoTopic.findFirst({
     where: {
@@ -317,6 +370,20 @@ async function loadTopicById(topicId: string) {
         select: {
           userId: true,
           reactionValue: true
+        }
+      },
+      attachments: {
+        where: {
+          deletedAt: null
+        },
+        select: {
+          id: true,
+          fileName: true,
+          mimeType: true,
+          sizeBytes: true
+        },
+        orderBy: {
+          createdAt: "asc"
         }
       }
     }
@@ -534,6 +601,20 @@ export const ateneoService = {
           select: {
             userId: true,
             reactionValue: true
+          }
+        },
+        attachments: {
+          where: {
+            deletedAt: null
+          },
+          select: {
+            id: true,
+            fileName: true,
+            mimeType: true,
+            sizeBytes: true
+          },
+          orderBy: {
+            createdAt: "asc"
           }
         }
       },
@@ -852,6 +933,20 @@ export const ateneoService = {
             userId: true,
             reactionValue: true
           }
+        },
+        attachments: {
+          where: {
+            deletedAt: null
+          },
+          select: {
+            id: true,
+            fileName: true,
+            mimeType: true,
+            sizeBytes: true
+          },
+          orderBy: {
+            createdAt: "asc"
+          }
         }
       },
       orderBy: [{ reactionCount: "desc" }, { createdAt: "desc" }],
@@ -863,7 +958,12 @@ export const ateneoService = {
     };
   },
 
-  async createTopic(currentUserId: string, params: AteneoGroupParams, body: CreateAteneoTopicBody): Promise<CreateAteneoTopicOutput> {
+  async createTopic(
+    currentUserId: string,
+    params: AteneoGroupParams,
+    body: CreateAteneoTopicBody,
+    files: UploadedTopicFile[] = []
+  ): Promise<CreateAteneoTopicOutput> {
     await ensureGroupAccess(params.groupId, currentUserId);
 
     const group = await getGroupMembership(params.groupId, currentUserId);
@@ -875,14 +975,32 @@ export const ateneoService = {
       throw new AppError("Only admins can create topics in this group", StatusCodes.FORBIDDEN);
     }
 
-    const topic = await prisma.ateneoTopic.create({
-      data: {
-        groupId: params.groupId,
-        authorUserId: currentUserId,
-        title: body.title.trim(),
-        description: body.description.trim(),
-        tone: body.tone
+    assertTopicAttachments(files);
+
+    const topic = await prisma.$transaction(async (tx) => {
+      const createdTopic = await tx.ateneoTopic.create({
+        data: {
+          groupId: params.groupId,
+          authorUserId: currentUserId,
+          title: body.title.trim(),
+          description: body.description.trim(),
+          tone: body.tone
+        }
+      });
+
+      if (files.length > 0) {
+        await tx.ateneoTopicAttachment.createMany({
+          data: files.map((file) => ({
+            topicId: createdTopic.id,
+            fileName: file.originalname,
+            mimeType: file.mimetype,
+            sizeBytes: file.size,
+            fileData: file.buffer
+          }))
+        });
       }
+
+      return createdTopic;
     });
 
     const hydrated = await loadTopicById(topic.id);
@@ -893,6 +1011,47 @@ export const ateneoService = {
     return {
       topic: mapTopicSummary(hydrated, currentUserId)
     };
+  },
+
+  async downloadTopicAttachment(
+    currentUserId: string,
+    params: AteneoTopicAttachmentParams
+  ): Promise<DownloadAteneoTopicAttachmentOutput> {
+    await ensureGroupAccess(params.groupId, currentUserId);
+
+    const topic = await loadTopicById(params.topicId);
+    if (!topic || topic.groupId !== params.groupId) {
+      throw new AppError("Ateneo topic not found", StatusCodes.NOT_FOUND);
+    }
+
+    const blockedUserIds = await blockService.getBlockedUserIdsFor(currentUserId);
+    if (blockedUserIds.has(topic.authorUserId)) {
+      throw new AppError("Ateneo topic not found", StatusCodes.NOT_FOUND);
+    }
+
+    const attachment = await prisma.ateneoTopicAttachment.findFirst({
+      where: {
+        id: params.attachmentId,
+        topicId: params.topicId,
+        deletedAt: null,
+        topic: {
+          groupId: params.groupId,
+          deletedAt: null
+        }
+      },
+      select: {
+        fileName: true,
+        mimeType: true,
+        sizeBytes: true,
+        fileData: true
+      }
+    });
+
+    if (!attachment) {
+      throw new AppError("Ateneo attachment not found", StatusCodes.NOT_FOUND);
+    }
+
+    return attachment;
   },
 
   async getTopic(currentUserId: string, params: AteneoTopicParams): Promise<GetAteneoTopicOutput> {

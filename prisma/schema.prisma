@@ -201,12 +201,30 @@ model AteneoTopic {
   group           AteneoGroup             @relation(fields: [groupId], references: [id], onDelete: Cascade)
   author          User                    @relation("AteneoTopicAuthor", fields: [authorUserId], references: [id], onDelete: Cascade)
   comments        AteneoTopicComment[]
+  attachments     AteneoTopicAttachment[]
   reactions       AteneoTopicReaction[]
 
   @@index([groupId, deletedAt, createdAt(sort: Desc)])
   @@index([authorUserId, deletedAt])
   @@index([isRecommended, deletedAt, createdAt(sort: Desc)])
   @@map("ateneo_topics")
+}
+
+model AteneoTopicAttachment {
+  id          String    @id @default(cuid())
+  topicId     String    @map("topic_id")
+  fileName    String    @map("file_name")
+  mimeType    String    @map("mime_type")
+  sizeBytes   Int       @map("size_bytes")
+  fileData    Bytes     @map("file_data")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  topic       AteneoTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@index([deletedAt])
+  @@index([topicId, deletedAt])
+  @@map("ateneo_topic_attachments")
 }
 
 model AteneoTopicComment {

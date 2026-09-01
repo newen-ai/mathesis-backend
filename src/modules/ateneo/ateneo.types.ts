@@ -53,6 +53,15 @@ export type AteneoTopicSummary = {
   createdAt: string;
   updatedAt: string;
   currentUserReactionValue: "value" | null;
+  attachments: AteneoTopicAttachmentSummary[];
+};
+
+export type AteneoTopicAttachmentSummary = {
+  id: string;
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  downloadUrl: string;
 };
 
 export type AteneoTopicCommentSummary = {
@@ -108,6 +117,13 @@ export type ListAteneoTopicCommentsOutput = {
 
 export type CreateAteneoTopicOutput = {
   topic: AteneoTopicSummary;
+};
+
+export type DownloadAteneoTopicAttachmentOutput = {
+  fileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  fileData: Buffer;
 };
 
 export type CreateAteneoTopicCommentOutput = {

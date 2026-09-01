@@ -4,6 +4,7 @@ import { ateneoService } from "./ateneo.service";
 import type {
   AteneoCommentParams,
   AteneoGroupParams,
+  AteneoTopicAttachmentParams,
   AteneoTopicParams,
   CreateAteneoGroupBody,
   CreateAteneoTopicBody,
@@ -16,6 +17,26 @@ import type {
   ToggleAteneoTopicCommentReactionBody,
   ToggleAteneoTopicReactionBody
 } from "./ateneo.schemas";
+
+type UploadedTopicFile = {
+  originalname: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+};
+
+function getUploadedTopicFiles(files: UploadedTopicFile[] | undefined): UploadedTopicFile[] {
+  return files ?? [];
+}
+
+function buildAttachmentDisposition(fileName: string, mimeType: string): string {
+  const safeAsciiFileName = fileName.replace(/[\r\n"]/g, "_") || "attachment";
+  const encodedFileName = encodeURIComponent(fileName || "attachment");
+  const isInlineImage = mimeType.startsWith("image/");
+  const dispositionType = isInlineImage ? "inline" : "attachment";
+
+  return `${dispositionType}; filename="${safeAsciiFileName}"; filename*=UTF-8''${encodedFileName}`;
+}
 
 export const listAteneoGroups: RequestHandler = async (req, res) => {
   const currentUserId = req.user?.sub as string;
@@ -119,7 +140,8 @@ export const createAteneoTopic: RequestHandler = async (req, res) => {
   const currentUserId = req.user?.sub as string;
   const params = req.params as AteneoGroupParams;
   const body = req.body as CreateAteneoTopicBody;
-  const result = await ateneoService.createTopic(currentUserId, params, body);
+  const files = getUploadedTopicFiles(req.files as UploadedTopicFile[] | undefined);
+  const result = await ateneoService.createTopic(currentUserId, params, body, files);
 
   res.status(StatusCodes.CREATED).json({
     success: true,
@@ -189,4 +211,15 @@ export const toggleAteneoTopicCommentReaction: RequestHandler = async (req, res)
     message: "ATENEO_TOPIC_COMMENT_REACTION_TOGGLED",
     data: result
   });
+};
+
+export const downloadAteneoTopicAttachment: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
+  const params = req.params as AteneoTopicAttachmentParams;
+  const attachment = await ateneoService.downloadTopicAttachment(currentUserId, params);
+
+  res.setHeader("Content-Type", attachment.mimeType);
+  res.setHeader("Content-Length", attachment.sizeBytes.toString());
+  res.setHeader("Content-Disposition", buildAttachmentDisposition(attachment.fileName, attachment.mimeType));
+  res.status(StatusCodes.OK).send(attachment.fileData);
 };
