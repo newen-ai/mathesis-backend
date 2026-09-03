@@ -14,6 +14,85 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-02 21:35 - Notifications error handling alternative fix
+- Agent: GitHub Copilot
+- Summary: Replaced the generic notifications-page catch-all error masking with explicit API error propagation so the UI exposes the real backend message (for example, auth/verification failures) instead of hiding the root cause behind a static generic banner, and switched the page heading to a theme-aware heading token for light mode readability.
+- Files changed:
+  - ../mathesis-ui/src/lib/api/client.ts
+  - ../mathesis-ui/src/app/(platform)/notificaciones/page.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Run a focused lint/typecheck pass on the changed UI files.
+  - Re-test the notifications flow in a logged-in verified session to confirm the page now surfaces the real backend response and renders legibly in light mode.
+
+### 2026-09-02 20:15 - Notifications message type removal cleanup
+- Agent: GitHub Copilot
+- Summary: Removed the message notification type from the live backend notification domain by updating the Prisma enum, notification seed data, and type unions to the non-message-only set while keeping the existing migration file in place and avoiding a new migration.
+- Files changed:
+  - src/modules/notification/notification.service.ts
+  - src/modules/notification/notification.types.ts
+  - prisma/schema.prisma
+  - prisma/migrations/20260901014500_add_notifications_table/migration.sql
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Wait until DATABASE_URL is configured for the target environment.
+  - Apply the updated existing migration in the real database when ready.
+  - Re-run a focused notification API check to confirm the cleaned enum/seed set matches runtime expectations.
+
+### 2026-09-02 00:45 - Notifications backend integration
+- Agent: GitHub Copilot
+- Summary: Replaced the local mock notification state in /notificaciones with real backend fetch/read calls from the existing API client, while keeping the tuned desktop layout and unread/read grouping intact.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/notificaciones/page.tsx
+  - ../mathesis-ui/src/lib/api/notifications.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Run the UI build and page-level validation against the configured API base URL.
+  - Confirm in browser that the list loads from the backend and read actions persist visually and across API responses.
+
+### 2026-09-01 01:32 - Notificaciones header and sidebar alignment
+- Agent: GitHub Copilot
+- Summary: Moved `Marcar todo leído` into the `No leídas` header row aligned right, increased the `Accesos rápidos` heading size, and added a desktop vertical separator between the notifications list and quick-links sidebar.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/notificaciones/page.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Review the updated desktop composition for final spacing polish.
+  - If approved, continue with any remaining screenshot-parity tweaks before backend integration.
+
+### 2026-09-01 01:20 - Notificaciones shell refinement
+- Agent: GitHub Copilot
+- Summary: Removed the shared carousel and boxed page-title container from `/notificaciones`, widened the page content area, reduced quick-links typography, and switched the quick-links list to explicit divider lines between items.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/notificaciones/page.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual browser review of `/notificaciones` for final spacing/alignment polish against the latest feedback.
+  - If approved, proceed to a final screenshot-parity pass before backend integration.
+
+### 2026-09-01 01:05 - Notificaciones UI first pass
+- Agent: GitHub Copilot
+- Summary: Implemented the first UI pass for `/notificaciones` using mocked local data, screenshot-aligned list rows, inline bold-link navigation, local read/unread state interactions, desktop quick links, and preserved shared topbar/shell behavior.
+- Files changed:
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/app/(platform)/notificaciones/page.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual browser QA on `/notificaciones` in both light and dark themes against the provided screenshots.
+  - Collect your visual feedback for spacing, iconography, and text density tweaks before backend wiring.
+  - Backend follow-up: add notifications model/endpoints and replace mocked frontend data with API integration.
+
+### 2026-09-01 00:00 - Local branch cleanup confirmation script
+- Agent: GitHub Copilot
+- Summary: Added a reusable git cleanup script that previews local-only branches (missing on origin), asks for confirmation before deletion, and supports dry-run/force flags.
+- Files changed:
+  - scripts/cleanup-local-branches.sh
+  - package.json
+  - docs/agent-live-context.md
+- Next actions:
+  - Run the script in each repo with `--dry-run` first, then run without `--dry-run` to confirm deletion.
+
 ### 2026-08-31 22:29 - Ateneo image MIME helper centralization
 - Agent: GitHub Copilot
 - Summary: Generalized repeated `isImageMimeType` logic into a shared Ateneo API helper and updated all Ateneo readers to import it instead of duplicating local functions.

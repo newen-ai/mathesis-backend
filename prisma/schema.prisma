@@ -67,6 +67,33 @@ enum UserBlockAuditAction {
   UNBLOCK
 }
 
+enum NotificationType {
+  POST_REACTION
+  BADGE_APPROVED
+  ENTERPRISE_APPROVED
+  ACCOUNT_BANNED
+  ACCOUNT_REMOVED
+  ENTERPRISE_COFUNDER
+  TERMS_UPDATED
+  MEMBERSHIP_VERIFIED
+  ENTERPRISE_REJECTED
+  ACCOUNT_RESTORED
+}
+
+enum NotificationLeadKind {
+  INITIALS
+  SYMBOL
+}
+
+enum NotificationLeadTone {
+  NAVY
+  GOLD
+  GREEN
+  RED
+  GRAY
+  TEAL
+}
+
 model User {
   id        String    @id @default(cuid())
   email     String    @unique
@@ -116,10 +143,36 @@ model User {
   blocksReceived              UserBlock[] @relation("UserBlocksReceived")
   blockAuditsAsActor          UserBlockAudit[] @relation("UserBlockAuditActor")
   blockAuditsAsTarget         UserBlockAudit[] @relation("UserBlockAuditTarget")
+  notifications               Notification[]
 
   @@index([deletedAt])
   @@index([canonicalEmail])
   @@map("users")
+}
+
+model Notification {
+  id                String               @id @default(cuid())
+  userId            String               @map("user_id")
+  type              NotificationType
+  seedKey           String?              @map("seed_key")
+  leadKind          NotificationLeadKind @map("lead_kind")
+  leadValue         String               @map("lead_value")
+  leadTone          NotificationLeadTone @map("lead_tone")
+  bodyJson          Json                 @map("body_json")
+  actionLabel       String?              @map("action_label")
+  actionHref        String?              @map("action_href")
+  timeLabelOverride String?              @map("time_label_override")
+  isRead            Boolean              @default(false) @map("is_read")
+  readAt            DateTime?            @map("read_at")
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+
+  user              User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, seedKey])
+  @@index([userId, isRead, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
 }
 
 model AteneoGroup {
