@@ -1,4 +1,4 @@
-import { NotificationLeadKind, NotificationLeadTone, NotificationType, Prisma } from "@prisma/client";
+import { NotificationLeadKind, NotificationLeadTone, Prisma } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
 import { prisma } from "../../common/prisma";
