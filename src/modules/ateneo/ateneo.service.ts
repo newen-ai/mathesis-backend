@@ -1,3 +1,4 @@
+import { NotificationLeadKind, NotificationLeadTone, Prisma } from "@prisma/client";
 import { AppError } from "../../common/errors/app-error";
 import { prisma } from "../../common/prisma";
 import { StatusCodes } from "http-status-codes";
@@ -209,6 +210,71 @@ function mapCommentSummary(comment: NonNullable<CommentWithRelations>, currentUs
     reactions: comment.reactionCount,
     currentUserReactionValue: currentUserReaction?.reactionValue ?? null
   };
+}
+
+function buildAteneoTopicReactionNotificationBody(reactionCount: number, groupId: string, topicId: string): Prisma.InputJsonValue {
+  const countLabel = reactionCount === 1 ? "1 valoración" : `${reactionCount} valoraciones`;
+
+  return [
+    { text: "Tu tema recibió " },
+    { text: countLabel, href: `/ateneo/groups/${encodeURIComponent(groupId)}/topics/${encodeURIComponent(topicId)}`, isBold: true },
+    { text: ". Solo vos ves este número." }
+  ];
+}
+
+async function syncAteneoTopicReactionNotification(groupId: string, topicId: string): Promise<void> {
+  const topic = await prisma.ateneoTopic.findUnique({
+    where: { id: topicId },
+    select: {
+      authorUserId: true,
+      reactionCount: true,
+    }
+  });
+
+  if (!topic) {
+    return;
+  }
+
+  const seedKey = topicId;
+
+  if (topic.reactionCount <= 0) {
+    await prisma.notification.deleteMany({
+      where: {
+        userId: topic.authorUserId,
+        seedKey,
+      }
+    });
+    return;
+  }
+
+  await prisma.notification.upsert({
+    where: {
+      userId_seedKey: {
+        userId: topic.authorUserId,
+        seedKey,
+      }
+    },
+    create: {
+      userId: topic.authorUserId,
+      seedKey,
+      type: "POST_REACTION",
+      leadKind: NotificationLeadKind.SYMBOL,
+      leadValue: "↑",
+      leadTone: NotificationLeadTone.GOLD,
+      bodyJson: buildAteneoTopicReactionNotificationBody(topic.reactionCount, groupId, topicId),
+      isRead: false,
+      readAt: null,
+    },
+    update: {
+      type: "POST_REACTION",
+      leadKind: NotificationLeadKind.SYMBOL,
+      leadValue: "↑",
+      leadTone: NotificationLeadTone.GOLD,
+      bodyJson: buildAteneoTopicReactionNotificationBody(topic.reactionCount, groupId, topicId),
+      isRead: false,
+      readAt: null,
+    }
+  });
 }
 
 function mapDeletedCommentPlaceholder(comment: {
@@ -1325,6 +1391,8 @@ export const ateneoService = {
     if (!hydrated) {
       throw new AppError("Ateneo topic not found", StatusCodes.NOT_FOUND);
     }
+
+    await syncAteneoTopicReactionNotification(params.groupId, params.topicId);
 
     return {
       topic: mapTopicSummary(hydrated, currentUserId)

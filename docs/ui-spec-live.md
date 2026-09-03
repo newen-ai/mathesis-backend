@@ -40,6 +40,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Ateneo (compatibility): `/ateneo/feed` redirects to `/ateneo`.
 - Blocked users (backend + frontend in progress): one-sided block action with mutual enforcement while active. DMs keep history but block new direct sends both directions; group chats still deliver messages but suppress blocked-pair mention notifications; profile URL + global search + feed author surfaces + Ateneo members hide blocked users; Ateneo topics/comments from blocked pairs are hidden both directions with deleted-placeholder behavior for hidden parent comments that still have visible replies; blocked pairs cannot connect while active and existing connections are removed on block; unblock restores normal access; direct-chat composer in `/mensajes` is disabled when the pair is blocked and shows directional hover guidance.
 - Profile UI action menu: when viewing another user's profile (`/perfil?userId=...`), show a three-dot actions trigger with `Bloquear` and `Denunciar`; `Bloquear` calls backend block endpoint and `Denunciar` remains a placeholder.
+- Notifications (backend-integrated first pass): `/notificaciones` uses backend-backed notifications with persistent read state, screenshot-aligned unread/read grouping, inline linkable bold segments, `Marcar todo leído`, and desktop quick links. The first integrated pass bootstraps representative notifications for each user until real event generation is wired.
 
 ## Profile Field Matrix
 | Section | Field | Backend status | Frontend status | Notes |
@@ -70,6 +71,18 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-09-02 - Notifications message type removal
+- Removed the message notification type from the Prisma enum, notification seed payload, and backend type unions so the existing notifications migration reflects the intended non-message-only notification set.
+- Kept the existing migration file in place and updated it in-place instead of creating a follow-up migration.
+
+### 2026-09-01 - Notifications backend integration
+- Replaced the frontend-only notifications data source with a backend notifications module, persistent read state, and read-all support.
+- Added a first-pass bootstrap path so users receive representative notifications from the backend immediately while real notification event producers remain pending.
+
+### 2026-09-01 - Notifications UI-first implementation kickoff
+- Added notifications module scope for a frontend-only first pass on `/notificaciones` with mocked data and local read-state interactions.
+- Confirmed first-pass behavior: inline bold links navigate and mark as read, row non-link clicks mark as read only, and topbar remains the existing shared shell.
+
 ### 2026-08-31 - Ateneo provider-aware link previews
 - Improved link-preview reliability for social/video URLs by adding provider-specific metadata enrichers for YouTube, Vimeo, TikTok, and X/Twitter.
 - Reduced stale-preview behavior by refreshing preview fetches and shortening API cache lifetime.

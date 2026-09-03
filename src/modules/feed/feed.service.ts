@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { NotificationLeadKind, NotificationLeadTone, NotificationType, Prisma } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AppError } from "../../common/errors/app-error";
 import { prisma } from "../../common/prisma";
@@ -105,6 +105,71 @@ function mapFeedPost(post: FeedPostWithRelations, currentUserId: string): FeedPo
     createdAt: post.createdAt.toISOString(),
     updatedAt: post.updatedAt.toISOString()
   };
+}
+
+function buildPostReactionNotificationBody(reactionCount: number, postId: string): Prisma.InputJsonValue {
+  const countLabel = reactionCount === 1 ? "1 valoración" : `${reactionCount} valoraciones`;
+
+  return [
+    { text: "Tu post recibió " },
+    { text: countLabel, href: `/red?postId=${postId}`, isBold: true },
+    { text: ". Solo vos ves este número." }
+  ];
+}
+
+async function syncPostReactionNotification(postId: string): Promise<void> {
+  const post = await prisma.feedPost.findUnique({
+    where: { id: postId },
+    select: {
+      authorUserId: true,
+      reactionCount: true,
+    }
+  });
+
+  if (!post) {
+    return;
+  }
+
+  const seedKey = postId;
+
+  if (post.reactionCount <= 0) {
+    await prisma.notification.deleteMany({
+      where: {
+        userId: post.authorUserId,
+        seedKey,
+      }
+    });
+    return;
+  }
+
+  await prisma.notification.upsert({
+    where: {
+      userId_seedKey: {
+        userId: post.authorUserId,
+        seedKey,
+      }
+    },
+    create: {
+      userId: post.authorUserId,
+      seedKey,
+      type: "POST_REACTION",
+      leadKind: NotificationLeadKind.SYMBOL,
+      leadValue: "↑",
+      leadTone: NotificationLeadTone.GOLD,
+      bodyJson: buildPostReactionNotificationBody(post.reactionCount, postId),
+      isRead: false,
+      readAt: null,
+    },
+    update: {
+      type: "POST_REACTION",
+      leadKind: NotificationLeadKind.SYMBOL,
+      leadValue: "↑",
+      leadTone: NotificationLeadTone.GOLD,
+      bodyJson: buildPostReactionNotificationBody(post.reactionCount, postId),
+      isRead: false,
+      readAt: null,
+    }
+  });
 }
 
 function buildFeedPostInclude(currentUserId: string) {
@@ -457,8 +522,11 @@ export const feedService = {
       ]);
     }
 
+    const updatedPost = await loadFeedPostById(postId, currentUserId, blockedUserIds);
+    await syncPostReactionNotification(postId);
+
     return {
-      post: await loadFeedPostById(postId, currentUserId, blockedUserIds)
+      post: updatedPost
     };
   },
 

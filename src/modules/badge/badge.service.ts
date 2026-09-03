@@ -1,3 +1,8 @@
+import {
+  NotificationLeadKind,
+  NotificationLeadTone,
+  NotificationType,
+} from "@prisma/client";
 import { prisma } from "../../common/prisma";
 
 export const BADGE_SLUGS = {
@@ -6,6 +11,44 @@ export const BADGE_SLUGS = {
 } as const;
 
 export type BadgeSlug = (typeof BADGE_SLUGS)[keyof typeof BADGE_SLUGS];
+
+async function createMensaEmpresariosApprovalNotification(userId: string): Promise<void> {
+  await prisma.notification.upsert({
+    where: {
+      userId_seedKey: {
+        userId,
+        seedKey: "badge-approved-me"
+      }
+    },
+    create: {
+      userId,
+      seedKey: "badge-approved-me",
+      type: NotificationType.BADGE_APPROVED,
+      leadKind: NotificationLeadKind.SYMBOL,
+      leadValue: "∫",
+      leadTone: NotificationLeadTone.GOLD,
+      bodyJson: [
+        { text: "¡Fuiste aprobado en " },
+        { text: "Mensa Empresarios", href: "/directorio", isBold: true },
+        { text: "! Ya podés completar el perfil de tu empresa." }
+      ],
+      isRead: false,
+    },
+    update: {
+      type: NotificationType.BADGE_APPROVED,
+      leadKind: NotificationLeadKind.SYMBOL,
+      leadValue: "∫",
+      leadTone: NotificationLeadTone.GOLD,
+      bodyJson: [
+        { text: "¡Fuiste aprobado en " },
+        { text: "Mensa Empresarios", href: "/directorio", isBold: true },
+        { text: "! Ya podés completar el perfil de tu empresa." }
+      ],
+      isRead: false,
+      readAt: null,
+    },
+  });
+}
 
 export const badgeService = {
   async grantBadge(userId: string, badgeSlug: BadgeSlug): Promise<void> {
@@ -19,6 +62,10 @@ export const badgeService = {
     await prisma.userBadge.create({
       data: { userId, badgeSlug }
     });
+
+    if (badgeSlug === BADGE_SLUGS.MENSA_EMPRESARIOS) {
+      await createMensaEmpresariosApprovalNotification(userId);
+    }
   },
 
   async revokeBadge(userId: string, badgeSlug: BadgeSlug): Promise<void> {
