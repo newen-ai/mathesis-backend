@@ -41,6 +41,8 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Blocked users (backend + frontend in progress): one-sided block action with mutual enforcement while active. DMs keep history but block new direct sends both directions; group chats still deliver messages but suppress blocked-pair mention notifications; profile URL + global search + feed author surfaces + Ateneo members hide blocked users; Ateneo topics/comments from blocked pairs are hidden both directions with deleted-placeholder behavior for hidden parent comments that still have visible replies; blocked pairs cannot connect while active and existing connections are removed on block; unblock restores normal access; direct-chat composer in `/mensajes` is disabled when the pair is blocked and shows directional hover guidance.
 - Profile UI action menu: when viewing another user's profile (`/perfil?userId=...`), show a three-dot actions trigger with `Bloquear` and `Denunciar`; `Bloquear` calls backend block endpoint and `Denunciar` remains a placeholder.
 - Notifications (backend-integrated first pass): `/notificaciones` uses backend-backed notifications with persistent read state, screenshot-aligned unread/read grouping, inline linkable bold segments, `Marcar todo leído`, and desktop quick links. The first integrated pass bootstraps representative notifications for each user until real event generation is wired.
+- Platform navigation (topbar redesign desktop pass): desktop topbar now follows the new icon/menu model with role-gated `Admin`, optional `ME Admin` shortcut, `Nexum` and `Agora` dropdown menus, avatar profile dropdown, and unread red-count badges for `Mensajes` + `Notificaciones` (polling every 30 seconds, capped at `99+`).
+- Platform navigation (topbar redesign mobile pass): implemented with a right-side mobile mega-menu drawer, single-open accordion behavior across sections, screenshot-aligned Nexum/Agora/Mathesis content groups, disabled `Próximamente` placeholders, and live `Solicitar Membresía` action wiring for Mensa Empresarios (hidden once user already has badge).
 
 ## Profile Field Matrix
 | Section | Field | Backend status | Frontend status | Notes |
@@ -71,6 +73,17 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-09-05 - Topbar redesign mobile phase 2
+- Replaced the old mobile drawer with the new right-side mega-menu layout aligned to the provided references, including profile header, section cards, and long-form submenu groups.
+- Implemented single-open accordion behavior so opening one submenu collapses others.
+- Wired `Solicitar Membresía` to the existing Mensa Empresarios request API and hid the action when the user already has the badge.
+- Added disabled `Próximamente` states for currently unavailable actions and routes in the mobile information architecture.
+
+### 2026-09-05 - Topbar redesign desktop phase 1
+- Reworked desktop topbar information architecture to the new screenshot-aligned structure: Mensajes, Notificaciones, Admin (role-gated), ME Admin (access-gated), Nexum, Agora, and avatar profile menu.
+- Added desktop unread badges for Mensajes and Notificaciones, using backend totals and 30-second polling with `99+` cap behavior.
+- Kept mobile drawer behavior unchanged for this phase; mobile redesign remains scheduled as the next step.
+
 ### 2026-09-02 - Notifications message type removal
 - Removed the message notification type from the Prisma enum, notification seed payload, and backend type unions so the existing notifications migration reflects the intended non-message-only notification set.
 - Kept the existing migration file in place and updated it in-place instead of creating a follow-up migration.

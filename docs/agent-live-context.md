@@ -14,6 +14,64 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-05 15:31 - My enterprises lint blocker fix
+- Agent: GitHub Copilot
+- Summary: Resolved the blocking lint error in the enterprises page by refactoring the initial data-load effect to perform async fetch/update directly in the promise chain instead of invoking a state-mutating helper from the effect body.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/my-enterprises/page.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Optional cleanup pass for remaining non-blocking warnings in `DigitalCredentialCard.tsx` to keep lint output fully clean.
+
+### 2026-09-05 15:28 - Topbar desktop/mobile component split
+- Agent: GitHub Copilot
+- Summary: Refactored the platform topbar into separate desktop and mobile components while preserving existing behavior and API wiring. Extracted shared menu/types/helpers usage into shared modules, reused the shared nav icon renderer, and kept TopBar as the orchestration layer for state/effects.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/TopBarDesktop.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/TopBarMobile.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/TopBarNavIcon.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/topbar.shared.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual browser QA for desktop/mobile topbar parity after the split, including dropdown close behavior and mobile overlay click-blocking.
+  - If future changes are needed, continue moving repeated menu-row patterns into small presentational subcomponents to keep TopBarMobile maintainable.
+
+### 2026-09-05 15:18 - Mobile menu non-routed items disabled labeling
+- Agent: GitHub Copilot
+- Summary: Updated the redesigned mobile topbar menu so all non-routed options are rendered as disabled visual rows with explicit `PRÓXIMAMENTE` pills, including Ateneo activity/about placeholders and Mathesis legal placeholders, to make available vs unavailable navigation states unambiguous.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Visual QA pass on mobile menu density to confirm label spacing remains readable with the new `PRÓXIMAMENTE` pills.
+  - If needed, extract repeated disabled-row markup into a reusable mobile menu item component for easier maintenance.
+
+### 2026-09-05 15:06 - Topbar redesign mobile phase 2
+- Agent: GitHub Copilot
+- Summary: Implemented the mobile topbar menu redesign with a right-side mega-menu drawer and screenshot-aligned sections for Nexum, Agora, and Mathesis. Added global accordion behavior so only one mobile submenu can be open at a time, wired `Solicitar Membresía` to the existing Mensa Empresarios membership-request API, and kept unavailable actions explicitly disabled as `PRÓXIMAMENTE` placeholders.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Perform browser visual QA on mobile breakpoints against the provided screenshots (open/closed states for Perfil, Empresas, Ateneo, and Cuenta y Administración).
+  - Validate role-based mobile entries with at least one admin and one non-admin account.
+  - Confirm copy/spacing polish and apply any final parity tweaks before PR.
+
+### 2026-09-05 14:52 - Topbar redesign desktop phase 1
+- Agent: GitHub Copilot
+- Summary: Implemented desktop-first topbar redesign in the UI shell with screenshot-aligned icon order and role gates, added dropdown menus for Nexum and Agora, preserved avatar-triggered profile menu with logout, and integrated unread counters for Mensajes and Notificaciones using backend data with 30-second polling and `99+` cap behavior. Mobile drawer behavior was intentionally left unchanged for this phase.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/DesktopTopbarIcons.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Run desktop screenshot-parity QA in both light and dark themes for spacing, dropdown density, and icon geometry.
+  - Start mobile topbar/menu redesign phase with accordion behavior and expanded section content from the provided references.
+  - Optionally address pre-existing unrelated lint error in `../mathesis-ui/src/app/(platform)/my-enterprises/page.tsx` so full-repo lint is green.
+
 ### 2026-09-02 21:35 - Notifications error handling alternative fix
 - Agent: GitHub Copilot
 - Summary: Replaced the generic notifications-page catch-all error masking with explicit API error propagation so the UI exposes the real backend message (for example, auth/verification failures) instead of hiding the root cause behind a static generic banner, and switched the page heading to a theme-aware heading token for light mode readability.
