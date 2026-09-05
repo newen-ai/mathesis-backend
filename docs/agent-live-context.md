@@ -14,6 +14,37 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-05 16:08 - Ateneo mobile centered group picker
+- Agent: GitHub Copilot
+- Summary: Updated the existing Ateneo new-topic form to support a mobile-only centered overlay group picker with a dim backdrop and scrollable options, while preserving desktop native select behavior. Kept fixed group context read-only for group-scoped creation routes and retained footer-source placeholder default selection.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Mobile visual QA of the picker overlay in light and dark themes.
+  - Confirm keyboard/escape close behavior and background scroll lock on iOS/Android browser emulation.
+
+### 2026-09-05 15:45 - Mobile signed-in footer redesign
+- Agent: GitHub Copilot
+- Summary: Implemented a shared mobile footer for all signed-in `(platform)` routes with screenshot-aligned interaction behavior: Nexum/Agora open dim-backdrop overlays, Mensajes/Perfil remain direct routes, and `Crear` opens global topic creation. Removed duplicated page-level mobile footer implementations and added cross-close coordination between footer overlays and topbar mobile drawer.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/MobilePlatformFooter.tsx
+  - ../mathesis-ui/src/app/(platform)/layout.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/HomeView.tsx
+  - ../mathesis-ui/src/app/(platform)/account/configuration/page.tsx
+  - ../mathesis-ui/src/app/(platform)/account/configuration/change-password/page.tsx
+  - ../mathesis-ui/src/app/(platform)/account/contact/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/new-topic/page.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Perform browser screenshot-parity QA on mobile for overlay spacing, icon sizing, and dim-backdrop intensity in both light and dark themes.
+  - Confirm footer behavior on admin and account subroutes where local footers were removed.
+
 ### 2026-09-05 15:31 - My enterprises lint blocker fix
 - Agent: GitHub Copilot
 - Summary: Resolved the blocking lint error in the enterprises page by refactoring the initial data-load effect to perform async fetch/update directly in the promise chain instead of invoking a state-mutating helper from the effect body.
