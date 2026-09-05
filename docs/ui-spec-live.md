@@ -43,6 +43,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Notifications (backend-integrated first pass): `/notificaciones` uses backend-backed notifications with persistent read state, screenshot-aligned unread/read grouping, inline linkable bold segments, `Marcar todo leído`, and desktop quick links. The first integrated pass bootstraps representative notifications for each user until real event generation is wired.
 - Platform navigation (topbar redesign desktop pass): desktop topbar now follows the new icon/menu model with role-gated `Admin`, optional `ME Admin` shortcut, `Nexum` and `Agora` dropdown menus, avatar profile dropdown, and unread red-count badges for `Mensajes` + `Notificaciones` (polling every 30 seconds, capped at `99+`).
 - Platform navigation (topbar redesign mobile pass): implemented with a right-side mobile mega-menu drawer, single-open accordion behavior across sections, screenshot-aligned Nexum/Agora/Mathesis content groups, disabled `Próximamente` placeholders, and live `Solicitar Membresía` action wiring for Mensa Empresarios (hidden once user already has badge).
+- Platform navigation (mobile footer redesign pass): implemented for signed-in mobile routes with one shared footer mounted at platform layout level, Nexum/Agora overlays with dim backdrop from footer taps, direct Mensajes/Perfil routing, and `Crear` wired to a global topic-creation route.
 
 ## Profile Field Matrix
 | Section | Field | Backend status | Frontend status | Notes |
@@ -73,6 +74,12 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-09-05 - Mobile footer redesign for signed-in routes
+- Replaced duplicated page-level mobile footers with one shared signed-in footer mounted in the `(platform)` layout.
+- Added footer-driven Nexum and Agora overlays with dim backdrop interactions, keeping unavailable entries visually labeled as `PRÓXIMAMENTE`.
+- Added global topic creation route `/ateneo/new-topic` and wired footer `Crear` to open the topic form without a preselected group.
+- Updated the Ateneo new-topic form to support optional initial group context and a clear empty-state message when the user has no available groups.
+
 ### 2026-09-05 - Topbar redesign mobile phase 2
 - Replaced the old mobile drawer with the new right-side mega-menu layout aligned to the provided references, including profile header, section cards, and long-form submenu groups.
 - Implemented single-open accordion behavior so opening one submenu collapses others.
