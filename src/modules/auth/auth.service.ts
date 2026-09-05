@@ -14,6 +14,7 @@ import type {
   ConfirmPasswordResetBody,
   LoginBody,
   RegisterBody,
+  RequestVerificationEmailBody,
   RequestPasswordResetBody
 } from "./auth.schemas";
 import { whitelistService } from "../whitelist/whitelist.service";
@@ -68,6 +69,8 @@ function generatePasswordResetToken(): string {
 }
 
 const passwordResetRateLimitStore = new Map<string, number[]>();
+const verificationEmailCooldownStore = new Map<string, number>();
+const VERIFICATION_EMAIL_COOLDOWN_MS = 3 * 60 * 1000;
 
 function isPasswordResetRateLimited(canonicalEmail: string, now: number): boolean {
   const oneHourAgo = now - 60 * 60 * 1000;
@@ -82,6 +85,25 @@ function isPasswordResetRateLimited(canonicalEmail: string, now: number): boolea
   recentHistory.push(now);
   passwordResetRateLimitStore.set(canonicalEmail, recentHistory);
   return false;
+}
+
+function getVerificationEmailRetryAfterSeconds(cooldownKey: string, now: number): number {
+  const lastSentAt = verificationEmailCooldownStore.get(cooldownKey);
+  if (!lastSentAt) {
+    return 0;
+  }
+
+  const elapsed = now - lastSentAt;
+  if (elapsed >= VERIFICATION_EMAIL_COOLDOWN_MS) {
+    verificationEmailCooldownStore.delete(cooldownKey);
+    return 0;
+  }
+
+  return Math.ceil((VERIFICATION_EMAIL_COOLDOWN_MS - elapsed) / 1000);
+}
+
+function markVerificationEmailRequested(cooldownKey: string, now: number): void {
+  verificationEmailCooldownStore.set(cooldownKey, now);
 }
 
 export const authService = {
@@ -153,7 +175,7 @@ export const authService = {
     };
   },
 
-  async confirmEmail(token: string): Promise<{ success: boolean; message: string }> {
+  async confirmEmail(token: string): Promise<{ success: boolean; message: string; accessToken: string }> {
     if (!token.trim()) {
       throw new AppError("Verification token is required", StatusCodes.BAD_REQUEST);
     }
@@ -166,17 +188,26 @@ export const authService = {
       throw new AppError("Invalid or expired confirmation token", StatusCodes.BAD_REQUEST);
     }
 
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
         emailVerifiedAt: new Date(),
         emailVerificationToken: null
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        authSessionVersion: true
       }
     });
 
+    const accessToken = buildAccessToken(buildAuthPayload(updatedUser));
+
     return {
       success: true,
-      message: "EMAIL_VERIFIED"
+      message: "EMAIL_VERIFIED",
+      accessToken
     };
   },
 
@@ -226,6 +257,59 @@ export const authService = {
     return {
       success: true,
       message: "PASSWORD_RESET_EMAIL_SENT"
+    };
+  },
+
+  async requestVerificationEmail(input: RequestVerificationEmailBody): Promise<{ success: boolean; message: string }> {
+    const email = normalizeEmailAddress(input.email);
+    const now = Date.now();
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+    const cooldownKey = user ? `user:${user.id}` : `email:${toCanonicalEmail(email)}`;
+    const retryAfterSeconds = getVerificationEmailRetryAfterSeconds(cooldownKey, now);
+
+    if (retryAfterSeconds > 0) {
+      throw new AppError(
+        "Please wait before requesting another verification email",
+        StatusCodes.TOO_MANY_REQUESTS,
+        true,
+        {
+          code: "VERIFICATION_EMAIL_RATE_LIMITED",
+          retryAfterSeconds
+        }
+      );
+    }
+
+    markVerificationEmailRequested(cooldownKey, now);
+
+    if (!user || user.deletedAt || user.emailVerifiedAt) {
+      return {
+        success: true,
+        message: "VERIFICATION_EMAIL_SENT"
+      };
+    }
+
+    const emailVerificationToken = generateEmailVerificationToken();
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerificationToken
+      }
+    });
+
+    const verificationUrl = new URL("/confirm", env.FRONTEND_ORIGIN);
+    verificationUrl.searchParams.set("token", emailVerificationToken);
+
+    await sendVerificationEmail({
+      email: user.email,
+      verificationUrl: verificationUrl.toString()
+    });
+
+    return {
+      success: true,
+      message: "VERIFICATION_EMAIL_SENT"
     };
   },
 

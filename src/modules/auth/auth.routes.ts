@@ -11,6 +11,7 @@ import {
 	login,
 	logout,
 	register,
+	requestVerificationEmail,
 	requestPasswordReset,
 	requestWhitelistAccess,
 	session
@@ -19,6 +20,7 @@ import {
 	changePasswordSchema,
 	confirmPasswordResetSchema,
 	loginSchema,
+	requestVerificationEmailSchema,
 	registerSchema,
 	requestPasswordResetSchema
 } from "./auth.schemas";
@@ -27,6 +29,7 @@ const authRouter = Router();
 
 authRouter.post("/register", validateRequest(registerSchema), asyncHandler(register));
 authRouter.get("/confirm", asyncHandler(confirmEmail));
+authRouter.post("/request-verification", validateRequest(requestVerificationEmailSchema), asyncHandler(requestVerificationEmail));
 authRouter.post("/request-reset", validateRequest(requestPasswordResetSchema), asyncHandler(requestPasswordReset));
 authRouter.post("/confirm-reset", validateRequest(confirmPasswordResetSchema), asyncHandler(confirmPasswordReset));
 authRouter.post("/change-password", requireAuth({ skipWhitelist: true }), validateRequest(changePasswordSchema), asyncHandler(changePassword));

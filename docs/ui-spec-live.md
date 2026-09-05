@@ -19,6 +19,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Interests section: editable tag list in /perfil (`Intereses`) with individual remove actions, drag-and-drop reordering, backend-persisted save, and backend suggestions from 3 typed characters.
 - Interests section: editable tag list in /perfil (`Intereses`) with individual remove actions, drag-and-drop reordering, backend-persisted save, backend suggestions from 3 typed characters, and lowercase normalization on save.
 - Authentication: forgot-password flow (Page 1 request view implemented; Page 2 sent view implemented; Page 3 reset-password view implemented; dark/light parity required per page) and authenticated change-password flow implemented end-to-end.
+- Authentication: unverified-login recovery flow implemented end-to-end with post-login-attempt redirect to an unverified account page, verification-email resend action, and 3-minute resend cooldown enforcement.
 - Application shell: a global footer with copy `Powered by Newen.Solutions` is rendered from the root layout, fixed to the viewport bottom, visible on all screens (platform + auth/public), and inherited automatically by new pages.
 - Bug reports (backend-integrated): authenticated platform routes can expose an env-gated floating `Reportar bug` action that opens a draft-preserving form with current URL capture, screenshot attachments, local autosave, close-without-clear behavior, and backend submission through the support module.
 - Bug reports (verification utility): add a temporary authenticated verification route in the UI that lists the current user’s bug reports and exercises attachment retrieval against the support download endpoint.
@@ -74,6 +75,11 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-09-05 - Unverified login recovery flow
+- Added a dedicated unverified-account recovery path that appears only after a login attempt is rejected with `EMAIL_NOT_VERIFIED`.
+- Added verification-email resend support with cooldown-protected retries (one resend every 3 minutes) and non-enumerating success responses.
+- Preserved blocked-login behavior for unverified accounts while adding explicit UI guidance to complete verification.
+
 ### 2026-09-05 - Mobile footer redesign for signed-in routes
 - Replaced duplicated page-level mobile footers with one shared signed-in footer mounted in the `(platform)` layout.
 - Added footer-driven Nexum and Agora overlays with dim backdrop interactions, keeping unavailable entries visually labeled as `PRÓXIMAMENTE`.

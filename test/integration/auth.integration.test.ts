@@ -36,12 +36,18 @@ integrationDescribe("email confirmation integration", () => {
 
     expect(storedUser?.emailVerificationToken).toBeTruthy();
 
-    const confirmResponse = await request(app).get(
+    const confirmAgent = request.agent(app);
+    const confirmResponse = await confirmAgent.get(
       `/api/v1/auth/confirm?token=${encodeURIComponent(storedUser!.emailVerificationToken!)}`
     );
 
     expect(confirmResponse.status).toBe(200);
     expect(confirmResponse.body?.message).toBe("EMAIL_VERIFIED");
+
+    const confirmedSessionResponse = await confirmAgent.get("/api/v1/auth/session");
+    expect(confirmedSessionResponse.status).toBe(200);
+    expect(confirmedSessionResponse.body?.data?.user?.email).toBe(email);
+    expect(confirmedSessionResponse.body?.data?.user?.hasVerifiedEmail).toBe(true);
 
     const updatedUser = await prisma.user.findUnique({
       where: { email }
@@ -69,6 +75,142 @@ integrationDescribe("email confirmation integration", () => {
 
     expect(loginResponse.status).toBe(403);
     expect(loginResponse.body?.details?.code).toBe("EMAIL_NOT_VERIFIED");
+  });
+
+  it("sends verification resend response for unverified users and rotates token", async () => {
+    const email = randomEmail("resend-unverified");
+    createdEmails.push(email);
+    canonicalEmails.add(toCanonicalEmail(email));
+
+    const registerResponse = await request(app)
+      .post("/api/v1/auth/register")
+      .send({ firstName: "Resend", lastName: "User", email, password: "Password123!" });
+
+    expect(registerResponse.status).toBe(201);
+
+    const originalUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    const originalToken = originalUser?.emailVerificationToken;
+    expect(originalToken).toBeTruthy();
+
+    const resendResponse = await request(app)
+      .post("/api/v1/auth/request-verification")
+      .send({ email });
+
+    expect(resendResponse.status).toBe(200);
+    expect(resendResponse.body?.success).toBe(true);
+    expect(resendResponse.body?.message).toBe("VERIFICATION_EMAIL_SENT");
+
+    const updatedUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    expect(updatedUser?.emailVerificationToken).toBeTruthy();
+    expect(updatedUser?.emailVerificationToken).not.toBe(originalToken);
+  });
+
+  it("enforces a 3-minute cooldown for verification resend requests", async () => {
+    const email = randomEmail("resend-cooldown");
+    createdEmails.push(email);
+    canonicalEmails.add(toCanonicalEmail(email));
+
+    const registerResponse = await request(app)
+      .post("/api/v1/auth/register")
+      .send({ firstName: "Cooldown", lastName: "User", email, password: "Password123!" });
+
+    expect(registerResponse.status).toBe(201);
+
+    const firstResend = await request(app)
+      .post("/api/v1/auth/request-verification")
+      .send({ email });
+
+    expect(firstResend.status).toBe(200);
+    expect(firstResend.body?.message).toBe("VERIFICATION_EMAIL_SENT");
+
+    const secondResend = await request(app)
+      .post("/api/v1/auth/request-verification")
+      .send({ email });
+
+    expect(secondResend.status).toBe(429);
+    expect(secondResend.body?.details?.code).toBe("VERIFICATION_EMAIL_RATE_LIMITED");
+    expect(typeof secondResend.body?.details?.retryAfterSeconds).toBe("number");
+    expect(secondResend.body?.details?.retryAfterSeconds).toBeGreaterThan(0);
+  });
+
+  it("does not share verification resend cooldown across different users with plus-alias emails", async () => {
+    const sharedLocalPart = `cooldown-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const firstEmail = `${sharedLocalPart}+one@example.com`;
+    const secondEmail = `${sharedLocalPart}+two@example.com`;
+    createdEmails.push(firstEmail, secondEmail);
+    canonicalEmails.add(toCanonicalEmail(firstEmail));
+
+    const firstRegisterResponse = await request(app)
+      .post("/api/v1/auth/register")
+      .send({ firstName: "Alias", lastName: "One", email: firstEmail, password: "Password123!" });
+
+    expect(firstRegisterResponse.status).toBe(201);
+
+    const secondRegisterResponse = await request(app)
+      .post("/api/v1/auth/register")
+      .send({ firstName: "Alias", lastName: "Two", email: secondEmail, password: "Password123!" });
+
+    expect(secondRegisterResponse.status).toBe(201);
+
+    const firstResend = await request(app)
+      .post("/api/v1/auth/request-verification")
+      .send({ email: firstEmail });
+
+    expect(firstResend.status).toBe(200);
+
+    const secondResend = await request(app)
+      .post("/api/v1/auth/request-verification")
+      .send({ email: secondEmail });
+
+    expect(secondResend.status).toBe(200);
+    expect(secondResend.body?.message).toBe("VERIFICATION_EMAIL_SENT");
+  });
+
+  it("returns generic verification resend success for unknown and already verified users", async () => {
+    const unknownEmail = randomEmail("resend-unknown");
+    const unknownCanonicalEmail = toCanonicalEmail(unknownEmail);
+
+    const unknownResponse = await request(app)
+      .post("/api/v1/auth/request-verification")
+      .send({ email: unknownEmail });
+
+    expect(unknownResponse.status).toBe(200);
+    expect(unknownResponse.body?.message).toBe("VERIFICATION_EMAIL_SENT");
+
+    const verifiedEmail = randomEmail("resend-verified");
+    createdEmails.push(verifiedEmail);
+    canonicalEmails.add(toCanonicalEmail(verifiedEmail));
+
+    const registerResponse = await request(app)
+      .post("/api/v1/auth/register")
+      .send({ firstName: "Verified", lastName: "User", email: verifiedEmail, password: "Password123!" });
+
+    expect(registerResponse.status).toBe(201);
+
+    const storedUser = await prisma.user.findUnique({
+      where: { email: verifiedEmail }
+    });
+
+    const confirmResponse = await request(app).get(
+      `/api/v1/auth/confirm?token=${encodeURIComponent(storedUser!.emailVerificationToken!)}`
+    );
+
+    expect(confirmResponse.status).toBe(200);
+
+    const verifiedResend = await request(app)
+      .post("/api/v1/auth/request-verification")
+      .send({ email: verifiedEmail });
+
+    expect(verifiedResend.status).toBe(200);
+    expect(verifiedResend.body?.message).toBe("VERIFICATION_EMAIL_SENT");
+
+    canonicalEmails.add(unknownCanonicalEmail);
   });
 
   it("blocks login when whitelist is enabled and the user is not whitelisted", async () => {

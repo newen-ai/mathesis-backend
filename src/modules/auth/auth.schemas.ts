@@ -31,6 +31,12 @@ export const requestPasswordResetSchema = z.object({
   })
 });
 
+export const requestVerificationEmailSchema = z.object({
+  body: z.object({
+    email: z.string().email()
+  })
+});
+
 export const confirmPasswordResetSchema = z.object({
   body: z.object({
     token: z.string().min(1),
@@ -48,5 +54,6 @@ export const changePasswordSchema = z.object({
 export type RegisterBody = z.infer<typeof registerSchema>["body"];
 export type LoginBody = z.infer<typeof loginSchema>["body"];
 export type RequestPasswordResetBody = z.infer<typeof requestPasswordResetSchema>["body"];
+export type RequestVerificationEmailBody = z.infer<typeof requestVerificationEmailSchema>["body"];
 export type ConfirmPasswordResetBody = z.infer<typeof confirmPasswordResetSchema>["body"];
 export type ChangePasswordBody = z.infer<typeof changePasswordSchema>["body"];

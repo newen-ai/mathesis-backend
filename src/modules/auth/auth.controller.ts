@@ -7,6 +7,7 @@ import type {
   ConfirmPasswordResetBody,
   LoginBody,
   RegisterBody,
+  RequestVerificationEmailBody,
   RequestPasswordResetBody
 } from "./auth.schemas";
 import type { CreateWhitelistRequestBody } from "../whitelist/whitelist.schemas";
@@ -38,6 +39,9 @@ export const register: RequestHandler = async (req, res) => {
 export const confirmEmail: RequestHandler = async (req, res) => {
   const token = typeof req.query.token === "string" ? req.query.token : "";
   const result = await authService.confirmEmail(token);
+  const cookieOptions = buildAuthCookieOptions();
+
+  res.cookie(env.AUTH_COOKIE_NAME, result.accessToken, cookieOptions);
 
   res.status(StatusCodes.OK).json({
     success: true,
@@ -65,6 +69,15 @@ export const login: RequestHandler = async (req, res) => {
 
 export const requestPasswordReset: RequestHandler = async (req, res) => {
   const result = await authService.requestPasswordReset(req.body as RequestPasswordResetBody);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: result.message
+  });
+};
+
+export const requestVerificationEmail: RequestHandler = async (req, res) => {
+  const result = await authService.requestVerificationEmail(req.body as RequestVerificationEmailBody);
 
   res.status(StatusCodes.OK).json({
     success: true,

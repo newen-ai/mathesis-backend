@@ -14,6 +14,38 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-05 20:51 -03 - Verification resend cooldown keyed per user
+- Agent: GitHub Copilot
+- Summary: Updated verification-email resend cooldown enforcement so it is keyed by actual user account (`user.id`) instead of canonical email, preventing cooldown collisions across different accounts that share plus-alias local parts. Kept a canonical-email fallback key only for unknown-email requests to preserve non-enumeration behavior.
+- Files changed:
+  - src/modules/auth/auth.service.ts
+  - test/integration/auth.integration.test.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Optional: include a `Retry-After` header in 429 responses for stricter client/server countdown sync.
+  - Optional: migrate cooldown store from in-memory map to shared cache (Redis) if running multiple backend instances.
+
+### 2026-09-05 20:40 -03 - Unverified login recovery flow
+- Agent: GitHub Copilot
+- Summary: Implemented an end-to-end unverified-account recovery flow: login now redirects users rejected with `EMAIL_NOT_VERIFIED` to a dedicated `/unverified` page, and the page can request a new verification email through a new backend endpoint with a strict server-enforced 3-minute cooldown and generic non-enumerating responses.
+- Files changed:
+  - src/modules/auth/auth.schemas.ts
+  - src/modules/auth/auth.routes.ts
+  - src/modules/auth/auth.controller.ts
+  - src/modules/auth/auth.service.ts
+  - test/integration/auth.integration.test.ts
+  - docs/ui-spec-live.md
+  - ../mathesis-ui/src/lib/api/auth.ts
+  - ../mathesis-ui/src/app/login/page.tsx
+  - ../mathesis-ui/src/app/unverified/page.tsx
+  - ../mathesis-ui/src/lib/i18n/auth-errors.ts
+  - ../mathesis-ui/src/lib/i18n/locales/es/auth.json
+  - ../mathesis-ui/src/lib/i18n/locales/en/auth.json
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual browser QA of `/unverified` in light and dark themes, including countdown behavior and spam-folder guidance copy.
+  - Optional: add `Retry-After` response header for `VERIFICATION_EMAIL_RATE_LIMITED` to simplify strict server-time countdown synchronization in the UI.
+
 ### 2026-09-05 16:08 - Ateneo mobile centered group picker
 - Agent: GitHub Copilot
 - Summary: Updated the existing Ateneo new-topic form to support a mobile-only centered overlay group picker with a dim backdrop and scrollable options, while preserving desktop native select behavior. Kept fixed group context read-only for group-scoped creation routes and retained footer-source placeholder default selection.
