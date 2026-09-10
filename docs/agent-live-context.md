@@ -14,6 +14,26 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-10 00:39 -0300 - Remove unused HomeView component
+- Agent: GitHub Copilot
+- Summary: Removed the unused `HomeView` component after root navigation switched to `/ateneo`, and verified no remaining references in the UI codebase.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/home/HomeView.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Optional: evaluate whether other legacy home-only components can be pruned if they are no longer reachable.
+
+### 2026-09-10 00:37 -0300 - Root logo/home routing to Ateneo
+- Agent: GitHub Copilot
+- Summary: Updated authenticated platform root behavior so `/` now redirects to `/ateneo`, which removes the legacy root feed destination behind top-left logo/home navigation while preserving direct Ateneo entry behavior.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/page.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Run a quick browser smoke check for top-left logo click from a platform page to confirm landing on `/ateneo` through `/`.
+  - Optional: remove legacy home feed components if they are no longer used by any route.
+
 ### 2026-09-05 20:51 -03 - Verification resend cooldown keyed per user
 - Agent: GitHub Copilot
 - Summary: Updated verification-email resend cooldown enforcement so it is keyed by actual user account (`user.id`) instead of canonical email, preventing cooldown collisions across different accounts that share plus-alias local parts. Kept a canonical-email fallback key only for unknown-email requests to preserve non-enumeration behavior.

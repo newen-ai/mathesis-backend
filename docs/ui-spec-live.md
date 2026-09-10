@@ -31,6 +31,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Enterprises: each card in /my-enterprises offers edit and delete actions; edit uses /my-enterprises/[enterpriseId]/edit with prefilled data and save-back to the backend.
 - Enterprises: status labels/chips were removed from both backend contracts and UI rendering (status column dropped from DB schema).
 - Ateneo (backend-integrated): `/ateneo` is the dedicated 3-column feed page with middle-column topics loaded from backend endpoint `GET /api/v1/ateneo/feed`.
+- Ateneo (compatibility): authenticated platform root route `/` redirects to `/ateneo` so shell home entry and logo navigation land on the Ateneo feed.
 - Ateneo (backend-integrated): `/ateneo/groups` uses backend endpoint `GET /api/v1/ateneo/groups?tab=...` for tabbed group browsing (`Tus grupos`, `Descubrir`, `Grupos que administrás`).
 - Ateneo (backend-integrated): group/topic/detail flows (`/ateneo/groups/:groupId`, `/ateneo/groups/:groupId/new-topic`, `/ateneo/groups/:groupId/topics/:topicId`) are runtime-backed by `GET/POST /api/v1/ateneo/groups/:groupId/topics*` and topic-comment endpoints.
 - Ateneo (backend-integrated): the new-topic composer now supports real image and PDF attachments for topics, with backend persistence, download routing, and rendered attachment metadata in feed/detail views.
@@ -75,6 +76,10 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-09-10 - Root route redirects to Ateneo
+- Updated authenticated platform root route behavior so `/` redirects to `/ateneo`.
+- This removes the legacy root feed surface from top-left logo/home navigation while keeping `/ateneo/feed` compatibility redirect behavior.
+
 ### 2026-09-05 - Unverified login recovery flow
 - Added a dedicated unverified-account recovery path that appears only after a login attempt is rejected with `EMAIL_NOT_VERIFIED`.
 - Added verification-email resend support with cooldown-protected retries (one resend every 3 minutes) and non-enumerating success responses.
