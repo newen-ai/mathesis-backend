@@ -14,6 +14,15 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-10 01:01 -0300 - Ateneo link overflow wrapping hardening
+- Agent: GitHub Copilot
+- Summary: Hardened shared linkified text wrapping so long URLs and unbroken text segments wrap inside topic cards instead of escaping the card bounds on mobile.
+- Files changed:
+  - ../mathesis-ui/src/components/ui/LinkifiedText.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual mobile QA on `/ateneo` and group topic cards with long URLs in both light and dark themes to confirm no horizontal text escape remains.
+
 ### 2026-09-10 00:57 -0300 - Bug report mobile layering and scroll fix
 - Agent: GitHub Copilot
 - Summary: Adjusted the floating bug-report button and modal behavior on mobile so the button anchors above the signed-in bottom footer, the modal stack sits above the footer, background page scrolling is locked while open, and modal content becomes internally scrollable when tall.
