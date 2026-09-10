@@ -14,6 +14,15 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-10 01:30 -0300 - Fixed topbar during scroll
+- Agent: GitHub Copilot
+- Summary: Updated the shared platform topbar to use fixed viewport positioning so navigation remains visible while scrolling on both desktop and mobile, and added a matching spacer element to prevent content overlap.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual browser QA on desktop and mobile routes to confirm the topbar stays pinned and content offset remains correct with open/closed mobile drawer states.
+
 ### 2026-09-10 02:25 -0300 - Auth session parser cleanup (no fallbacks)
 - Agent: GitHub Copilot
 - Summary: Simplified UI session user-id parsing to the strict backend contract shape (`data.user.id`) and removed compatibility fallbacks for alternative payload locations to keep `auth.ts` cleaner.
