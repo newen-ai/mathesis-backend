@@ -14,6 +14,27 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-10 00:49 -0300 - Ateneo topic card shared component refactor
+- Agent: GitHub Copilot
+- Summary: Extracted duplicated topic-card UI/interaction logic from Ateneo feed and group feed into a shared `AteneoTopicCard` component, keeping card-click topic navigation and preserving nested link/attachment interaction behavior.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicCard.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual browser QA for `/ateneo` and `/ateneo/groups/[groupId]` in light/dark themes to verify visual parity between card variants and expected navigation behavior.
+
+### 2026-09-10 00:45 -0300 - Ateneo card click replaces Ver tema action
+- Agent: GitHub Copilot
+- Summary: Removed the `Ver tema` action link from Ateneo topic cards and moved that navigation behavior to the whole card click/keyboard interaction so opening a topic is triggered directly from the card surface.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual browser QA on `/ateneo` and `/ateneo/groups/[groupId]` to verify card click navigation feels correct and attachment links still open files as expected.
+
 ### 2026-09-10 00:39 -0300 - Remove unused HomeView component
 - Agent: GitHub Copilot
 - Summary: Removed the unused `HomeView` component after root navigation switched to `/ateneo`, and verified no remaining references in the UI codebase.
