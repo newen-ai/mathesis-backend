@@ -14,6 +14,16 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-10 00:57 -0300 - Bug report mobile layering and scroll fix
+- Agent: GitHub Copilot
+- Summary: Adjusted the floating bug-report button and modal behavior on mobile so the button anchors above the signed-in bottom footer, the modal stack sits above the footer, background page scrolling is locked while open, and modal content becomes internally scrollable when tall.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/BugReportWidget.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual mobile QA on `/ateneo`, `/mensajes`, and `/perfil` in both light and dark themes to confirm initial button placement and modal scrolling behavior.
+  - Optional: if any devices still overlap due to safe-area variance, tune the mobile bottom offset using a CSS-safe-area-driven value.
+
 ### 2026-09-10 00:49 -0300 - Ateneo topic card shared component refactor
 - Agent: GitHub Copilot
 - Summary: Extracted duplicated topic-card UI/interaction logic from Ateneo feed and group feed into a shared `AteneoTopicCard` component, keeping card-click topic navigation and preserving nested link/attachment interaction behavior.
