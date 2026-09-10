@@ -77,6 +77,47 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-09-10 - Published mosaic height reduced
+- Reduced published-topic image mosaic height from square behavior to a compact responsive height to avoid oversized cards while keeping image readability.
+
+### 2026-09-10 - Published attachment mosaic layout
+- Replaced published-topic image filename rows with a single mosaic-style image block for feed/group cards and topic detail.
+- Added up-to-four tile layout behavior with `+N` overlay on the last tile when additional images are present.
+
+### 2026-09-10 - Published image preview reliability fix
+- Fixed broken published-topic image previews by loading attachments through authenticated API blob fetches before rendering preview images.
+- Reused the same in-app carousel interaction for published images while preserving PDF download/open behavior.
+
+### 2026-09-10 - Published-topic attachment carousel interaction
+- Changed Ateneo published-topic image attachment interaction: clicking previews now opens an in-app carousel modal with overlay close behavior.
+- Image preview clicks no longer navigate directly to file URLs; PDF attachments keep download/open behavior.
+
+### 2026-09-10 - Published topic attachment image previews
+- Updated Ateneo published-topic surfaces to render image attachments as visual previews in feed cards and topic detail views.
+- Applied centered contain rendering with neutral dark/gray letterbox fill so full images stay visible across device widths.
+
+### 2026-09-10 - Link preview full-image rendering
+- Updated shared link preview cards to render preview images fully (no crop) with centered contain behavior.
+- Added neutral dark/gray backdrop fill in preview image canvases so side gaps are visually consistent across device widths.
+
+### 2026-09-10 - Ateneo HEIC preview fallback
+- Fixed Ateneo new-topic draft preview for HEIC/HEIF attachments by adding client-side preview conversion fallback to JPEG when direct rendering is not supported by the browser.
+- Kept original uploaded HEIC file intact for publish payloads while only transforming preview rendering.
+
+### 2026-09-10 - Ateneo carousel remove action
+- Added a trash-icon action in the Ateneo draft image preview modal to remove the currently displayed image directly from the draft.
+- Kept carousel continuity after removal by moving to the next available image (or closing the modal when no image remains).
+
+### 2026-09-10 - Ateneo topic draft preview controls and mobile swipe
+- Added per-attachment remove controls in the Ateneo new-topic draft composer for both image and PDF attachments.
+- Extended topic draft image preview modal with mobile swipe navigation (left/right) between uploaded images.
+- Migrated draft preview image rendering to Next Image for improved frontend lint/tooling alignment.
+
+### 2026-09-10 - Ateneo topic draft image preview carousel
+- Updated Ateneo new-topic creation UX so uploaded image attachments show inline draft previews before publish.
+- Added click-to-open image lightbox behavior with carousel navigation across attached images in the draft.
+- Added modal backdrop close behavior so clicking outside the preview closes the image viewer.
+
 ### 2026-09-10 - Creator-only topic deletion
 - Added backend endpoint `DELETE /api/v1/ateneo/groups/:groupId/topics/:topicId` for soft-deleting topics.
 - Enforced authorization so only the topic creator can delete it.

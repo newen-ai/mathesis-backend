@@ -14,6 +14,125 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-10 06:05 -0300 - Compact published mosaic height
+- Agent: GitHub Copilot
+- Summary: Reduced published-topic image mosaic height to a compact responsive block so attachment sections stop feeling oversized while preserving usable visual preview space.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoImageMosaic.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual visual check with 1-4 and 5+ image posts to confirm height balance across mobile and desktop.
+
+### 2026-09-10 05:55 -0300 - Published image mosaic presentation
+- Agent: GitHub Copilot
+- Summary: Implemented a Facebook-style mosaic presentation for published topic images (filenames hidden for images), with support for 1-4 tile layouts plus `+N` overlay for extra images and click-to-open carousel behavior.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoImageMosaic.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicCard.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual visual QA with 1, 2, 3, 4, and 5+ image attachments to tune tile proportions if needed.
+
+### 2026-09-10 05:35 -0300 - Fix broken published image previews
+- Agent: GitHub Copilot
+- Summary: Fixed published-topic image previews failing to render by switching preview loading to authenticated attachment fetches (blob URLs), and kept image-click carousel behavior intact across feed/group cards and topic detail.
+- Files changed:
+  - ../mathesis-ui/src/lib/utils/image-preview.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicCard.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual browser QA with mixed PNG/HEIC published attachments to confirm reliable preview rendering and modal navigation.
+
+### 2026-09-10 05:15 -0300 - Published-topic image click opens carousel
+- Agent: GitHub Copilot
+- Summary: Replaced direct download/navigation on published-topic image attachment clicks with an in-app carousel modal (overlay close, keyboard arrows, swipe support) across feed/group cards and topic detail.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoImageCarouselModal.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicCard.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual UX validation for image click behavior in `/ateneo`, `/ateneo/groups/[groupId]`, and `/ateneo/groups/[groupId]/topics/[topicId]` to ensure no accidental file downloads remain.
+
+### 2026-09-10 04:55 -0300 - Published topic image attachment previews
+- Agent: GitHub Copilot
+- Summary: Added visual previews for image attachments in already published Ateneo topics (feed/group cards and topic detail), using centered contain-fit rendering with neutral dark/gray letterbox background.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicCard.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual QA with portrait and landscape uploaded topic images in `/ateneo`, `/ateneo/groups/[groupId]`, and `/ateneo/groups/[groupId]/topics/[topicId]`.
+
+### 2026-09-10 04:35 -0300 - Link preview image contain + letterbox
+- Agent: GitHub Copilot
+- Summary: Updated shared link preview cards so preview images render fully without cropping, centered inside a taller preview area with neutral dark/gray backdrop fill for side gaps across device widths.
+- Files changed:
+  - ../mathesis-ui/src/components/ui/LinkPreviewList.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual QA on mobile and desktop with portrait and landscape preview images to confirm visual balance and readability.
+
+### 2026-09-10 04:15 -0300 - Ateneo HEIC preview compatibility fix
+- Agent: GitHub Copilot
+- Summary: Fixed the topic draft preview bug where HEIC images failed to render in some browsers by adding a client-side HEIC/HEIF-to-JPEG preview fallback while preserving original file upload.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/package.json
+  - ../mathesis-ui/package-lock.json
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual QA with HEIC files on Safari and Chromium browsers to verify fallback preview reliability and upload success.
+
+### 2026-09-10 04:00 -0300 - Ateneo carousel trash remove action
+- Agent: GitHub Copilot
+- Summary: Added a trash-icon control in the opened Ateneo image preview carousel so users can remove the currently viewed image from the topic draft without leaving the modal.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual UX check to confirm the remove action feels clear on both desktop and mobile and that modal close behavior remains consistent when deleting the final image.
+
+### 2026-09-10 03:40 -0300 - Ateneo draft preview follow-up polish
+- Agent: GitHub Copilot
+- Summary: Implemented the three requested follow-ups for topic draft previews: remove controls per attachment, mobile swipe gestures in the preview carousel, and Next Image migration for preview rendering.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual QA on touch devices for swipe sensitivity and accidental swipe prevention while zoom-less viewing.
+
+### 2026-09-10 03:05 -0300 - Ateneo new-topic image preview carousel
+- Agent: GitHub Copilot
+- Summary: Added image previsualization during topic creation: uploaded images now render as inline thumbnails and open in a modal carousel with keyboard navigation and overlay click-to-close behavior.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoNewTopicForm.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual QA on `/ateneo/new-topic` and `/ateneo/groups/[groupId]/new-topic` in light/dark themes, including mobile and desktop modal interactions.
+
 ### 2026-09-10 01:30 -0300 - Fixed topbar during scroll
 - Agent: GitHub Copilot
 - Summary: Updated the shared platform topbar to use fixed viewport positioning so navigation remains visible while scrolling on both desktop and mobile, and added a matching spacer element to prevent content overlap.
