@@ -162,6 +162,18 @@ export const getAteneoTopic: RequestHandler = async (req, res) => {
   });
 };
 
+export const deleteAteneoTopic: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
+  const params = req.params as AteneoTopicParams;
+  const result = await ateneoService.deleteTopic(currentUserId, params);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "ATENEO_TOPIC_DELETED",
+    data: result
+  });
+};
+
 export const listAteneoTopicComments: RequestHandler = async (req, res) => {
   const currentUserId = req.user?.sub as string;
   const params = req.params as AteneoTopicParams;

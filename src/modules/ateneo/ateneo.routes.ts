@@ -7,6 +7,7 @@ import {
   createAteneoGroup,
   createAteneoTopic,
   createAteneoTopicComment,
+  deleteAteneoTopic,
   downloadAteneoTopicAttachment,
   getAteneoGroup,
   getAteneoTopic,
@@ -24,6 +25,7 @@ import {
   createAteneoGroupSchema,
   createAteneoTopicCommentSchema,
   createAteneoTopicSchema,
+  deleteAteneoTopicSchema,
   getAteneoGroupSchema,
   getAteneoTopicSchema,
   joinAteneoGroupSchema,
@@ -74,6 +76,12 @@ ateneoRouter.post(
   asyncHandler(createAteneoTopic)
 );
 ateneoRouter.get("/groups/:groupId/topics/:topicId", requireAuth(), validateRequest(getAteneoTopicSchema), asyncHandler(getAteneoTopic));
+ateneoRouter.delete(
+  "/groups/:groupId/topics/:topicId",
+  requireAuth(),
+  validateRequest(deleteAteneoTopicSchema),
+  asyncHandler(deleteAteneoTopic)
+);
 ateneoRouter.get(
   "/groups/:groupId/topics/:topicId/attachments/:attachmentId",
   requireAuth(),

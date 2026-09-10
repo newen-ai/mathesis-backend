@@ -24,6 +24,7 @@ import type {
   AteneoGroupSummary,
   AteneoTopicAttachmentSummary,
   CreateAteneoGroupOutput,
+  DeleteAteneoTopicOutput,
   JoinAteneoGroupOutput,
   AteneoTopicCommentSummary,
   AteneoTopicSummary,
@@ -1135,6 +1136,50 @@ export const ateneoService = {
 
     return {
       topic: mapTopicSummary(topic, currentUserId)
+    };
+  },
+
+  async deleteTopic(currentUserId: string, params: AteneoTopicParams): Promise<DeleteAteneoTopicOutput> {
+    await ensureGroupAccess(params.groupId, currentUserId);
+
+    const topic = await prisma.ateneoTopic.findFirst({
+      where: {
+        id: params.topicId,
+        groupId: params.groupId,
+        deletedAt: null
+      },
+      select: {
+        id: true,
+        authorUserId: true
+      }
+    });
+
+    if (!topic) {
+      throw new AppError("Ateneo topic not found", StatusCodes.NOT_FOUND);
+    }
+
+    if (topic.authorUserId !== currentUserId) {
+      throw new AppError("Only topic author can delete this topic", StatusCodes.FORBIDDEN);
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.ateneoTopic.update({
+        where: { id: topic.id },
+        data: {
+          deletedAt: new Date()
+        }
+      });
+
+      await tx.notification.deleteMany({
+        where: {
+          userId: topic.authorUserId,
+          seedKey: topic.id
+        }
+      });
+    });
+
+    return {
+      topicId: topic.id
     };
   },
 

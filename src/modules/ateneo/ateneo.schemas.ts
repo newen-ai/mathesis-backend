@@ -91,6 +91,8 @@ export const getAteneoTopicSchema = z.object({
   })
 });
 
+export const deleteAteneoTopicSchema = getAteneoTopicSchema;
+
 export const downloadAteneoTopicAttachmentSchema = z.object({
   params: z.object({
     groupId: z.string().min(1),

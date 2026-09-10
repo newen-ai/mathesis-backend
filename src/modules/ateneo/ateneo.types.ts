@@ -111,6 +111,10 @@ export type GetAteneoTopicOutput = {
   topic: AteneoTopicSummary;
 };
 
+export type DeleteAteneoTopicOutput = {
+  topicId: string;
+};
+
 export type ListAteneoTopicCommentsOutput = {
   comments: AteneoTopicCommentSummary[];
 };

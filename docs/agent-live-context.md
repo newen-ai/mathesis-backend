@@ -14,6 +14,61 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-10 02:25 -0300 - Auth session parser cleanup (no fallbacks)
+- Agent: GitHub Copilot
+- Summary: Simplified UI session user-id parsing to the strict backend contract shape (`data.user.id`) and removed compatibility fallbacks for alternative payload locations to keep `auth.ts` cleaner.
+- Files changed:
+  - ../mathesis-ui/src/lib/api/auth.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Keep backend `/auth/session` response contract stable; if it changes, update both type and parser together.
+
+### 2026-09-10 02:15 -0300 - Fix report color token in Ateneo overflow menu
+- Agent: GitHub Copilot
+- Summary: Fixed `Denunciar publicación` color not applying by replacing undefined `--danger-600`/`--danger-50` tokens with existing `--danger-500` and a token-based hover background mix in Ateneo topic/comment overflow menus.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Quick manual visual check in light and dark themes to confirm `Denunciar publicación` appears clearly red in the topic overflow menu.
+
+### 2026-09-10 02:06 -0300 - Ateneo overflow menu close and danger styling
+- Agent: GitHub Copilot
+- Summary: Updated Ateneo topic overflow-menu interactions so menus close on outside click and Escape, and reinforced danger-red styling for `Denunciar publicación` label/icon treatment. Persisted the direction in UI live guidelines for future work.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Run UI lint/build checks and do quick manual interaction QA for post/comment overflow menus in light and dark themes.
+
+### 2026-09-10 01:53 -0300 - Fix creator menu visibility for topic delete
+- Agent: GitHub Copilot
+- Summary: Fixed session user-id extraction in the UI auth client so creator detection resolves correctly from `/auth/session` payloads (`data.user.id`), which restores visibility of `Eliminar publicación` for topic authors in the Ateneo topic overflow menu.
+- Files changed:
+  - ../mathesis-ui/src/lib/api/auth.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual browser check in `/ateneo/groups/:groupId/topics/:topicId` as topic author to confirm `Eliminar publicación` is visible above `Denunciar publicación`.
+  - Optional: centralize session-user shape typing across UI auth helpers to prevent future payload-shape drift.
+
+### 2026-09-10 01:42 -0300 - Ateneo topic creator delete action
+- Agent: GitHub Copilot
+- Summary: Added creator-only topic deletion for Ateneo topic detail overflow menu. Implemented backend delete endpoint with author authorization and UI wiring so `Eliminar publicación` appears above `Denunciar publicación` only for the topic creator.
+- Files changed:
+  - src/modules/ateneo/ateneo.types.ts
+  - src/modules/ateneo/ateneo.schemas.ts
+  - src/modules/ateneo/ateneo.controller.ts
+  - src/modules/ateneo/ateneo.routes.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Run lint and typecheck for backend and UI to confirm the new endpoint and topic menu wiring pass static validation.
+  - Manually verify in browser that non-authors do not see the delete option and authors can delete and redirect back to the group feed.
+
 ### 2026-09-10 01:01 -0300 - Ateneo link overflow wrapping hardening
 - Agent: GitHub Copilot
 - Summary: Hardened shared linkified text wrapping so long URLs and unbroken text segments wrap inside topic cards instead of escaping the card bounds on mobile.

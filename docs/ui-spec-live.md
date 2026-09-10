@@ -34,6 +34,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Ateneo (compatibility): authenticated platform root route `/` redirects to `/ateneo` so shell home entry and logo navigation land on the Ateneo feed.
 - Ateneo (backend-integrated): `/ateneo/groups` uses backend endpoint `GET /api/v1/ateneo/groups?tab=...` for tabbed group browsing (`Tus grupos`, `Descubrir`, `Grupos que administrás`).
 - Ateneo (backend-integrated): group/topic/detail flows (`/ateneo/groups/:groupId`, `/ateneo/groups/:groupId/new-topic`, `/ateneo/groups/:groupId/topics/:topicId`) are runtime-backed by `GET/POST /api/v1/ateneo/groups/:groupId/topics*` and topic-comment endpoints.
+- Ateneo (backend-integrated): topic detail overflow menu now supports creator-only topic deletion (`DELETE /api/v1/ateneo/groups/:groupId/topics/:topicId`), rendered above `Denunciar publicación`; non-authors continue seeing report-only behavior.
 - Ateneo (backend-integrated): the new-topic composer now supports real image and PDF attachments for topics, with backend persistence, download routing, and rendered attachment metadata in feed/detail views.
 - Ateneo (backend-integrated): non-member users can open a group detail preview (`/ateneo/groups/:groupId`) to read basic metadata (name, description, rules) and join in place via `POST /api/v1/ateneo/groups/:groupId/join`; topics remain member-only until join succeeds.
 - Ateneo (backend-integrated): group settings can restrict topic creation and commenting to admins only; the frontend hides the corresponding CTAs and the backend rejects bypass attempts for those actions.
@@ -76,6 +77,11 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-09-10 - Creator-only topic deletion
+- Added backend endpoint `DELETE /api/v1/ateneo/groups/:groupId/topics/:topicId` for soft-deleting topics.
+- Enforced authorization so only the topic creator can delete it.
+- Updated topic detail three-dot menu to show `Eliminar publicación` only for the topic creator, positioned above `Denunciar publicación`.
+
 ### 2026-09-10 - Root route redirects to Ateneo
 - Updated authenticated platform root route behavior so `/` redirects to `/ateneo`.
 - This removes the legacy root feed surface from top-left logo/home navigation while keeping `/ateneo/feed` compatibility redirect behavior.
