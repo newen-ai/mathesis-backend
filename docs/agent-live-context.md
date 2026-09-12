@@ -14,6 +14,44 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-12 12:23 -0300 - Topbar notifications count immediate sync
+- Agent: GitHub Copilot
+- Summary: Fixed stale topbar notifications unread count by introducing a shared frontend event for unread-count updates and emitting it from `/notificaciones` load/read/read-all actions so the topbar badge updates immediately instead of waiting for polling.
+- Files changed:
+  - ../mathesis-ui/src/lib/api/notifications.ts
+  - ../mathesis-ui/src/app/(platform)/notificaciones/page.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual QA: click an unread notification and `Marcar todo leído` in `/notificaciones`, then confirm topbar count updates instantly on desktop and mobile.
+
+### 2026-09-12 12:21 -0300 - Mobile bell restored as icon-only
+- Agent: GitHub Copilot
+- Summary: Re-added the mobile topbar notifications bell beside the hamburger as an icon-only action (no boxed container), preserving navigation to `/notificaciones` and unread badge behavior.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual mobile visual check to confirm bell spacing/alignment next to the hamburger on light/dark themes.
+
+### 2026-09-12 12:21 -0300 - Removed mobile topbar bell container
+- Agent: GitHub Copilot
+- Summary: Removed the mobile notifications bell button container from the topbar, leaving only the hamburger action in that area.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - No further action required for this rollback.
+
+### 2026-09-12 12:19 -0300 - Mobile topbar notifications bell shortcut
+- Agent: GitHub Copilot
+- Summary: Added a mobile topbar bell action beside the hamburger menu, wired to `/notificaciones`, with unread-count badge parity using the existing topbar notification counter.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual mobile QA on `/ateneo`, `/mensajes`, and `/perfil` to confirm bell placement, badge visibility, and navigation behavior in light/dark themes.
+
 ### 2026-09-12 12:15 -0300 - Removed unused default feed seed constants
 - Agent: GitHub Copilot
 - Summary: Removed the unused `defaultFeedPosts` seed array from UI platform constants and dropped the now-unused `FeedPost` type import.
