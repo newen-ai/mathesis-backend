@@ -14,6 +14,53 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-12 11:52 -0300 - Removed temporary Ateneo title score debug UI
+- Agent: GitHub Copilot
+- Summary: Removed the temporary hot-score display next to Ateneo topic titles and cleaned the debug field from backend/UI topic response types while keeping Reddit-like ranking behavior unchanged.
+- Files changed:
+  - src/modules/ateneo/ateneo.service.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicCard.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Continue tuning Reddit-like ranking weights if needed based on observed feed ordering.
+
+### 2026-09-12 11:46 -0300 - Ateneo hot-score debug label beside titles
+- Agent: GitHub Copilot
+- Summary: Exposed the backend-computed Ateneo hot score in topic payloads and temporarily rendered it next to each topic title for debugging ranking behavior in both feed and group views.
+- Files changed:
+  - src/modules/ateneo/ateneo.service.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicCard.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Remove the temporary title score label after ranking validation is complete.
+  - Optionally gate score exposure behind a debug environment flag if needed beyond local testing.
+
+### 2026-09-12 11:43 -0300 - Ateneo Reddit-like hot ranking
+- Agent: GitHub Copilot
+- Summary: Replaced static Ateneo topic sorting with a single backend-controlled Reddit-like hot score that mixes recency decay, reactions, and weighted comment count; applied consistently to both `/ateneo/feed` and `/ateneo/groups/:groupId/topics`.
+- Files changed:
+  - src/modules/ateneo/ateneo.service.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual QA in `/ateneo` and group feeds with old/high-engagement topics versus recent/low-engagement topics to validate hot-ranking behavior.
+
+### 2026-09-12 11:38 -0300 - Ateneo topic ranking aligned + comments weighted
+- Agent: GitHub Copilot
+- Summary: Unified Ateneo topic ordering between general feed and group feeds by using the same engagement-first ranking rule, now considering both reactions and comment counts before recency.
+- Files changed:
+  - src/modules/ateneo/ateneo.service.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual QA in /ateneo and /ateneo/groups/:groupId to validate expected ordering with mixed reaction/comment distributions.
+
 ### 2026-09-12 10:28 -0300 - Mensajes group header member names + modal
 - Agent: GitHub Copilot
 - Summary: Replaced group header count-only secondary text with participant-name preview (truncated with ellipsis when long) and added a clickable group-header members modal with overlay, close actions, and profile images.

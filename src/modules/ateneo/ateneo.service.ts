@@ -76,6 +76,9 @@ const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 const MAX_TOPIC_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024;
 const MAX_TOPIC_ATTACHMENTS = 5;
+const DEFAULT_ATENEO_HOT_GRAVITY = 1.8;
+const DEFAULT_ATENEO_HOT_COMMENT_WEIGHT = 1.5;
+const ATENEO_HOT_FETCH_MULTIPLIER = 4;
 const ALLOWED_TOPIC_ATTACHMENT_MIME_TYPES = new Set([
   "application/pdf",
   "image/jpeg",
@@ -672,6 +675,147 @@ async function loadCommentById(commentId: string) {
   });
 }
 
+function buildTopicInclude(currentUserId: string) {
+  return {
+    group: {
+      select: {
+        id: true,
+        name: true
+      }
+    },
+    author: {
+      select: {
+        id: true,
+        email: true,
+        profile: {
+          where: { deletedAt: null },
+          select: {
+            firstName: true,
+            lastName: true,
+            profileImageUrl: true
+          }
+        }
+      }
+    },
+    reactions: {
+      where: {
+        userId: currentUserId
+      },
+      select: {
+        userId: true,
+        reactionValue: true
+      }
+    },
+    attachments: {
+      where: {
+        deletedAt: null
+      },
+      select: {
+        id: true,
+        fileName: true,
+        mimeType: true,
+        sizeBytes: true
+      },
+      orderBy: {
+        createdAt: "asc" as const
+      }
+    }
+  };
+}
+
+async function loadTopicsByIdsInOrder(
+  topicRows: Array<{ id: string; hotScore: number }>,
+  currentUserId: string,
+  blockedUserIds: Set<string>,
+  scope: { type: "feed" } | { type: "group"; groupId: string }
+): Promise<AteneoTopicSummary[]> {
+  if (topicRows.length === 0) {
+    return [];
+  }
+
+  const topicIds = topicRows.map((row) => row.id);
+
+  const blockedUserIdNotInFilter = blockService.buildBlockedUserIdNotInFilter(blockedUserIds);
+
+  const topics = await prisma.ateneoTopic.findMany({
+    where: {
+      id: {
+        in: topicIds
+      },
+      ...(blockedUserIdNotInFilter
+        ? {
+            authorUserId: blockedUserIdNotInFilter
+          }
+        : {}),
+      deletedAt: null,
+      group: {
+        deletedAt: null,
+        ...(scope.type === "feed"
+          ? {
+              memberships: {
+                some: {
+                  userId: currentUserId,
+                  deletedAt: null,
+                  leftAt: null
+                }
+              }
+            }
+          : {
+              id: scope.groupId
+            })
+      }
+    },
+    include: buildTopicInclude(currentUserId)
+  });
+
+  const byId = new Map(topics.map((topic) => [topic.id, topic]));
+
+  return topicIds
+    .map((topicId) => byId.get(topicId))
+    .filter((topic): topic is NonNullable<typeof topic> => Boolean(topic))
+    .map((topic) => mapTopicSummary(topic, currentUserId));
+}
+
+async function loadHotTopicRows(
+  currentUserId: string,
+  limit: number,
+  blockedUserIds: Set<string>,
+  scope: { type: "feed" } | { type: "group"; groupId: string }
+): Promise<Array<{ id: string; hotScore: number }>> {
+  const blockedUserIdsArray = Array.from(blockedUserIds);
+
+  const scoredRows = await prisma.$queryRaw<Array<{ id: string; hot_score: number }>>(Prisma.sql`
+    SELECT
+      t.id,
+      (
+        ((GREATEST(t.reaction_count, 0)::double precision + (GREATEST(t.comment_count, 0)::double precision * ${DEFAULT_ATENEO_HOT_COMMENT_WEIGHT})) - 1.0)
+        /
+        POWER(((EXTRACT(EPOCH FROM (NOW() - t.created_at)) / 3600.0) + 2.0), ${DEFAULT_ATENEO_HOT_GRAVITY})
+      ) AS hot_score
+    FROM ateneo_topics t
+    INNER JOIN ateneo_groups g ON g.id = t.group_id
+    ${scope.type === "feed"
+      ? Prisma.sql`INNER JOIN ateneo_group_members gm ON gm.group_id = g.id`
+      : Prisma.empty}
+    WHERE t.deleted_at IS NULL
+      AND g.deleted_at IS NULL
+      ${scope.type === "feed"
+        ? Prisma.sql`AND gm.user_id = ${currentUserId} AND gm.deleted_at IS NULL AND gm.left_at IS NULL`
+        : Prisma.sql`AND t.group_id = ${scope.groupId}`}
+      ${blockedUserIdsArray.length > 0
+        ? Prisma.sql`AND t.author_user_id NOT IN (${Prisma.join(blockedUserIdsArray)})`
+        : Prisma.empty}
+    ORDER BY hot_score DESC,
+    t.created_at DESC
+    LIMIT ${limit * ATENEO_HOT_FETCH_MULTIPLIER}
+  `);
+
+  return scoredRows.map((row) => ({
+    id: row.id,
+    hotScore: row.hot_score
+  }));
+}
+
 export const ateneoService = {
   async createGroup(currentUserId: string, body: CreateAteneoGroupBody): Promise<CreateAteneoGroupOutput> {
     const baseSlug = toSlug(body.name) || "grupo";
@@ -797,78 +941,11 @@ export const ateneoService = {
   async listFeed(currentUserId: string, limit?: number): Promise<ListAteneoFeedOutput> {
     const take = clampLimit(limit);
     const blockedUserIds = await blockService.getBlockedUserIdsFor(currentUserId);
-    const blockedUserIdNotInFilter = blockService.buildBlockedUserIdNotInFilter(blockedUserIds);
-
-    const topics = await prisma.ateneoTopic.findMany({
-      where: {
-        deletedAt: null,
-        ...(blockedUserIdNotInFilter
-          ? {
-              authorUserId: blockedUserIdNotInFilter
-            }
-          : {}),
-        group: {
-          deletedAt: null,
-          memberships: {
-            some: {
-              userId: currentUserId,
-              deletedAt: null,
-              leftAt: null
-            }
-          }
-        }
-      },
-      include: {
-        group: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        author: {
-          select: {
-            id: true,
-            email: true,
-            profile: {
-              where: { deletedAt: null },
-              select: {
-                firstName: true,
-                lastName: true,
-                profileImageUrl: true
-              }
-            }
-          }
-        },
-        reactions: {
-          where: {
-            userId: currentUserId
-          },
-          select: {
-            userId: true,
-            reactionValue: true
-          }
-        },
-        attachments: {
-          where: {
-            deletedAt: null
-          },
-          select: {
-            id: true,
-            fileName: true,
-            mimeType: true,
-            sizeBytes: true
-          },
-          orderBy: {
-            createdAt: "asc"
-          }
-        }
-      },
-      orderBy: [{ createdAt: "desc" }],
-      take
-    });
+    const topicRows = await loadHotTopicRows(currentUserId, take, blockedUserIds, { type: "feed" });
+    const topics = await loadTopicsByIdsInOrder(topicRows, currentUserId, blockedUserIds, { type: "feed" });
 
     return {
-      topics: topics.map((topic) => mapTopicSummary(topic, currentUserId))
+      topics: topics.slice(0, take)
     };
   },
 
@@ -1490,72 +1567,17 @@ export const ateneoService = {
     await ensureGroupAccess(params.groupId, currentUserId);
     const take = clampLimit(limit);
     const blockedUserIds = await blockService.getBlockedUserIdsFor(currentUserId);
-    const blockedUserIdNotInFilter = blockService.buildBlockedUserIdNotInFilter(blockedUserIds);
-
-    const topics = await prisma.ateneoTopic.findMany({
-      where: {
-        groupId: params.groupId,
-        ...(blockedUserIdNotInFilter
-          ? {
-              authorUserId: blockedUserIdNotInFilter
-            }
-          : {}),
-        deletedAt: null,
-        group: {
-          deletedAt: null
-        }
-      },
-      include: {
-        group: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        author: {
-          select: {
-            id: true,
-            email: true,
-            profile: {
-              where: { deletedAt: null },
-              select: {
-                firstName: true,
-                lastName: true,
-                profileImageUrl: true
-              }
-            }
-          }
-        },
-        reactions: {
-          where: {
-            userId: currentUserId
-          },
-          select: {
-            userId: true,
-            reactionValue: true
-          }
-        },
-        attachments: {
-          where: {
-            deletedAt: null
-          },
-          select: {
-            id: true,
-            fileName: true,
-            mimeType: true,
-            sizeBytes: true
-          },
-          orderBy: {
-            createdAt: "asc"
-          }
-        }
-      },
-      orderBy: [{ reactionCount: "desc" }, { createdAt: "desc" }],
-      take
+    const topicRows = await loadHotTopicRows(currentUserId, take, blockedUserIds, {
+      type: "group",
+      groupId: params.groupId
+    });
+    const topics = await loadTopicsByIdsInOrder(topicRows, currentUserId, blockedUserIds, {
+      type: "group",
+      groupId: params.groupId
     });
 
     return {
-      topics: topics.map((topic) => mapTopicSummary(topic, currentUserId))
+      topics: topics.slice(0, take)
     };
   },
 
