@@ -68,6 +68,7 @@ export type AteneoTopicSummary = {
   reactions: number;
   comments: number;
   isRecommended: boolean;
+  hotScore?: number;
   createdAt: string;
   updatedAt: string;
   currentUserReactionValue: "value" | null;

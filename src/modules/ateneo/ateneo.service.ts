@@ -10,6 +10,7 @@ import {
 import { AppError } from "../../common/errors/app-error";
 import { prisma } from "../../common/prisma";
 import { StatusCodes } from "http-status-codes";
+import { env } from "../../config/env";
 import { blockService } from "../block/block.service";
 import type {
   AteneoCommentParams,
@@ -79,6 +80,7 @@ const MAX_TOPIC_ATTACHMENTS = 5;
 const DEFAULT_ATENEO_HOT_GRAVITY = 1.8;
 const DEFAULT_ATENEO_HOT_COMMENT_WEIGHT = 1.5;
 const ATENEO_HOT_FETCH_MULTIPLIER = 4;
+const SHOULD_EXPOSE_ATENEO_HOT_SCORE = env.NODE_ENV === "local" || env.NODE_ENV === "dev";
 const ALLOWED_TOPIC_ATTACHMENT_MIME_TYPES = new Set([
   "application/pdf",
   "image/jpeg",
@@ -207,7 +209,11 @@ function mapGroupSummary(group: {
   };
 }
 
-function mapTopicSummary(topic: NonNullable<TopicWithRelations>, currentUserId: string): AteneoTopicSummary {
+function mapTopicSummary(
+  topic: NonNullable<TopicWithRelations>,
+  currentUserId: string,
+  hotScore?: number
+): AteneoTopicSummary {
   const author = mapUserSummary(topic.author);
   const currentUserReaction = topic.reactions.find((item) => item.userId === currentUserId);
 
@@ -223,6 +229,7 @@ function mapTopicSummary(topic: NonNullable<TopicWithRelations>, currentUserId: 
     reactions: topic.reactionCount,
     comments: topic.commentCount,
     isRecommended: topic.isRecommended,
+    ...(SHOULD_EXPOSE_ATENEO_HOT_SCORE && typeof hotScore === "number" ? { hotScore } : {}),
     createdAt: topic.createdAt.toISOString(),
     updatedAt: topic.updatedAt.toISOString(),
     currentUserReactionValue: currentUserReaction?.reactionValue ?? null,
@@ -734,6 +741,7 @@ async function loadTopicsByIdsInOrder(
   }
 
   const topicIds = topicRows.map((row) => row.id);
+  const hotScoreById = new Map(topicRows.map((row) => [row.id, row.hotScore]));
 
   const blockedUserIdNotInFilter = blockService.buildBlockedUserIdNotInFilter(blockedUserIds);
 
@@ -773,7 +781,7 @@ async function loadTopicsByIdsInOrder(
   return topicIds
     .map((topicId) => byId.get(topicId))
     .filter((topic): topic is NonNullable<typeof topic> => Boolean(topic))
-    .map((topic) => mapTopicSummary(topic, currentUserId));
+    .map((topic) => mapTopicSummary(topic, currentUserId, hotScoreById.get(topic.id)));
 }
 
 async function loadHotTopicRows(

@@ -14,6 +14,20 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-12 11:58 -0300 - Ateneo score debug gated to local/dev only
+- Agent: GitHub Copilot
+- Summary: Re-enabled temporary topic score display for debugging, but gated backend exposure to local/dev environments only. In test/prod, score is neither included in API payloads nor rendered in UI.
+- Files changed:
+  - src/modules/ateneo/ateneo.service.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoFeedMiddle.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicCard.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Remove this temporary score display once ranking tuning is complete.
+
 ### 2026-09-12 11:52 -0300 - Removed temporary Ateneo title score debug UI
 - Agent: GitHub Copilot
 - Summary: Removed the temporary hot-score display next to Ateneo topic titles and cleaned the debug field from backend/UI topic response types while keeping Reddit-like ranking behavior unchanged.
