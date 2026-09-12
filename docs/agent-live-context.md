@@ -14,6 +14,120 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-12 11:05 -0300 - Ateneo left-rail group search disabled placeholder
+- Agent: GitHub Copilot
+- Summary: Replaced the non-functional left-rail group search copy with an explicitly disabled placeholder labeled `Próximamente` to avoid suggesting active search behavior before feature definition.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoExploreGroups.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Re-enable this control as an input once group-search requirements and endpoint behavior are defined.
+
+### 2026-09-12 09:46 -0300 - Ateneo admin deleted-topic preview modal
+- Agent: GitHub Copilot
+- Summary: Added admin-only preview for removed topics so moderators can click a deleted topic from moderation tabs and inspect full content in a modal before deciding restore actions.
+- Files changed:
+  - src/modules/ateneo/ateneo.schemas.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - src/modules/ateneo/ateneo.controller.ts
+  - src/modules/ateneo/ateneo.routes.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupMembersPanel.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoRemovedTopicPreviewModal.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual QA in light/dark themes for modal readability and overlay close behavior from the `Temas` moderation tab.
+  - Consider adding removed-comment preview parity if moderators need full comment thread context before restore.
+
+### 2026-09-12 09:32 -0300 - Split Ateneo moderation migration chain (applied-first safe)
+- Agent: GitHub Copilot
+- Summary: Re-split Ateneo moderation migrations so the already-applied first migration remains expulsion + expulsion-audit oriented, and moved unified moderation-audit consolidation into the second migration with data backfill and cleanup steps.
+- Files changed:
+  - prisma/migrations/20260911120000_add_ateneo_group_expulsions/migration.sql
+  - prisma/migrations/20260911143000_add_ateneo_content_moderation_audit/migration.sql
+  - docs/agent-live-context.md
+- Next actions:
+  - If the first migration checksum mismatch still appears locally, restore that file from your exact previously-applied copy (or reconcile with `prisma migrate resolve`) before running new migrations.
+  - Run the second migration to move audit data into `ateneo_moderation_audits` and drop legacy moderation audit tables/enums.
+
+### 2026-09-11 21:09 -0300 - Ateneo moderation unified audit + topic/comment restore
+- Agent: GitHub Copilot
+- Summary: Refactored Ateneo moderation to the requested 2-table model by replacing separate expulsion/content audit tables with one unified moderation audit stream, kept expulsion state table, and added topic/comment restore flows (backend endpoints + admin UI surface for removed content restore).
+- Files changed:
+  - prisma/schema.prisma
+  - prisma/migrations/20260911120000_add_ateneo_group_expulsions/migration.sql
+  - src/modules/ateneo/ateneo.schemas.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - src/modules/ateneo/ateneo.routes.ts
+  - src/modules/ateneo/ateneo.controller.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupMembersPanel.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Run Prisma migration and regenerate Prisma client in the target environment before QA/deploy.
+  - Verify admin restore UX for removed topics/comments and confirm comment counters remain consistent after remove/restore cycles.
+
+### 2026-09-11 04:35 -0300 - Ateneo admin topic/comment moderation removal
+- Agent: GitHub Copilot
+- Summary: Implemented admin/owner moderation removal flows for topics and comments with optional-reason modal in topic detail menus, added dedicated content moderation audit persistence separate from expulsion tables, and preserved thread continuity by rendering deleted-comment placeholders when visible replies remain.
+- Files changed:
+  - prisma/schema.prisma
+  - prisma/migrations/20260911143000_add_ateneo_content_moderation_audit/migration.sql
+  - src/modules/ateneo/ateneo.schemas.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - src/modules/ateneo/ateneo.routes.ts
+  - src/modules/ateneo/ateneo.controller.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoContentModerationModal.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Run the new migration in each target environment before QA/deploy.
+  - Manually verify topic/comment moderation remove UX and resulting placeholders in light/dark themes.
+
+### 2026-09-11 03:55 -0300 - Expelled user join CTA disable + hover guidance
+- Agent: GitHub Copilot
+- Summary: Added an explicit group payload flag for active expulsion state and updated Ateneo non-member join CTAs to be disabled when the current user is expelled, including hover copy explaining they were kicked out and inline helper text. Also added frontend toast feedback for join failures.
+- Files changed:
+  - src/modules/ateneo/ateneo.types.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupFeed.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupInfoPanel.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupMembersPanel.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual browser QA with an expelled user on `/ateneo/groups/:groupId`, `/info`, and `/members` to confirm disabled CTA and hover text behavior.
+
+### 2026-09-11 03:25 -0300 - Ateneo member expulsion and restore flow
+- Agent: GitHub Copilot
+- Summary: Implemented Ateneo moderation actions to kick members from members list and topic/comment overflow menus, added optional reason modal, enforced rejoin blocking for expelled users, created kicked-user notifications, added owner/admin hierarchy protections, and shipped admin-panel restore plus persistent DB audit trail.
+- Files changed:
+  - prisma/schema.prisma
+  - prisma/migrations/20260911120000_add_ateneo_group_expulsions/migration.sql
+  - src/modules/ateneo/ateneo.schemas.ts
+  - src/modules/ateneo/ateneo.types.ts
+  - src/modules/ateneo/ateneo.routes.ts
+  - src/modules/ateneo/ateneo.controller.ts
+  - src/modules/ateneo/ateneo.service.ts
+  - src/modules/notification/notification.types.ts
+  - ../mathesis-ui/src/lib/api/ateneo.ts
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoKickMemberModal.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoGroupMembersPanel.tsx
+  - ../mathesis-ui/src/app/(platform)/ateneo/_components/AteneoTopicDiscussion.tsx
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Run Prisma migration in the target environment before deployment.
+  - Perform manual browser QA in light/dark themes for members list and topic/comment overflow moderation menus.
+  - Validate notification visual parity against screenshot with real kicked-user data.
+
 ### 2026-09-10 06:05 -0300 - Compact published mosaic height
 - Agent: GitHub Copilot
 - Summary: Reduced published-topic image mosaic height to a compact responsive block so attachment sections stop feeling oversized while preserving usable visual preview space.
