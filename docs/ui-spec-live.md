@@ -46,6 +46,7 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Blocked users (backend + frontend in progress): one-sided block action with mutual enforcement while active. DMs keep history but block new direct sends both directions; group chats still deliver messages but suppress blocked-pair mention notifications; profile URL + global search + feed author surfaces + Ateneo members hide blocked users; Ateneo topics/comments from blocked pairs are hidden both directions with deleted-placeholder behavior for hidden parent comments that still have visible replies; blocked pairs cannot connect while active and existing connections are removed on block; unblock restores normal access; direct-chat composer in `/mensajes` is disabled when the pair is blocked and shows directional hover guidance.
 - Profile UI action menu: when viewing another user's profile (`/perfil?userId=...`), show a three-dot actions trigger with `Bloquear` and `Denunciar`; `Bloquear` calls backend block endpoint and `Denunciar` remains a placeholder.
 - Notifications (backend-integrated first pass): `/notificaciones` uses backend-backed notifications with persistent read state, screenshot-aligned unread/read grouping, inline linkable bold segments, `Marcar todo leído`, and desktop quick links. The first integrated pass bootstraps representative notifications for each user until real event generation is wired.
+- Messages (frontend UX): group-conversation headers now show participant names instead of member count using a truncated inline preview with ellipsis, and tapping/clicking the group header opens a members modal with overlay and profile images.
 - Platform navigation (topbar redesign desktop pass): desktop topbar now follows the new icon/menu model with role-gated `Admin`, optional `ME Admin` shortcut, `Nexum` and `Agora` dropdown menus, avatar profile dropdown, and unread red-count badges for `Mensajes` + `Notificaciones` (polling every 30 seconds, capped at `99+`).
 - Platform navigation (topbar redesign mobile pass): implemented with a right-side mobile mega-menu drawer, single-open accordion behavior across sections, screenshot-aligned Nexum/Agora/Mathesis content groups, disabled `Próximamente` placeholders, and live `Solicitar Membresía` action wiring for Mensa Empresarios (hidden once user already has badge).
 - Platform navigation (mobile footer redesign pass): implemented for signed-in mobile routes with one shared footer mounted at platform layout level, Nexum/Agora overlays with dim backdrop from footer taps, direct Mensajes/Perfil routing, and `Crear` wired to a global topic-creation route.
@@ -79,6 +80,10 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-09-12 - Messages group header names + members modal
+- Updated group-chat header metadata to display participant names (with truncation and ellipsis) instead of count-only copy.
+- Added a clickable group-header interaction that opens an overlay modal listing all group members with profile images.
+
 ### 2026-09-12 - Ateneo admin deleted-topic modal preview
 - Added an admin-only deleted-topic preview flow from Ateneo moderation tabs: clicking a removed topic opens a modal with full topic content instead of requiring route-level access.
 - Added backend endpoint to fetch removed topic preview payload only for group moderators/admins.

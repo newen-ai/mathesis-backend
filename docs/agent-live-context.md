@@ -14,9 +14,17 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-=======
+### 2026-09-12 10:28 -0300 - Mensajes group header member names + modal
+- Agent: GitHub Copilot
+- Summary: Replaced group header count-only secondary text with participant-name preview (truncated with ellipsis when long) and added a clickable group-header members modal with overlay, close actions, and profile images.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/mensajes/page.tsx
+  - ../mathesis-ui/docs/ui-agent-live-guidelines.md
+  - docs/ui-spec-live.md
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual QA in /mensajes for long-member-name groups on desktop and mobile, including light/dark theme checks and overlay close behavior (outside click + Esc).
+
 ### 2026-09-12 10:17 -0300 - Account configuration email row
 - Agent: GitHub Copilot
 - Summary: Added a read-only email row to the Cuenta section in Configuración by loading the current user email from the existing /profile/me endpoint through a shared profile API helper.
@@ -26,8 +34,7 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
   - docs/agent-live-context.md
 - Next actions:
   - Manual UI check on /account/configuration in light and dark themes to confirm spacing and value readability for long email addresses.
-
->>>>>>> Stashed changes
+  
 ### 2026-09-12 11:05 -0300 - Ateneo left-rail group search disabled placeholder
 - Agent: GitHub Copilot
 - Summary: Replaced the non-functional left-rail group search copy with an explicitly disabled placeholder labeled `Próximamente` to avoid suggesting active search behavior before feature definition.
@@ -37,8 +44,6 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next actions:
   - Re-enable this control as an input once group-search requirements and endpoint behavior are defined.
 
-=======
->>>>>>> 070483a26a6a986c38de90166b71e2348426f992
 ### 2026-09-12 09:46 -0300 - Ateneo admin deleted-topic preview modal
 - Agent: GitHub Copilot
 - Summary: Added admin-only preview for removed topics so moderators can click a deleted topic from moderation tabs and inspect full content in a modal before deciding restore actions.
