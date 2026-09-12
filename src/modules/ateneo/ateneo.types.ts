@@ -18,7 +18,9 @@ export type AteneoGroupSummary = {
   icon: string;
   isOfficial: boolean;
   isMember: boolean;
+  isJoinBlockedByExpulsion: boolean;
   isAdmin: boolean;
+  isOwner: boolean;
   isPinned: boolean;
 };
 
@@ -34,8 +36,24 @@ export type AteneoGroupMemberSummary = {
   profileImageUrl: string | null;
   initials: string;
   isAdmin: boolean;
+  isOwner: boolean;
   isPinned: boolean;
   joinedAt: string;
+};
+
+export type AteneoGroupExpulsionSummary = {
+  userId: string;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+  initials: string;
+  reason: string | null;
+  kickedAt: string;
+  kickedBy: AteneoUserSummary;
+  sourceContext: "MEMBERS_LIST" | "TOPIC" | "COMMENT" | "ADMIN_PANEL";
+  sourceTopicId: string | null;
+  sourceCommentId: string | null;
+  targetWasAdmin: boolean;
 };
 
 export type AteneoTopicSummary = {
@@ -99,6 +117,38 @@ export type ListAteneoGroupMembersOutput = {
   members: AteneoGroupMemberSummary[];
 };
 
+export type ListAteneoGroupExpulsionsOutput = {
+  expulsions: AteneoGroupExpulsionSummary[];
+};
+
+export type KickAteneoGroupMemberOutput = {
+  removedUserId: string;
+};
+
+export type RestoreAteneoGroupMemberOutput = {
+  restoredUserId: string;
+};
+
+export type AteneoRemovedTopicSummary = {
+  topicId: string;
+  title: string;
+  author: AteneoUserSummary;
+  deletedAt: string;
+};
+
+export type AteneoRemovedCommentSummary = {
+  commentId: string;
+  topicId: string;
+  contentPreview: string;
+  author: AteneoUserSummary;
+  deletedAt: string;
+};
+
+export type ListAteneoRemovedContentOutput = {
+  topics: AteneoRemovedTopicSummary[];
+  comments: AteneoRemovedCommentSummary[];
+};
+
 export type ListAteneoFeedOutput = {
   topics: AteneoTopicSummary[];
 };
@@ -111,7 +161,20 @@ export type GetAteneoTopicOutput = {
   topic: AteneoTopicSummary;
 };
 
+export type GetRemovedAteneoTopicPreviewOutput = {
+  topic: AteneoTopicSummary;
+  deletedAt: string;
+};
+
 export type DeleteAteneoTopicOutput = {
+  topicId: string;
+};
+
+export type ModerateRemoveAteneoTopicOutput = {
+  topicId: string;
+};
+
+export type ModerateRestoreAteneoTopicOutput = {
   topicId: string;
 };
 
@@ -132,6 +195,14 @@ export type DownloadAteneoTopicAttachmentOutput = {
 
 export type CreateAteneoTopicCommentOutput = {
   comment: AteneoTopicCommentSummary;
+};
+
+export type ModerateRemoveAteneoCommentOutput = {
+  commentId: string;
+};
+
+export type ModerateRestoreAteneoCommentOutput = {
+  commentId: string;
 };
 
 export type ToggleAteneoTopicReactionOutput = {

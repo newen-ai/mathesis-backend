@@ -7,12 +7,23 @@ import type {
   AteneoTopicAttachmentParams,
   AteneoTopicParams,
   CreateAteneoGroupBody,
+  KickAteneoGroupMemberBody,
+  KickAteneoGroupMemberParams,
   CreateAteneoTopicBody,
   CreateAteneoTopicCommentBody,
   ListAteneoFeedQuery,
+  ListAteneoGroupExpulsionsParams,
   ListAteneoGroupMembersParams,
+  ListAteneoRemovedContentParams,
   ListAteneoGroupsQuery,
   ListAteneoTopicsQuery,
+  ModerateRemoveAteneoCommentBody,
+  ModerateRemoveAteneoCommentParams,
+  ModerateRemoveAteneoTopicBody,
+  ModerateRestoreAteneoCommentBody,
+  ModerateRestoreAteneoCommentParams,
+  ModerateRestoreAteneoTopicBody,
+  RestoreAteneoGroupMemberParams,
   UpdateAteneoGroupBody,
   ToggleAteneoTopicCommentReactionBody,
   ToggleAteneoTopicReactionBody
@@ -98,6 +109,55 @@ export const listAteneoGroupMembers: RequestHandler = async (req, res) => {
   });
 };
 
+export const listAteneoGroupExpulsions: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
+  const params = req.params as ListAteneoGroupExpulsionsParams;
+  const result = await ateneoService.listGroupExpulsions(currentUserId, params);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "ATENEO_GROUP_EXPULSIONS_LISTED",
+    data: result
+  });
+};
+
+export const listAteneoRemovedContent: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
+  const params = req.params as ListAteneoRemovedContentParams;
+  const result = await ateneoService.listRemovedContent(currentUserId, params);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "ATENEO_REMOVED_CONTENT_LISTED",
+    data: result
+  });
+};
+
+export const kickAteneoGroupMember: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
+  const params = req.params as KickAteneoGroupMemberParams;
+  const body = req.body as KickAteneoGroupMemberBody;
+  const result = await ateneoService.kickGroupMember(currentUserId, params, body);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "ATENEO_GROUP_MEMBER_KICKED",
+    data: result
+  });
+};
+
+export const restoreAteneoGroupMember: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
+  const params = req.params as RestoreAteneoGroupMemberParams;
+  const result = await ateneoService.restoreGroupMember(currentUserId, params);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "ATENEO_GROUP_MEMBER_RESTORED",
+    data: result
+  });
+};
+
 export const joinAteneoGroup: RequestHandler = async (req, res) => {
   const currentUserId = req.user?.sub as string;
   const params = req.params as AteneoGroupParams;
@@ -162,6 +222,18 @@ export const getAteneoTopic: RequestHandler = async (req, res) => {
   });
 };
 
+export const getRemovedAteneoTopicPreview: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
+  const params = req.params as AteneoTopicParams;
+  const result = await ateneoService.getRemovedTopicPreview(currentUserId, params);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "ATENEO_REMOVED_TOPIC_PREVIEW_FOUND",
+    data: result
+  });
+};
+
 export const deleteAteneoTopic: RequestHandler = async (req, res) => {
   const currentUserId = req.user?.sub as string;
   const params = req.params as AteneoTopicParams;
@@ -170,6 +242,32 @@ export const deleteAteneoTopic: RequestHandler = async (req, res) => {
   res.status(StatusCodes.OK).json({
     success: true,
     message: "ATENEO_TOPIC_DELETED",
+    data: result
+  });
+};
+
+export const moderateRemoveAteneoTopic: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
+  const params = req.params as AteneoTopicParams;
+  const body = req.body as ModerateRemoveAteneoTopicBody;
+  const result = await ateneoService.moderateRemoveTopic(currentUserId, params, body);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "ATENEO_TOPIC_REMOVED_BY_MODERATION",
+    data: result
+  });
+};
+
+export const moderateRestoreAteneoTopic: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
+  const params = req.params as AteneoTopicParams;
+  const body = req.body as ModerateRestoreAteneoTopicBody;
+  const result = await ateneoService.moderateRestoreTopic(currentUserId, params, body);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "ATENEO_TOPIC_RESTORED_BY_MODERATION",
     data: result
   });
 };
@@ -195,6 +293,32 @@ export const createAteneoTopicComment: RequestHandler = async (req, res) => {
   res.status(StatusCodes.CREATED).json({
     success: true,
     message: "ATENEO_TOPIC_COMMENT_CREATED",
+    data: result
+  });
+};
+
+export const moderateRemoveAteneoTopicComment: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
+  const params = req.params as ModerateRemoveAteneoCommentParams;
+  const body = req.body as ModerateRemoveAteneoCommentBody;
+  const result = await ateneoService.moderateRemoveComment(currentUserId, params, body);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "ATENEO_COMMENT_REMOVED_BY_MODERATION",
+    data: result
+  });
+};
+
+export const moderateRestoreAteneoTopicComment: RequestHandler = async (req, res) => {
+  const currentUserId = req.user?.sub as string;
+  const params = req.params as ModerateRestoreAteneoCommentParams;
+  const body = req.body as ModerateRestoreAteneoCommentBody;
+  const result = await ateneoService.moderateRestoreComment(currentUserId, params, body);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: "ATENEO_COMMENT_RESTORED_BY_MODERATION",
     data: result
   });
 };
