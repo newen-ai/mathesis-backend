@@ -14,6 +14,7 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+<<<<<<< HEAD
 ### 2026-09-12 11:05 -0300 - Ateneo left-rail group search disabled placeholder
 - Agent: GitHub Copilot
 - Summary: Replaced the non-functional left-rail group search copy with an explicitly disabled placeholder labeled `Próximamente` to avoid suggesting active search behavior before feature definition.
@@ -23,6 +24,8 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Next actions:
   - Re-enable this control as an input once group-search requirements and endpoint behavior are defined.
 
+=======
+>>>>>>> 070483a26a6a986c38de90166b71e2348426f992
 ### 2026-09-12 09:46 -0300 - Ateneo admin deleted-topic preview modal
 - Agent: GitHub Copilot
 - Summary: Added admin-only preview for removed topics so moderators can click a deleted topic from moderation tabs and inspect full content in a modal before deciding restore actions.

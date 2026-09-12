@@ -2,6 +2,7 @@ export type NotificationLeadKindOutput = "INITIALS" | "SYMBOL";
 export type NotificationLeadToneOutput = "NAVY" | "GOLD" | "GREEN" | "RED" | "GRAY" | "TEAL";
 export type NotificationTypeOutput =
   | "POST_REACTION"
+  | "GROUP_MEMBER_KICKED"
   | "BADGE_APPROVED"
   | "ENTERPRISE_APPROVED"
   | "ACCOUNT_BANNED"

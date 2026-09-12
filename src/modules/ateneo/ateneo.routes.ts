@@ -10,13 +10,22 @@ import {
   deleteAteneoTopic,
   downloadAteneoTopicAttachment,
   getAteneoGroup,
+  getRemovedAteneoTopicPreview,
   getAteneoTopic,
   joinAteneoGroup,
+  kickAteneoGroupMember,
+  listAteneoGroupExpulsions,
+  listAteneoRemovedContent,
   listAteneoGroupMembers,
   listAteneoFeed,
   listAteneoGroups,
   listAteneoTopicComments,
   listAteneoTopics,
+  moderateRemoveAteneoTopic,
+  moderateRemoveAteneoTopicComment,
+  moderateRestoreAteneoTopic,
+  moderateRestoreAteneoTopicComment,
+  restoreAteneoGroupMember,
   updateAteneoGroup,
   toggleAteneoTopicCommentReaction,
   toggleAteneoTopicReaction
@@ -27,13 +36,22 @@ import {
   createAteneoTopicSchema,
   deleteAteneoTopicSchema,
   getAteneoGroupSchema,
+  getRemovedAteneoTopicPreviewSchema,
   getAteneoTopicSchema,
   joinAteneoGroupSchema,
+  kickAteneoGroupMemberSchema,
   listAteneoFeedSchema,
+  listAteneoGroupExpulsionsSchema,
+  listAteneoRemovedContentSchema,
   listAteneoGroupMembersSchema,
   listAteneoGroupsSchema,
   listAteneoTopicCommentsSchema,
   listAteneoTopicsSchema,
+  moderateRemoveAteneoTopicCommentSchema,
+  moderateRemoveAteneoTopicSchema,
+  moderateRestoreAteneoTopicCommentSchema,
+  moderateRestoreAteneoTopicSchema,
+  restoreAteneoGroupMemberSchema,
   downloadAteneoTopicAttachmentSchema,
   updateAteneoGroupSchema,
   toggleAteneoTopicCommentReactionSchema,
@@ -60,6 +78,30 @@ ateneoRouter.get(
   validateRequest(listAteneoGroupMembersSchema),
   asyncHandler(listAteneoGroupMembers)
 );
+ateneoRouter.get(
+  "/groups/:groupId/expulsions",
+  requireAuth(),
+  validateRequest(listAteneoGroupExpulsionsSchema),
+  asyncHandler(listAteneoGroupExpulsions)
+);
+ateneoRouter.get(
+  "/groups/:groupId/moderation/removed-content",
+  requireAuth(),
+  validateRequest(listAteneoRemovedContentSchema),
+  asyncHandler(listAteneoRemovedContent)
+);
+ateneoRouter.post(
+  "/groups/:groupId/members/:targetUserId/kick",
+  requireAuth(),
+  validateRequest(kickAteneoGroupMemberSchema),
+  asyncHandler(kickAteneoGroupMember)
+);
+ateneoRouter.post(
+  "/groups/:groupId/members/:targetUserId/restore",
+  requireAuth(),
+  validateRequest(restoreAteneoGroupMemberSchema),
+  asyncHandler(restoreAteneoGroupMember)
+);
 ateneoRouter.post("/groups/:groupId/join", requireAuth(), validateRequest(joinAteneoGroupSchema), asyncHandler(joinAteneoGroup));
 ateneoRouter.patch(
   "/groups/:groupId",
@@ -76,11 +118,29 @@ ateneoRouter.post(
   asyncHandler(createAteneoTopic)
 );
 ateneoRouter.get("/groups/:groupId/topics/:topicId", requireAuth(), validateRequest(getAteneoTopicSchema), asyncHandler(getAteneoTopic));
+ateneoRouter.get(
+  "/groups/:groupId/topics/:topicId/moderation/preview",
+  requireAuth(),
+  validateRequest(getRemovedAteneoTopicPreviewSchema),
+  asyncHandler(getRemovedAteneoTopicPreview)
+);
 ateneoRouter.delete(
   "/groups/:groupId/topics/:topicId",
   requireAuth(),
   validateRequest(deleteAteneoTopicSchema),
   asyncHandler(deleteAteneoTopic)
+);
+ateneoRouter.post(
+  "/groups/:groupId/topics/:topicId/moderation/remove",
+  requireAuth(),
+  validateRequest(moderateRemoveAteneoTopicSchema),
+  asyncHandler(moderateRemoveAteneoTopic)
+);
+ateneoRouter.post(
+  "/groups/:groupId/topics/:topicId/moderation/restore",
+  requireAuth(),
+  validateRequest(moderateRestoreAteneoTopicSchema),
+  asyncHandler(moderateRestoreAteneoTopic)
 );
 ateneoRouter.get(
   "/groups/:groupId/topics/:topicId/attachments/:attachmentId",
@@ -99,6 +159,18 @@ ateneoRouter.post(
   requireAuth(),
   validateRequest(createAteneoTopicCommentSchema),
   asyncHandler(createAteneoTopicComment)
+);
+ateneoRouter.post(
+  "/groups/:groupId/topics/:topicId/comments/:commentId/moderation/remove",
+  requireAuth(),
+  validateRequest(moderateRemoveAteneoTopicCommentSchema),
+  asyncHandler(moderateRemoveAteneoTopicComment)
+);
+ateneoRouter.post(
+  "/groups/:groupId/topics/:topicId/comments/:commentId/moderation/restore",
+  requireAuth(),
+  validateRequest(moderateRestoreAteneoTopicCommentSchema),
+  asyncHandler(moderateRestoreAteneoTopicComment)
 );
 ateneoRouter.post(
   "/groups/:groupId/topics/:topicId/reactions",
