@@ -1,4 +1,12 @@
-import { NotificationLeadKind, NotificationLeadTone, Prisma } from "@prisma/client";
+import {
+  AteneoModerationAction,
+  AteneoModerationSource,
+  AteneoModerationTargetType,
+  NotificationLeadKind,
+  NotificationLeadTone,
+  NotificationType,
+  Prisma
+} from "@prisma/client";
 import { AppError } from "../../common/errors/app-error";
 import { prisma } from "../../common/prisma";
 import { StatusCodes } from "http-status-codes";
@@ -13,7 +21,19 @@ import type {
   CreateAteneoTopicBody,
   CreateAteneoTopicCommentBody,
   CreateAteneoGroupBody,
+  KickAteneoGroupMemberBody,
+  KickAteneoGroupMemberParams,
+  ListAteneoGroupExpulsionsParams,
   ListAteneoGroupMembersParams,
+  ListAteneoRemovedContentParams,
+  ModerateRemoveAteneoCommentBody,
+  ModerateRemoveAteneoCommentParams,
+  ModerateRemoveAteneoTopicBody,
+  ModerateRestoreAteneoCommentBody,
+  ModerateRestoreAteneoCommentParams,
+  ModerateRestoreAteneoTopicBody,
+  RemovedAteneoTopicPreviewParams,
+  RestoreAteneoGroupMemberParams,
   UpdateAteneoGroupBody,
   ToggleAteneoTopicCommentReactionBody,
   ToggleAteneoTopicReactionBody
@@ -21,6 +41,7 @@ import type {
 import type {
   AteneoGroupDetail,
   AteneoGroupMemberSummary,
+  AteneoGroupExpulsionSummary,
   AteneoGroupSummary,
   AteneoTopicAttachmentSummary,
   CreateAteneoGroupOutput,
@@ -31,12 +52,21 @@ import type {
   CreateAteneoTopicCommentOutput,
   CreateAteneoTopicOutput,
   GetAteneoTopicOutput,
+  GetRemovedAteneoTopicPreviewOutput,
   DownloadAteneoTopicAttachmentOutput,
   ListAteneoFeedOutput,
   ListAteneoGroupsOutput,
+  ListAteneoGroupExpulsionsOutput,
   ListAteneoGroupMembersOutput,
+  ListAteneoRemovedContentOutput,
   ListAteneoTopicCommentsOutput,
   ListAteneoTopicsOutput,
+  KickAteneoGroupMemberOutput,
+  ModerateRemoveAteneoCommentOutput,
+  ModerateRemoveAteneoTopicOutput,
+  ModerateRestoreAteneoCommentOutput,
+  ModerateRestoreAteneoTopicOutput,
+  RestoreAteneoGroupMemberOutput,
   UpdateAteneoGroupOutput,
   ToggleAteneoTopicCommentReactionOutput,
   ToggleAteneoTopicReactionOutput
@@ -143,6 +173,7 @@ function mapGroupSummary(group: {
   id: string;
   slug: string;
   name: string;
+  createdByUserId: string;
   description: string | null;
   createTopicsMode: AteneoPermissionMode;
   commentsMode: AteneoPermissionMode;
@@ -151,7 +182,7 @@ function mapGroupSummary(group: {
   icon: string;
   isOfficial: boolean;
   memberships: Array<{ userId: string; isAdmin: boolean; isPinned: boolean }>;
-}, currentUserId: string): AteneoGroupSummary {
+}, currentUserId: string, isJoinBlockedByExpulsion = false): AteneoGroupSummary {
   const membership = group.memberships.find((item) => item.userId === currentUserId);
 
   return {
@@ -166,7 +197,9 @@ function mapGroupSummary(group: {
     icon: group.icon,
     isOfficial: group.isOfficial,
     isMember: Boolean(membership),
+    isJoinBlockedByExpulsion,
     isAdmin: Boolean(membership?.isAdmin),
+    isOwner: group.createdByUserId === currentUserId,
     isPinned: Boolean(membership?.isPinned)
   };
 }
@@ -319,7 +352,7 @@ function mapGroupMemberSummary(member: {
       profileImageUrl: string | null;
     } | null;
   };
-}): AteneoGroupMemberSummary {
+}, groupOwnerUserId: string): AteneoGroupMemberSummary {
   const firstName = member.user.profile?.firstName ?? null;
   const lastName = member.user.profile?.lastName ?? null;
   const profileImageUrl = member.user.profile?.profileImageUrl ?? null;
@@ -331,9 +364,97 @@ function mapGroupMemberSummary(member: {
     profileImageUrl,
     initials: initialsFromName(firstName, lastName, member.user.email),
     isAdmin: member.isAdmin,
+    isOwner: member.userId === groupOwnerUserId,
     isPinned: member.isPinned,
     joinedAt: member.joinedAt.toISOString()
   };
+}
+
+function normalizeOptionalReason(value: string | undefined): string | null {
+  const trimmed = value?.trim() ?? "";
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function buildKickNotificationBody(groupName: string, reason: string | null): Prisma.InputJsonValue {
+  const body: Array<{ text: string; href?: string; isBold?: boolean }> = [
+    { text: "Fuiste expulsado del grupo " },
+    { text: groupName, isBold: true },
+    { text: "." }
+  ];
+
+  if (reason) {
+    body.push({ text: ` Motivo: ${reason}` });
+  }
+
+  return body;
+}
+
+function mapGroupExpulsionSummary(expulsion: {
+  userId: string;
+  reason: string | null;
+  kickedAt: Date;
+  sourceContext: "MEMBERS_LIST" | "TOPIC" | "COMMENT" | "ADMIN_PANEL";
+  sourceTopicId: string | null;
+  sourceCommentId: string | null;
+  targetWasAdmin: boolean;
+  user: {
+    id: string;
+    email: string;
+    profile: {
+      firstName: string;
+      lastName: string;
+      profileImageUrl: string | null;
+    } | null;
+  };
+  kickedBy: {
+    id: string;
+    email: string;
+    profile: {
+      firstName: string;
+      lastName: string;
+      profileImageUrl: string | null;
+    } | null;
+  };
+}): AteneoGroupExpulsionSummary {
+  return {
+    ...mapUserSummary(expulsion.user),
+    reason: expulsion.reason,
+    kickedAt: expulsion.kickedAt.toISOString(),
+    kickedBy: mapUserSummary(expulsion.kickedBy),
+    sourceContext: expulsion.sourceContext,
+    sourceTopicId: expulsion.sourceTopicId,
+    sourceCommentId: expulsion.sourceCommentId,
+    targetWasAdmin: expulsion.targetWasAdmin
+  };
+}
+
+async function createContentModerationAudit(
+  tx: Prisma.TransactionClient,
+  input: {
+    groupId: string;
+    targetType: "MEMBER" | "TOPIC" | "COMMENT";
+    action: "KICK" | "RESTORE_MEMBER" | "REMOVE_TOPIC" | "RESTORE_TOPIC" | "REMOVE_COMMENT" | "RESTORE_COMMENT";
+    actorUserId: string;
+    targetUserId: string | null;
+    topicId: string | null;
+    commentId: string | null;
+    reason: string | null;
+    sourceContext: "MEMBERS_LIST" | "TOPIC" | "COMMENT" | "TOPIC_MENU" | "COMMENT_MENU" | "ADMIN_PANEL";
+  }
+): Promise<void> {
+  await tx.ateneoModerationAudit.create({
+    data: {
+      groupId: input.groupId,
+      targetType: input.targetType as AteneoModerationTargetType,
+      action: input.action as AteneoModerationAction,
+      actorUserId: input.actorUserId,
+      targetUserId: input.targetUserId,
+      topicId: input.topicId,
+      commentId: input.commentId,
+      reason: input.reason,
+      sourceContext: input.sourceContext as AteneoModerationSource
+    }
+  });
 }
 
 async function ensureGroupAccess(groupId: string, currentUserId: string): Promise<void> {
@@ -374,6 +495,63 @@ async function getGroupMembership(groupId: string, currentUserId: string) {
           isPinned: true
         }
       }
+    }
+  });
+}
+
+async function getGroupForModeration(groupId: string, currentUserId: string) {
+  const group = await prisma.ateneoGroup.findFirst({
+    where: {
+      id: groupId,
+      deletedAt: null
+    },
+    select: {
+      id: true,
+      name: true,
+      createdByUserId: true,
+      memberships: {
+        where: {
+          userId: currentUserId,
+          deletedAt: null,
+          leftAt: null
+        },
+        select: {
+          userId: true,
+          isAdmin: true
+        }
+      }
+    }
+  });
+
+  if (!group) {
+    throw new AppError("Ateneo group not found", StatusCodes.NOT_FOUND);
+  }
+
+  const actorMembership = group.memberships[0];
+  if (!actorMembership || !actorMembership.isAdmin) {
+    throw new AppError("Only group admins can manage member expulsions", StatusCodes.FORBIDDEN);
+  }
+
+  return {
+    group,
+    actorIsOwner: group.createdByUserId === currentUserId
+  };
+}
+
+async function refreshGroupMemberSubtitle(tx: Prisma.TransactionClient, groupId: string): Promise<void> {
+  const activeMembers = await tx.ateneoGroupMember.count({
+    where: {
+      groupId,
+      deletedAt: null,
+      leftAt: null
+    }
+  });
+
+  await tx.ateneoGroup.update({
+    where: { id: groupId },
+    data: {
+      memberSubtitle: `${activeMembers} ${activeMembers === 1 ? "miembro" : "miembros"}`,
+      activityLabel: activeMembers > 0 ? "Activo hoy" : "Sin actividad"
     }
   });
 }
@@ -731,8 +909,25 @@ export const ateneoService = {
       throw new AppError("Ateneo group not found", StatusCodes.NOT_FOUND);
     }
 
+    const isCurrentUserMember = group.memberships.length > 0;
+    const activeExpulsion = isCurrentUserMember
+      ? null
+      : await prisma.ateneoGroupExpulsion.findUnique({
+          where: {
+            groupId_userId: {
+              groupId: group.id,
+              userId: currentUserId
+            }
+          },
+          select: {
+            liftedAt: true
+          }
+        });
+
+    const isJoinBlockedByExpulsion = Boolean(activeExpulsion && activeExpulsion.liftedAt === null);
+
     return {
-      group: mapGroupSummary(group, currentUserId),
+      group: mapGroupSummary(group, currentUserId, isJoinBlockedByExpulsion),
       rules: group.rules.map((rule) => rule.text)
     };
   },
@@ -775,8 +970,345 @@ export const ateneoService = {
       orderBy: [{ isAdmin: "desc" }, { joinedAt: "asc" }]
     });
 
+    const groupOwner = await prisma.ateneoGroup.findFirst({
+      where: {
+        id: params.groupId,
+        deletedAt: null
+      },
+      select: {
+        createdByUserId: true
+      }
+    });
+
+    if (!groupOwner) {
+      throw new AppError("Ateneo group not found", StatusCodes.NOT_FOUND);
+    }
+
     return {
-      members: members.map((member) => mapGroupMemberSummary(member))
+      members: members.map((member) => mapGroupMemberSummary(member, groupOwner.createdByUserId))
+    };
+  },
+
+  async listGroupExpulsions(currentUserId: string, params: ListAteneoGroupExpulsionsParams): Promise<ListAteneoGroupExpulsionsOutput> {
+    await getGroupForModeration(params.groupId, currentUserId);
+
+    const expulsions = await prisma.ateneoGroupExpulsion.findMany({
+      where: {
+        groupId: params.groupId,
+        liftedAt: null
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              where: { deletedAt: null },
+              select: {
+                firstName: true,
+                lastName: true,
+                profileImageUrl: true
+              }
+            }
+          }
+        },
+        kickedBy: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              where: { deletedAt: null },
+              select: {
+                firstName: true,
+                lastName: true,
+                profileImageUrl: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        kickedAt: "desc"
+      }
+    });
+
+    return {
+      expulsions: expulsions.map((expulsion) => mapGroupExpulsionSummary(expulsion))
+    };
+  },
+
+  async listRemovedContent(currentUserId: string, params: ListAteneoRemovedContentParams): Promise<ListAteneoRemovedContentOutput> {
+    await getGroupForModeration(params.groupId, currentUserId);
+
+    const [topics, comments] = await Promise.all([
+      prisma.ateneoTopic.findMany({
+        where: {
+          groupId: params.groupId,
+          deletedAt: {
+            not: null
+          }
+        },
+        include: {
+          author: {
+            select: {
+              id: true,
+              email: true,
+              profile: {
+                where: { deletedAt: null },
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  profileImageUrl: true
+                }
+              }
+            }
+          }
+        },
+        orderBy: {
+          deletedAt: "desc"
+        }
+      }),
+      prisma.ateneoTopicComment.findMany({
+        where: {
+          deletedAt: {
+            not: null
+          },
+          topic: {
+            groupId: params.groupId,
+            deletedAt: null
+          }
+        },
+        include: {
+          author: {
+            select: {
+              id: true,
+              email: true,
+              profile: {
+                where: { deletedAt: null },
+                select: {
+                  firstName: true,
+                  lastName: true,
+                  profileImageUrl: true
+                }
+              }
+            }
+          }
+        },
+        orderBy: {
+          deletedAt: "desc"
+        }
+      })
+    ]);
+
+    return {
+      topics: topics.map((topic) => ({
+        topicId: topic.id,
+        title: topic.title,
+        author: mapUserSummary(topic.author),
+        deletedAt: (topic.deletedAt ?? topic.updatedAt).toISOString()
+      })),
+      comments: comments.map((comment) => ({
+        commentId: comment.id,
+        topicId: comment.topicId,
+        contentPreview: comment.content.slice(0, 180),
+        author: mapUserSummary(comment.author),
+        deletedAt: (comment.deletedAt ?? comment.updatedAt).toISOString()
+      }))
+    };
+  },
+
+  async kickGroupMember(
+    currentUserId: string,
+    params: KickAteneoGroupMemberParams,
+    body: KickAteneoGroupMemberBody
+  ): Promise<KickAteneoGroupMemberOutput> {
+    const { group, actorIsOwner } = await getGroupForModeration(params.groupId, currentUserId);
+
+    if (params.targetUserId === currentUserId) {
+      throw new AppError("You cannot kick yourself", StatusCodes.BAD_REQUEST);
+    }
+
+    const targetMembership = await prisma.ateneoGroupMember.findFirst({
+      where: {
+        groupId: params.groupId,
+        userId: params.targetUserId,
+        deletedAt: null,
+        leftAt: null
+      },
+      select: {
+        id: true,
+        isAdmin: true
+      }
+    });
+
+    if (!targetMembership) {
+      throw new AppError("Target user is not an active group member", StatusCodes.NOT_FOUND);
+    }
+
+    if (params.targetUserId === group.createdByUserId) {
+      throw new AppError("Group owner cannot be kicked", StatusCodes.FORBIDDEN);
+    }
+
+    if (targetMembership.isAdmin && !actorIsOwner) {
+      throw new AppError("Only owner can kick other admins", StatusCodes.FORBIDDEN);
+    }
+
+    const reason = normalizeOptionalReason(body.reason);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.ateneoGroupMember.update({
+        where: { id: targetMembership.id },
+        data: {
+          deletedAt: new Date(),
+          leftAt: new Date(),
+          isPinned: false
+        }
+      });
+
+      await tx.ateneoGroupExpulsion.upsert({
+        where: {
+          groupId_userId: {
+            groupId: params.groupId,
+            userId: params.targetUserId
+          }
+        },
+        create: {
+          groupId: params.groupId,
+          userId: params.targetUserId,
+          kickedByUserId: currentUserId,
+          reason,
+          sourceContext: body.sourceContext,
+          sourceTopicId: body.sourceTopicId ?? null,
+          sourceCommentId: body.sourceCommentId ?? null,
+          targetWasAdmin: targetMembership.isAdmin,
+          kickedAt: new Date(),
+          liftedAt: null,
+          liftedByUserId: null
+        },
+        update: {
+          kickedByUserId: currentUserId,
+          reason,
+          sourceContext: body.sourceContext,
+          sourceTopicId: body.sourceTopicId ?? null,
+          sourceCommentId: body.sourceCommentId ?? null,
+          targetWasAdmin: targetMembership.isAdmin,
+          kickedAt: new Date(),
+          liftedAt: null,
+          liftedByUserId: null
+        }
+      });
+
+      await createContentModerationAudit(tx, {
+        groupId: params.groupId,
+        targetType: "MEMBER",
+        action: "KICK",
+        actorUserId: currentUserId,
+        targetUserId: params.targetUserId,
+        topicId: body.sourceTopicId ?? null,
+        commentId: body.sourceCommentId ?? null,
+        reason,
+        sourceContext: body.sourceContext
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: params.targetUserId,
+          type: NotificationType.GROUP_MEMBER_KICKED,
+          seedKey: `group-kick-${params.groupId}-${Date.now()}`,
+          leadKind: NotificationLeadKind.SYMBOL,
+          leadValue: "⊖",
+          leadTone: NotificationLeadTone.RED,
+          bodyJson: buildKickNotificationBody(group.name, reason),
+          isRead: false,
+          readAt: null
+        }
+      });
+
+      await refreshGroupMemberSubtitle(tx, params.groupId);
+    });
+
+    return {
+      removedUserId: params.targetUserId
+    };
+  },
+
+  async restoreGroupMember(currentUserId: string, params: RestoreAteneoGroupMemberParams): Promise<RestoreAteneoGroupMemberOutput> {
+    const { actorIsOwner } = await getGroupForModeration(params.groupId, currentUserId);
+
+    const expulsion = await prisma.ateneoGroupExpulsion.findUnique({
+      where: {
+        groupId_userId: {
+          groupId: params.groupId,
+          userId: params.targetUserId
+        }
+      },
+      select: {
+        userId: true,
+        targetWasAdmin: true,
+        liftedAt: true
+      }
+    });
+
+    if (!expulsion || expulsion.liftedAt !== null) {
+      throw new AppError("Target user is not currently expelled", StatusCodes.NOT_FOUND);
+    }
+
+    if (expulsion.targetWasAdmin && !actorIsOwner) {
+      throw new AppError("Only owner can restore expelled admins", StatusCodes.FORBIDDEN);
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.ateneoGroupExpulsion.update({
+        where: {
+          groupId_userId: {
+            groupId: params.groupId,
+            userId: params.targetUserId
+          }
+        },
+        data: {
+          liftedAt: new Date(),
+          liftedByUserId: currentUserId
+        }
+      });
+
+      await tx.ateneoGroupMember.upsert({
+        where: {
+          groupId_userId: {
+            groupId: params.groupId,
+            userId: params.targetUserId
+          }
+        },
+        create: {
+          groupId: params.groupId,
+          userId: params.targetUserId,
+          isAdmin: false,
+          isPinned: false
+        },
+        update: {
+          deletedAt: null,
+          leftAt: null,
+          isAdmin: false,
+          isPinned: false
+        }
+      });
+
+      await createContentModerationAudit(tx, {
+        groupId: params.groupId,
+        targetType: "MEMBER",
+        action: "RESTORE_MEMBER",
+        actorUserId: currentUserId,
+        targetUserId: params.targetUserId,
+        topicId: null,
+        commentId: null,
+        reason: null,
+        sourceContext: "ADMIN_PANEL"
+      });
+
+      await refreshGroupMemberSubtitle(tx, params.groupId);
+    });
+
+    return {
+      restoredUserId: expulsion.userId
     };
   },
 
@@ -793,6 +1325,22 @@ export const ateneoService = {
 
     if (!group) {
       throw new AppError("Ateneo group not found", StatusCodes.NOT_FOUND);
+    }
+
+    const activeExpulsion = await prisma.ateneoGroupExpulsion.findUnique({
+      where: {
+        groupId_userId: {
+          groupId: params.groupId,
+          userId: currentUserId
+        }
+      },
+      select: {
+        liftedAt: true
+      }
+    });
+
+    if (activeExpulsion && activeExpulsion.liftedAt === null) {
+      throw new AppError("You were expelled from this group", StatusCodes.FORBIDDEN);
     }
 
     await prisma.$transaction(async (tx) => {
@@ -814,21 +1362,7 @@ export const ateneoService = {
         }
       });
 
-      const activeMembers = await tx.ateneoGroupMember.count({
-        where: {
-          groupId: params.groupId,
-          deletedAt: null,
-          leftAt: null
-        }
-      });
-
-      await tx.ateneoGroup.update({
-        where: { id: params.groupId },
-        data: {
-          memberSubtitle: `${activeMembers} ${activeMembers === 1 ? "miembro" : "miembros"}`,
-          activityLabel: "Activo hoy"
-        }
-      });
+      await refreshGroupMemberSubtitle(tx, params.groupId);
     });
 
     const hydrated = await prisma.ateneoGroup.findFirst({
@@ -1139,6 +1673,80 @@ export const ateneoService = {
     };
   },
 
+  async getRemovedTopicPreview(
+    currentUserId: string,
+    params: RemovedAteneoTopicPreviewParams
+  ): Promise<GetRemovedAteneoTopicPreviewOutput> {
+    await getGroupForModeration(params.groupId, currentUserId);
+
+    const topic = await prisma.ateneoTopic.findFirst({
+      where: {
+        id: params.topicId,
+        groupId: params.groupId,
+        deletedAt: {
+          not: null
+        },
+        group: {
+          deletedAt: null
+        }
+      },
+      include: {
+        group: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        author: {
+          select: {
+            id: true,
+            email: true,
+            profile: {
+              where: { deletedAt: null },
+              select: {
+                firstName: true,
+                lastName: true,
+                profileImageUrl: true
+              }
+            }
+          }
+        },
+        reactions: {
+          where: {
+            userId: currentUserId
+          },
+          select: {
+            userId: true,
+            reactionValue: true
+          }
+        },
+        attachments: {
+          where: {
+            deletedAt: null
+          },
+          select: {
+            id: true,
+            fileName: true,
+            mimeType: true,
+            sizeBytes: true
+          },
+          orderBy: {
+            createdAt: "asc"
+          }
+        }
+      }
+    });
+
+    if (!topic) {
+      throw new AppError("Removed Ateneo topic not found", StatusCodes.NOT_FOUND);
+    }
+
+    return {
+      topic: mapTopicSummary(topic, currentUserId),
+      deletedAt: (topic.deletedAt ?? topic.updatedAt).toISOString()
+    };
+  },
+
   async deleteTopic(currentUserId: string, params: AteneoTopicParams): Promise<DeleteAteneoTopicOutput> {
     await ensureGroupAccess(params.groupId, currentUserId);
 
@@ -1183,6 +1791,249 @@ export const ateneoService = {
     };
   },
 
+  async moderateRemoveTopic(
+    currentUserId: string,
+    params: AteneoTopicParams,
+    body: ModerateRemoveAteneoTopicBody
+  ): Promise<ModerateRemoveAteneoTopicOutput> {
+    await getGroupForModeration(params.groupId, currentUserId);
+
+    const topic = await prisma.ateneoTopic.findFirst({
+      where: {
+        id: params.topicId,
+        groupId: params.groupId,
+        deletedAt: null
+      },
+      select: {
+        id: true,
+        authorUserId: true
+      }
+    });
+
+    if (!topic) {
+      throw new AppError("Ateneo topic not found", StatusCodes.NOT_FOUND);
+    }
+
+    const reason = normalizeOptionalReason(body.reason);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.ateneoTopic.update({
+        where: { id: topic.id },
+        data: {
+          deletedAt: new Date()
+        }
+      });
+
+      await tx.notification.deleteMany({
+        where: {
+          userId: topic.authorUserId,
+          seedKey: topic.id
+        }
+      });
+
+      await createContentModerationAudit(tx, {
+        groupId: params.groupId,
+        targetType: "TOPIC",
+        action: "REMOVE_TOPIC",
+        actorUserId: currentUserId,
+        targetUserId: topic.authorUserId,
+        topicId: topic.id,
+        commentId: null,
+        reason,
+        sourceContext: "TOPIC_MENU"
+      });
+    });
+
+    return {
+      topicId: topic.id
+    };
+  },
+
+  async moderateRestoreTopic(
+    currentUserId: string,
+    params: AteneoTopicParams,
+    body: ModerateRestoreAteneoTopicBody
+  ): Promise<ModerateRestoreAteneoTopicOutput> {
+    await getGroupForModeration(params.groupId, currentUserId);
+
+    const topic = await prisma.ateneoTopic.findFirst({
+      where: {
+        id: params.topicId,
+        groupId: params.groupId,
+        deletedAt: {
+          not: null
+        }
+      },
+      select: {
+        id: true,
+        authorUserId: true
+      }
+    });
+
+    if (!topic) {
+      throw new AppError("Ateneo topic not found or not removed", StatusCodes.NOT_FOUND);
+    }
+
+    const reason = normalizeOptionalReason(body.reason);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.ateneoTopic.update({
+        where: { id: topic.id },
+        data: {
+          deletedAt: null
+        }
+      });
+
+      await createContentModerationAudit(tx, {
+        groupId: params.groupId,
+        targetType: "TOPIC",
+        action: "RESTORE_TOPIC",
+        actorUserId: currentUserId,
+        targetUserId: topic.authorUserId,
+        topicId: topic.id,
+        commentId: null,
+        reason,
+        sourceContext: "TOPIC_MENU"
+      });
+    });
+
+    return {
+      topicId: topic.id
+    };
+  },
+
+  async moderateRemoveComment(
+    currentUserId: string,
+    params: ModerateRemoveAteneoCommentParams,
+    body: ModerateRemoveAteneoCommentBody
+  ): Promise<ModerateRemoveAteneoCommentOutput> {
+    await getGroupForModeration(params.groupId, currentUserId);
+
+    const comment = await prisma.ateneoTopicComment.findFirst({
+      where: {
+        id: params.commentId,
+        topicId: params.topicId,
+        deletedAt: null,
+        topic: {
+          groupId: params.groupId,
+          deletedAt: null
+        }
+      },
+      select: {
+        id: true,
+        authorUserId: true,
+        topicId: true
+      }
+    });
+
+    if (!comment) {
+      throw new AppError("Ateneo comment not found", StatusCodes.NOT_FOUND);
+    }
+
+    const reason = normalizeOptionalReason(body.reason);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.ateneoTopicComment.update({
+        where: { id: comment.id },
+        data: {
+          deletedAt: new Date()
+        }
+      });
+
+      await tx.ateneoTopic.update({
+        where: { id: params.topicId },
+        data: {
+          commentCount: {
+            decrement: 1
+          }
+        }
+      });
+
+      await createContentModerationAudit(tx, {
+        groupId: params.groupId,
+        targetType: "COMMENT",
+        action: "REMOVE_COMMENT",
+        actorUserId: currentUserId,
+        targetUserId: comment.authorUserId,
+        topicId: comment.topicId,
+        commentId: comment.id,
+        reason,
+        sourceContext: "COMMENT_MENU"
+      });
+    });
+
+    return {
+      commentId: comment.id
+    };
+  },
+
+  async moderateRestoreComment(
+    currentUserId: string,
+    params: ModerateRestoreAteneoCommentParams,
+    body: ModerateRestoreAteneoCommentBody
+  ): Promise<ModerateRestoreAteneoCommentOutput> {
+    await getGroupForModeration(params.groupId, currentUserId);
+
+    const comment = await prisma.ateneoTopicComment.findFirst({
+      where: {
+        id: params.commentId,
+        topicId: params.topicId,
+        deletedAt: {
+          not: null
+        },
+        topic: {
+          groupId: params.groupId,
+          deletedAt: null
+        }
+      },
+      select: {
+        id: true,
+        authorUserId: true,
+        topicId: true
+      }
+    });
+
+    if (!comment) {
+      throw new AppError("Ateneo comment not found or not removed", StatusCodes.NOT_FOUND);
+    }
+
+    const reason = normalizeOptionalReason(body.reason);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.ateneoTopicComment.update({
+        where: { id: comment.id },
+        data: {
+          deletedAt: null
+        }
+      });
+
+      await tx.ateneoTopic.update({
+        where: { id: comment.topicId },
+        data: {
+          commentCount: {
+            increment: 1
+          }
+        }
+      });
+
+      await createContentModerationAudit(tx, {
+        groupId: params.groupId,
+        targetType: "COMMENT",
+        action: "RESTORE_COMMENT",
+        actorUserId: currentUserId,
+        targetUserId: comment.authorUserId,
+        topicId: comment.topicId,
+        commentId: comment.id,
+        reason,
+        sourceContext: "COMMENT_MENU"
+      });
+    });
+
+    return {
+      commentId: comment.id
+    };
+  },
+
   async listTopicComments(currentUserId: string, params: AteneoTopicParams): Promise<ListAteneoTopicCommentsOutput> {
     await ensureGroupAccess(params.groupId, currentUserId);
     const blockedUserIds = await blockService.getBlockedUserIdsFor(currentUserId);
@@ -1190,7 +2041,6 @@ export const ateneoService = {
     const comments = await prisma.ateneoTopicComment.findMany({
       where: {
         topicId: params.topicId,
-        deletedAt: null,
         topic: {
           groupId: params.groupId,
           deletedAt: null
@@ -1226,7 +2076,7 @@ export const ateneoService = {
 
     const hiddenCommentIds = new Set(
       comments
-        .filter((comment) => blockedUserIds.has(comment.authorUserId))
+        .filter((comment) => comment.deletedAt === null && blockedUserIds.has(comment.authorUserId))
         .map((comment) => comment.id)
     );
 
@@ -1245,13 +2095,16 @@ export const ateneoService = {
     const commentsToReturn: AteneoTopicCommentSummary[] = [];
 
     for (const comment of comments) {
-      if (!hiddenCommentIds.has(comment.id)) {
+      const isModerationDeleted = comment.deletedAt !== null;
+      const isHiddenByBlock = hiddenCommentIds.has(comment.id);
+
+      if (!isModerationDeleted && !isHiddenByBlock) {
         commentsToReturn.push(mapCommentSummary(comment, currentUserId));
         continue;
       }
 
       const hasVisibleReply = (commentsByParentId.get(comment.id) ?? []).some(
-        (reply) => !hiddenCommentIds.has(reply.id)
+        (reply) => reply.deletedAt === null && !hiddenCommentIds.has(reply.id)
       );
 
       if (hasVisibleReply) {

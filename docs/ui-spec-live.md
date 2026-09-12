@@ -39,6 +39,8 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 - Ateneo (backend-integrated): non-member users can open a group detail preview (`/ateneo/groups/:groupId`) to read basic metadata (name, description, rules) and join in place via `POST /api/v1/ateneo/groups/:groupId/join`; topics remain member-only until join succeeds.
 - Ateneo (backend-integrated): group settings can restrict topic creation and commenting to admins only; the frontend hides the corresponding CTAs and the backend rejects bypass attempts for those actions.
 - Ateneo (backend-integrated): group middle-column header actions include an info page (`/ateneo/groups/:groupId/info`), a members page (`/ateneo/groups/:groupId/members`), and an admin-only edit page (`/ateneo/groups/:groupId/edit`) that reuses the new-group form prefilled with the current group data.
+- Ateneo moderation (backend-integrated): group admins/owners can open a kick-user flow from members rows and topic/comment overflow menus; kick action is audited with optional reason and source context, kicked users receive a notification, cannot rejoin while kick is active, and admins can undo kicks from the members admin surface.
+- Ateneo moderation (backend-integrated): group admins/owners can remove topics and comments from topic-detail overflow menus with optional reason capture and persistent moderation audit logging, while preserving author self-delete behavior for topics.
 - Ateneo (frontend UX): topic descriptions and comments auto-detect URLs, render them as clickable links, and show link-preview cards (including default preview image when available) for both topic creation and reading views.
 - Ateneo (compatibility): `/ateneo/feed` redirects to `/ateneo`.
 - Blocked users (backend + frontend in progress): one-sided block action with mutual enforcement while active. DMs keep history but block new direct sends both directions; group chats still deliver messages but suppress blocked-pair mention notifications; profile URL + global search + feed author surfaces + Ateneo members hide blocked users; Ateneo topics/comments from blocked pairs are hidden both directions with deleted-placeholder behavior for hidden parent comments that still have visible replies; blocked pairs cannot connect while active and existing connections are removed on block; unblock restores normal access; direct-chat composer in `/mensajes` is disabled when the pair is blocked and shows directional hover guidance.
@@ -77,6 +79,27 @@ Purpose: Keep backend and frontend aligned with the current HTML source of truth
 4. Every profile-related task must update this file when statuses change.
 
 ## Changelog
+### 2026-09-12 - Ateneo admin deleted-topic modal preview
+- Added an admin-only deleted-topic preview flow from Ateneo moderation tabs: clicking a removed topic opens a modal with full topic content instead of requiring route-level access.
+- Added backend endpoint to fetch removed topic preview payload only for group moderators/admins.
+
+### 2026-09-11 - Ateneo moderation architecture consolidation + restore actions
+- Consolidated Ateneo moderation persistence into a 2-table design: state in `ateneo_group_expulsions` plus a unified audit stream in `ateneo_moderation_audits` for member and content actions.
+- Added moderation restore APIs and admin UI wiring for both topics and comments.
+- Added admin listing surface for removed content so restores can be performed without direct topic access.
+
+### 2026-09-11 - Ateneo admin content removal moderation
+- Added admin/owner moderation removal actions for topics and comments from topic-detail overflow menus, with optional reason capture in a modal.
+- Kept topic author self-delete behavior intact via the existing creator delete flow.
+- Added a dedicated content moderation audit model (separate from member-expulsion tables) with actor, target author, target type, source context, and reason fields.
+- Updated topic-comment list behavior so removed comments render placeholder continuity when visible replies still exist.
+
+### 2026-09-11 - Ateneo member expulsion and restore
+- Added Ateneo member expulsion flow from two entry points: group members list row overflow and topic/comment overflow menus.
+- Added kick confirmation modal with optional reason (up to 500 characters), persistent audit logging (actor/target/source context/topic/comment references), and kicked-user notification generation.
+- Enforced membership access so kicked users cannot rejoin until an admin/owner restores membership from the members admin panel.
+- Added owner/admin permission hierarchy: owner cannot be kicked, only owner can kick admins, and non-admin users cannot access moderation actions.
+
 ### 2026-09-10 - Published mosaic height reduced
 - Reduced published-topic image mosaic height from square behavior to a compact responsive height to avoid oversized cards while keeping image readability.
 

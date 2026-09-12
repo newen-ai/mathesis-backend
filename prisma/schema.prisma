@@ -62,6 +62,37 @@ enum AteneoReactionValue {
   value
 }
 
+enum AteneoGroupExpulsionSource {
+  MEMBERS_LIST
+  TOPIC
+  COMMENT
+  ADMIN_PANEL
+}
+
+enum AteneoModerationTargetType {
+  MEMBER
+  TOPIC
+  COMMENT
+}
+
+enum AteneoModerationAction {
+  KICK
+  RESTORE_MEMBER
+  REMOVE_TOPIC
+  RESTORE_TOPIC
+  REMOVE_COMMENT
+  RESTORE_COMMENT
+}
+
+enum AteneoModerationSource {
+  MEMBERS_LIST
+  TOPIC
+  COMMENT
+  TOPIC_MENU
+  COMMENT_MENU
+  ADMIN_PANEL
+}
+
 enum UserBlockAuditAction {
   BLOCK
   UNBLOCK
@@ -69,6 +100,7 @@ enum UserBlockAuditAction {
 
 enum NotificationType {
   POST_REACTION
+  GROUP_MEMBER_KICKED
   BADGE_APPROVED
   ENTERPRISE_APPROVED
   ACCOUNT_BANNED
@@ -139,6 +171,11 @@ model User {
   ateneoTopicCommentsMentioned AteneoTopicComment[] @relation("AteneoTopicCommentMentionUser")
   ateneoTopicReactions        AteneoTopicReaction[]
   ateneoTopicCommentReactions AteneoTopicCommentReaction[]
+  ateneoModerationAuditsAsActor  AteneoModerationAudit[] @relation("AteneoModerationActor")
+  ateneoModerationAuditsAsTarget AteneoModerationAudit[] @relation("AteneoModerationTarget")
+  ateneoGroupExpulsionsReceived  AteneoGroupExpulsion[] @relation("AteneoGroupExpulsionTarget")
+  ateneoGroupExpulsionsIssued    AteneoGroupExpulsion[] @relation("AteneoGroupExpulsionActor")
+  ateneoGroupExpulsionsLifted    AteneoGroupExpulsion[] @relation("AteneoGroupExpulsionLiftedBy")
   blocksInitiated             UserBlock[] @relation("UserBlocksInitiated")
   blocksReceived              UserBlock[] @relation("UserBlocksReceived")
   blockAuditsAsActor          UserBlockAudit[] @relation("UserBlockAuditActor")
@@ -194,6 +231,8 @@ model AteneoGroup {
   createdBy         User              @relation("AteneoGroupCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
   rules             AteneoGroupRule[]
   memberships       AteneoGroupMember[]
+  expulsions        AteneoGroupExpulsion[]
+  moderationAudits  AteneoModerationAudit[]
   topics            AteneoTopic[]
 
   @@index([deletedAt])
@@ -237,6 +276,60 @@ model AteneoGroupMember {
   @@map("ateneo_group_members")
 }
 
+model AteneoGroupExpulsion {
+  id              String                    @id @default(cuid())
+  groupId         String                    @map("group_id")
+  userId          String                    @map("user_id")
+  kickedByUserId  String                    @map("kicked_by_user_id")
+  liftedByUserId  String?                   @map("lifted_by_user_id")
+  reason          String?
+  sourceContext   AteneoGroupExpulsionSource @map("source_context")
+  sourceTopicId   String?                   @map("source_topic_id")
+  sourceCommentId String?                   @map("source_comment_id")
+  targetWasAdmin  Boolean                   @default(false) @map("target_was_admin")
+  kickedAt        DateTime                  @default(now()) @map("kicked_at")
+  liftedAt        DateTime?                 @map("lifted_at")
+  createdAt       DateTime                  @default(now()) @map("created_at")
+  updatedAt       DateTime                  @updatedAt @map("updated_at")
+
+  group           AteneoGroup               @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user            User                      @relation("AteneoGroupExpulsionTarget", fields: [userId], references: [id], onDelete: Cascade)
+  kickedBy        User                      @relation("AteneoGroupExpulsionActor", fields: [kickedByUserId], references: [id], onDelete: Cascade)
+  liftedBy        User?                     @relation("AteneoGroupExpulsionLiftedBy", fields: [liftedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([groupId, userId])
+  @@index([groupId, liftedAt, kickedAt(sort: Desc)])
+  @@index([userId, liftedAt])
+  @@index([kickedByUserId, kickedAt(sort: Desc)])
+  @@map("ateneo_group_expulsions")
+}
+
+model AteneoModerationAudit {
+  id                 String                    @id @default(cuid())
+  groupId            String                    @map("group_id")
+  targetType         AteneoModerationTargetType @map("target_type")
+  action             AteneoModerationAction
+  actorUserId        String                    @map("actor_user_id")
+  targetUserId       String?                   @map("target_user_id")
+  topicId            String?                   @map("topic_id")
+  commentId          String?                   @map("comment_id")
+  reason             String?
+  sourceContext      AteneoModerationSource    @map("source_context")
+  createdAt          DateTime                  @default(now()) @map("created_at")
+
+  group              AteneoGroup               @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  actorUser          User                      @relation("AteneoModerationActor", fields: [actorUserId], references: [id], onDelete: Cascade)
+  targetUser         User?                     @relation("AteneoModerationTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  topic              AteneoTopic?              @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  comment            AteneoTopicComment?       @relation(fields: [commentId], references: [id], onDelete: SetNull)
+
+  @@index([groupId, createdAt(sort: Desc)])
+  @@index([targetType, action, createdAt(sort: Desc)])
+  @@index([targetUserId, createdAt(sort: Desc)])
+  @@index([actorUserId, createdAt(sort: Desc)])
+  @@map("ateneo_moderation_audits")
+}
+
 model AteneoTopic {
   id              String          @id @default(cuid())
   groupId         String          @map("group_id")
@@ -256,6 +349,7 @@ model AteneoTopic {
   comments        AteneoTopicComment[]
   attachments     AteneoTopicAttachment[]
   reactions       AteneoTopicReaction[]
+  moderationAudits AteneoModerationAudit[]
 
   @@index([groupId, deletedAt, createdAt(sort: Desc)])
   @@index([authorUserId, deletedAt])
@@ -298,6 +392,7 @@ model AteneoTopicComment {
   replies             AteneoTopicComment[] @relation("AteneoCommentReplies")
   mentionUser         User?                @relation("AteneoTopicCommentMentionUser", fields: [mentionUserId], references: [id], onDelete: SetNull)
   reactions           AteneoTopicCommentReaction[]
+  moderationAudits    AteneoModerationAudit[]
 
   @@index([topicId, deletedAt, createdAt(sort: Asc)])
   @@index([authorUserId, deletedAt])
