@@ -14,6 +14,16 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-12 12:31 -0300 - Mobile hamburger Ateneo groups from backend
+- Agent: GitHub Copilot
+- Summary: Replaced hardcoded Ateneo group items inside the mobile hamburger menu with backend-driven data (`admin` + `mine` tabs), deduplicated overlap between sections, and wired each listed group to its direct route `/ateneo/groups/:groupId` instead of static tab-only redirects.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/TopBar.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/TopBarMobile.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Manual mobile QA: open hamburger on a user with multiple Ateneo memberships/admin groups and verify section labels, per-group routing, and fallback links when sections are empty.
+
 ### 2026-09-12 12:23 -0300 - Topbar notifications count immediate sync
 - Agent: GitHub Copilot
 - Summary: Fixed stale topbar notifications unread count by introducing a shared frontend event for unread-count updates and emitting it from `/notificaciones` load/read/read-all actions so the topbar badge updates immediately instead of waiting for polling.
