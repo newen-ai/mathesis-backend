@@ -14,6 +14,35 @@ Purpose: Shared handoff file. Every new agent must read this file before coding 
 - Run Prisma migration against a configured DATABASE_URL environment.
 
 ## Session Log
+### 2026-09-12 12:15 -0300 - Removed unused default feed seed constants
+- Agent: GitHub Copilot
+- Summary: Removed the unused `defaultFeedPosts` seed array from UI platform constants and dropped the now-unused `FeedPost` type import.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_lib/constants.ts
+  - docs/agent-live-context.md
+- Next actions:
+  - No further action required for this cleanup scope.
+
+### 2026-09-12 12:13 -0300 - Removed remaining inspirational phrases data
+- Agent: GitHub Copilot
+- Summary: Completed phrase cleanup by removing the remaining `catchyLines` phrase list constant and deleting the unused `CatchyPhrasesBanner` component file after the carousel render had already been removed.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_lib/constants.ts
+  - ../mathesis-ui/src/app/(platform)/_components/home/CatchyPhrasesBanner.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - No further action required for this scope.
+
+### 2026-09-12 12:12 -0300 - Removed "Frases que inspiran" carousel
+- Agent: GitHub Copilot
+- Summary: Removed the "Frases que inspiran" banner/carousel from platform shell render paths so it no longer appears in module pages or the legacy profile-initialization view.
+- Files changed:
+  - ../mathesis-ui/src/app/(platform)/_components/ModulePage.tsx
+  - ../mathesis-ui/src/app/(platform)/_components/home/ProfileInitializationView.tsx
+  - docs/agent-live-context.md
+- Next actions:
+  - Optionally delete unused `CatchyPhrasesBanner` and `catchyLines` constants in a follow-up cleanup if you want to remove dead code completely.
+
 ### 2026-09-12 11:58 -0300 - Ateneo score debug gated to local/dev only
 - Agent: GitHub Copilot
 - Summary: Re-enabled temporary topic score display for debugging, but gated backend exposure to local/dev environments only. In test/prod, score is neither included in API payloads nor rendered in UI.
